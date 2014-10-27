@@ -9,7 +9,6 @@ Ben Edelstein, Brian Shin, Brendon Fish, Dan Schlosser, Nate Brennand
 ## TODO
 - section on `?` operator
 - value of primitives after instantiation without setting the value
-  - what is the value of number/strings types on instantiation? ""/0/0.0 or null?
   -  IS explained for dictionaries, lists are implicitly 0
 - anonymous errors
 - go over how this allows you to stack multiple unsafe functions. i.e. show what value this feature 
