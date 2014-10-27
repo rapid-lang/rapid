@@ -649,7 +649,7 @@ Expressions are series of operators and operands that may be evaluated to a valu
 
 Constants may be string, integer, float, or boolean, dict, list, or JSON object literals.  See Lexical Conventions for more information.
 
-#### Identifiers TODO: should we allow redeclaring variables?
+#### Identifiers
 
 Identifiers could be primitive types, lists, dictionaries, objects, JSON objects, functions, classes, or errors.  Identifiers can be modified, and reused throughout a program.
 
