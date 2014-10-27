@@ -6,28 +6,6 @@
 
 Ben Edelstein, Brian Shin, Brendon Fish, Dan Schlosser, Nate Brennand
 
-## TODO
-- section on `?` operator
-- value of primitives after instantiation without setting the value
-  - what is the value of number/strings types on instantiation? ""/0/0.0 or null?
-  -  IS explained for dictionaries, lists are implicitly 0
-- anonymous errors
-- go over how this allows you to stack multiple unsafe functions. i.e. show what value this feature 
-- list functions? how do I append? Can I get a subset of the list (like l[5:10])
-- do we have true OOP?  like are there instances methods on classes?  are routes instance methods?
-  - We could do this with an `instance ClassName self {}` block, where `instance` is a keyword like:
-	```
-	class User {
-	     string name
-	      
-		 instance User self {
-			 func get_name(self) string {
-				 return self.name
-			 }
-		 }
-	}	 
-	```
-
 
 [toc]
 
@@ -50,7 +28,7 @@ In RAPID, the `null` keyword represents
 Boolean values are defined by the `true` and `false` keywords.  Because they are their own type, non-boolean values must be cast to `boolean` in order to be used in logical expressions. 
 
 > **Example:**
-> 
+>
 > `(3+5)?` is valid RAPID, but `!(3+5)` is not.
 
 (`?` is a an operator on all primitive types that evaluates to the "truthiness" of that value)
@@ -82,8 +60,6 @@ float j = 3.14 // 3.14
 
 
 ----------
-
-
 ```
 
 #### Strings
@@ -187,8 +163,8 @@ Errors in RAPID are not thrown and caught, rather they are returned directly by 
 For example, to declare a custom error:
 
 ```
-Error e = Error(name="RequestError", 
-				code=400, 
+Error e = Error(name="RequestError",
+				code=400,
 				message="There was an error with that Request.")
 ```
 
@@ -282,11 +258,11 @@ Functions are first class objects, and may be passed around as variables (see Fu
 Identifiers must start with a letter or an underscore, followed by any combination of letters, numbers, and underscores.
 
 > **Valid Identifiers:**
-> 
+>
 > `abc`, `abc_def`, `a___1`, `__a__`, `_1`, `ABC`
 
 > **Invalid Identifiers:**
-> 
+>
 > `123`, `abc-def`, `1abc`, `ab\ cd`
 
 ### 3.2 Keywords
@@ -426,7 +402,7 @@ New instances of a class may be declared using the `new` keyword.  The `new` key
 User bob = new User({
     "username": "burgerbob",
     "full_name": "Bob Belcher",
-    "password": "burgersrock",    
+    "password": "burgersrock",
     "age": 42
 })
 ```
@@ -435,11 +411,11 @@ User bob = new User({
 
 Defining the "User" class defines a `User` type, as well as a `JSON User` type.  The `JSON User` type has the same keys and value types as the User class, and may be declared in dictionary literal syntax.
 
-``` 
+```
 JSON User bob_json = {
     "username": "burgerbob",
     "full_name": "Bob Belcher",
-    "password": "burgersrock",    
+    "password": "burgersrock",
     "age": 42
 }
 ```
@@ -468,13 +444,13 @@ Tweet[] tweets = Tweet.get()
 
 ### 5.1 Declaration TODO: Default return type of null?
 
-Functions in RAPID are first-class objects, but may not be declared anonymously.  Functions are declared using the `func` keyword.  The arguments (within parenthesis), return type (after the parenthesis, but before the braces), and the body of the function (within the braces) must be declared explicitly.  Return types may include multiple types separated by commas, or may be omitted (for a default value of `null`). 
+Functions in RAPID are first-class objects, but may not be declared anonymously.  Functions are declared using the `func` keyword.  The arguments (within parenthesis), return type (after the parenthesis, but before the braces), and the body of the function (within the braces) must be declared explicitly.  Return types may include multiple types separated by commas, or may be omitted (for a default value of `null`).
 
 Return values are specified using the `return` keyword.  If it is followed by an expression, the expression is returned.  If not, `null` is returned. If the `return` keyword is omitted, the function also returns `null`
 
 ```
 return /* expression */
-```   
+```
 
 The arguments must be in order `namespace` arguments, then formal arguments.
 
@@ -525,7 +501,7 @@ One of the core features of RAPID is it's ability to easily define routes for a 
 
 ### 6.1 Declaring Routes
 
-Routes may be declared like functions, but substituting the `http` keyword for the `func` keyword.  Routes specify a REST API endpoint, it's parameters, it's response, and any side effects. 
+Routes may be declared like functions, but substituting the `http` keyword for the `func` keyword.  Routes specify a REST API endpoint, it's parameters, it's response, and any side effects.
 
 Like functions, routes take namespace arguments, and then other formal arguments.  Unlike functions, however, routes may also take a single request body argument that of a JSON object type.  It will be read from the request body and interpreted as JSON.
 
@@ -541,7 +517,7 @@ For example, the following route echos the URL parameter that it is passed.
 
 ```
 http echo(string foo) string, Error {
-	return foo, 200                
+	return foo, 200
 }
 ```
 
@@ -603,7 +579,7 @@ A `GET` request to `/math/ops/add?a=3&b=4` will return `7`.
 
 #### Parameters
 
-Variable URL parameters may be defined similar to namespaces, using a named block with the `param` keyword.  The `param` keyword is followed by a type and an identifier.  
+Variable URL parameters may be defined similar to namespaces, using a named block with the `param` keyword.  The `param` keyword is followed by a type and an identifier.
 
 Any function or route defined within a `param` block must take the parameters defined by the `param` blocks in order from inside to out.
 
@@ -718,7 +694,7 @@ A variable declaration consists of a type and an id.
 
 ##### Function Declaration
 
-The declaration of a function is a valid statement (see Functions). 
+The declaration of a function is a valid statement (see Functions).
 
 ##### Route Declaration
 
@@ -743,7 +719,7 @@ int x = add(2, 6, 7)
 
 #### Control flow
 
-##### If 
+##### If
 
 If the expression between the parenthesis of an `if` statement evaluates to `true`, then the statements within the body are executed.  Note that non-boolean values will not be cast to boolean, and will result in a compile-time error.
 
@@ -901,6 +877,24 @@ range(3,7,2)   // [3,5]
 range(10,4,-2) // [10,8,6]
 ```
 
+### 8.3 Output
+
+There are four methods of outputing from the server.
+They all accept a format string as the first argument and optional additional arguments for format strings.
+
+
+STDOUT
+----
+printf()
+
+
+STDERR
+---
+log.info()
+log.warn()
+log.error()
+
+
 ## 9. Standard Library TODO: complete
 
 ### 9.1 string
@@ -917,29 +911,25 @@ func is_empty() boolean
 unsafe func substring(start, stop) string
 ```
 
-#### string.&#95;&#95;get&#95;&#95;()
+#### string.__get__()
 
 ```
 unsafe func __get__(int index) string
 ```
 
-#### string.&#95;&#95;set&#95;&#95;()
+#### string.__set__()
 
 ```
 func __set__(int index, string char)
 ```
 
-#### string.&#95;&#95;iter&#95;&#95;() TODO Iterables?
+#### string.__iter__() TODO Iterables?
 
 ```
 func __iter__() iterator
 ```
 
-#### string.&#95;&#95;slice&#95;&#95;()
 
-```
-unsafe func __slice__(start, stop[, step=1])
-```
 
 ### 9.2 list
 
@@ -952,7 +942,7 @@ func is_empty() boolean
 #### list.append()
 
 ```
-func append(T elem) 
+func append(T elem) list<T>
 ```
 
 #### list.pop()
@@ -981,29 +971,31 @@ func reverse() list<T>
 
 #### list.copy()
 
+Copies by the list value.
+
 ```
 func copy() list<T>
 ```
 
-#### list.&#95;&#95;get&#95;&#95;()
+#### list.__get__()
 
 ```
 unsafe func __get__(int index) T
 ```
 
-#### list.&#95;&#95;set&#95;&#95;()
+#### list.__set__()
 
 ```
-func __set__(int index, T elem) 
+func __set__(int index, T elem)
 ```
 
-#### list.&#95;&#95;iter&#95;&#95;() TODO: Iterables?
+#### list.__iter__() TODO: Iterables?
 
 ```
 func __iter__() iterable
 ```
 
-#### list.&#95;&#95;slice&#95;&#95;()
+#### list.__slice__()
 
 ```
 func __slice__(int start, int stop[, int step]) list<T>
@@ -1047,19 +1039,19 @@ func keys() list<T>
 func values() list<S>
 ```
 
-#### dict.&#95;&#95;get&#95;&#95;()
+#### dict.__get__()
 
 ```
 unsafe func __get__(T key) S
 ```
 
-#### dict.&#95;&#95;set&#95;&#95;()
+#### dict.__set__()
 
 ```
 func __set__(T key, S value)
 ```
 
-#### dict.&#95;&#95;iter&#95;&#95;() TODO iterators?
+#### dict.__iter__() TODO iterators?
 
 ```
 func __iter__() iterator
@@ -1085,11 +1077,17 @@ int code
 string name
 ```
 
-### 9.2 sys TODO: include?
-
 ## 10. Program Execution TODO: explain compilation / execution
 
 RAPID programs compile to a Go executable.  If a RAPID program contains an `http` route, then running the executable will start a server on `localhost:5000`.  Otherwise, the statements will be executed in order.
 
 
-<!--se_discussion_list:{"zQORJhlYbDMZtVnLBFF07Yf0":{"selectionStart":2232,"selectionEnd":2233,"commentList":[{"author":"Nate","content":"are they?  we never discussed immutable values"},{"author":"Dan","content":"idk I just wrote this. Are go strings mutable or immutable?"},{"author":"Nate","content":"clarifying it to that strings are pass by value"}],"discussionIndex":"zQORJhlYbDMZtVnLBFF07Yf0"},"6MbsJsjDcGY1cUhC7pz69VHo":{"selectionStart":3690,"selectionEnd":3690,"commentList":[{"author":"Nate","content":"What is the use case for declaring an object as JSON? I thought we were only intending to handle regular objects and then serialize them when they're returned to the user?"},{"author":"Dan","content":"You'd rarely do this, it's mostly so that you can create some fake users in the database without acutally posting JSON. Also, the important point here is answering the question of what actually is getting passed into the Tweet constructor in our example program?"}],"discussionIndex":"6MbsJsjDcGY1cUhC7pz69VHo"},"0Bjr02Cp5Exac4vTcBETcCf8":{"selectionStart":9102,"selectionEnd":8996,"commentList":[{"author":"Nate","content":"I don't think it makes sense to have a special case for errors w.r.t the equality operator to suddenly just use types"},{"author":"Dan","content":"If we do types, we'll need inheritance. Do we want to implement that?"}],"discussionIndex":"0Bjr02Cp5Exac4vTcBETcCf8"},"4J6VrHafL9OQqYpxIME1ohbC":{"selectionStart":11371,"selectionEnd":11396,"commentList":[{"author":"Nate","content":"Why should we allow nesting of comments?"},{"author":"Dan","content":"So that you can comment out blocks of code that include comments"}],"discussionIndex":"4J6VrHafL9OQqYpxIME1ohbC"},"XNfBpahmJ9OSKiHJAPeIT2ti":{"selectionStart":13382,"selectionEnd":13411,"commentList":[{"author":"Nate","content":"What is the defined behavior for \"optional\" attributes here as well as default values?"},{"author":"Nate","content":"if the age is missing, should it be omitted or should 18 be put in"},{"author":"Dan","content":"I think 18 should be put in.  Any problems with that?"}],"discussionIndex":"XNfBpahmJ9OSKiHJAPeIT2ti"},"cjb2t10o4cxpmXyE0z1wOatk":{"selectionStart":19535,"selectionEnd":19610,"commentList":[{"author":"Nate","content":"added this defined behavior, comment if you disagree"}],"discussionIndex":"cjb2t10o4cxpmXyE0z1wOatk"},"Uz4Cqbm2symqFX77UWn9RQEe":{"selectionStart":19792,"selectionEnd":19792,"commentList":[{"author":"Nate","content":"I think this is too much magic for this aspect. I know that we have DB & HTTP magic, but function parameters should not be implicit like this."}],"discussionIndex":"Uz4Cqbm2symqFX77UWn9RQEe"},"6A4TW9AVUcnIAfICkXBqZS4V":{"selectionStart":20659,"selectionEnd":20720,"commentList":[{"author":"Nate","content":"I think this needs to be tied to scope, please see below example of an edge case"},{"author":"Dan","content":"See my answer below."},{"author":"Dan","content":"We could also get rid of this behavior"}],"discussionIndex":"6A4TW9AVUcnIAfICkXBqZS4V"}}-->
+
+
+#### Flags
+
+- `-L <filename>` :  log output will be appended to the specified file, defaults to `server.log`
+- `-P <port>` : alters the port the service will run on, defaults to 80
+- `-H` : prints all the options available
+
+
