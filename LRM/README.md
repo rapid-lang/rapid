@@ -407,18 +407,25 @@ Operator | Use | Associativity
 `>=` | Greater than or equal to | non-associative
 `<=` | Less than or equal to | non-associative
 
+
+
 ## 4. Database Backing
 
 ### 4.1 Classes
 
-RAPID classes are backed by a PostgreSQL database. Classes are defined using the `class` keyword, and represent an SQL table.  Instance variables (variables declared directly within the `class` block) represent columns for the table.  Instances of a class represent rows in SQL.  By default, columns are not nullable, but this may be overwritten using the `optional` keyword.  If the assignment syntax is used, a default value will be given.
+RAPID classes are backed by a PostgreSQL database.
+Classes are defined using the `class` keyword, and represent an SQL table.
+Instance variables (variables declared directly within the `class` block) represent columns for the table.
+Instances of a class represent rows in SQL.
+By default, columns are not nullable, but this may be overwritten using the `optional` keyword.
+If the assignment syntax is used, a default value will be given.
 
 ```
 class /* id */ {
-	/* declaration */
-	/* declaration */
-	...
-	/* declaration */
+    /* declaration */
+    /* declaration */
+    ...
+    /* declaration */
 }
 ```
 
@@ -475,7 +482,13 @@ printf("%s", obama.get_full_name()) // Barrak Obama
 
 #### Instantiation
 
-New instances of a class may be declared using the `new` keyword.  The `new` keyword is followed by the name of the class and a pair of parenthesis, in which a JSON User literal (described more in-depth in the next section) may be passed to declare instance variables.
+New instances of a class may be declared using the `new` keyword.
+The `new` keyword is followed by the name of the class and a pair of parenthesis, in which a JSON User literal (described more in-depth in the next section) may be passed to declare instance variables.
+Once a user defined object is created, it will be database backed.
+Any changes to the object will trigger an update to the database backed copy.
+Every object will have an `ID` attribute generated (this is a reserved attribute that cannot be used).
+This is a unique identifier to the object.
+
 
 ```
 User bob = new User(
@@ -504,18 +517,46 @@ This `json<User>` object does not represent a row in the database, and will be d
 It may be passed into an instantiation statement for a User object, to be persisted:
 
 ```
-User bob = new User(bob_json)
+User bob, error e = new User(bob_json)
 ```
 
-### 4.2 Querying TODO complete, define some parameters, filters, etc.
+### 4.2 Querying
 
-Objects may be queried from the database using the `get` function, which is automatically defined on all classes.   
+Objects may be queried from the database using the `get` function, which is automatically defined on all classes.
+`get` is an unsafe function which will return a list of objects as well as an error.
 
 The following example queries all User objects from the database:
 
 ```
 Tweet[] tweets = Tweet.get()
 ```
+
+A optional `filter` parameter can be set to limit the responses returned by Get().
+The filter value shoudld be a dictionary of attributes and values.
+Any non-existant attributes in the dictionary will be logged as an warning and ignored.
+
+
+```
+// returns all tweets by burgerbob.
+Tweet[] tweets, error e = Tweet.get(filter={
+  username="burgerbob"
+})
+```
+
+
+A optional `ID` parameter can be set to return a single Object.
+This can be combined with filter if desired.
+
+In the case that the object is not found, the returned object will be `null` and the error will be a non-null value.
+
+
+```
+// returns all tweets by burgerbob.
+Tweet t, error e = Tweet.get(ID="123abc")
+```
+
+### 4.3 Updates
+
 
 ## 5. Functions
 
@@ -1095,8 +1136,8 @@ Appends the argument to the end of a list.
 ```
 list<int> a = []
 
-a.append(7) 		// [7]
-a.append(3)			// [7,3]
+a.append(7)     // [7]
+a.append(3)     // [7,3]
 
 ```
 
@@ -1111,9 +1152,9 @@ Removes the last element in a list, and returns it. If the list is empty, an err
 ```
 list<int> a = [3,4]
 
-a.pop() 	// 4
-a.pop()		// 3
-a.pop()		// error
+a.pop()   // 4
+a.pop()   // 3
+a.pop()   // error
 
 ```
 
@@ -1140,7 +1181,7 @@ Reverses the list on which it is called and returns the reversed list.
 ```
 list<int> a = [1,2,3,4,5]
 
-a.reverse() 	// [5,4,3,2,1]
+a.reverse()  // [5,4,3,2,1]
 ```
 
 #### list.copy()
@@ -1154,7 +1195,7 @@ func copy() list<T>
 Returns a copy of the list on which it is called
 
 ```
-list<int> a = [1,2,3,4,5] 	// [1,2,3,4,5]
+list<int> a = [1,2,3,4,5]   // [1,2,3,4,5]
 ```
 
 
@@ -1212,8 +1253,8 @@ Returns a boolean value corresponding to whether the dictionary on which it is c
 ```
 dict<string, string> d = {"Dog" : "cat"}
 
-d.has_key("Dog") 	// true
-d.has_key("Cow")	// false
+d.has_key("Dog")  // true
+d.has_key("Cow")  // false
 
 ```
 
@@ -1228,7 +1269,7 @@ Inserts the arguments as a key, value pair in the dictionary on which it is call
 ```
 dict<string, string> d = {"Dog" : "cat"}
 
-d.insert("Cow" : "Pig") 	// {"Dog" : "cat", "Cow" : "Pig"}
+d.insert("Cow" : "Pig")  // {"Dog" : "cat", "Cow" : "Pig"}
  
 ```
 
@@ -1243,7 +1284,7 @@ Removes the value for the key given in the argument from the dictionary on which
 ```
 dict<string, string> d = {"Dog" : "cat", "Cow" : "Pig"}
 
-d.remove("Dog") 		// {"Cow" : "Pig"}
+d.remove("Dog")    // {"Cow" : "Pig"}
 
 ```
 
