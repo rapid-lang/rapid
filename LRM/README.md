@@ -1,29 +1,14 @@
+<<<<<<< HEAD
 
 
 
 # RAPID Language Reference Manual 
+=======
+# RAPID Language Reference Manual
+>>>>>>> fbcdfee5f55d32bf5c7191913beb45c3c434458f
 ## Coms W 4115
 
 Ben Edelstein, Brian Shin, Brendon Fish, Dan Schlosser, Nate Brennand
-
-## TODO
-- section on `?` operator
-- anonymous errors
-- go over how this allows you to stack multiple unsafe functions. i.e. show what value this feature 
-- list functions? how do I append? Can I get a subset of the list (like l[5:10])
-- do we have true OOP?  like are there instances methods on classes?  are routes instance methods?
-  - We could do this with an `instance ClassName self {}` block, where `instance` is a keyword like:
-	```
-	class User {
-	     string name
-	      
-		 instance User self {
-			 func get_name(self) string {
-				 return self.name
-			 }
-		 }
-	}	 
-	```
 
 
 [toc]
@@ -53,17 +38,20 @@ RAPID is a statically typed language; variables must be explicitly typed upon de
 
 #### null
 
-In RAPID, the `null` keyword represents
+In RAPID, the `null` keyword represents an uninitialized value.  Any type in rapid may take on `null` if it hasn't been initialized, or otherwise doesn't exist.
 
 #### Booleans
 
 Boolean values are defined by the `true` and `false` keywords.  Because they are their own type, non-boolean values must be cast to `boolean` in order to be used in logical expressions. 
 
-> **Example:**
-> 
-> `(3+5)?` is valid RAPID, but `!(3+5)` is not.
+For example:
+```
+(3+5)? // valid RAPID
 
-(`?` is a an operator on all primitive types that evaluates to the "truthiness" of that value)
+!(3+5) // not valid RAPID
+```
+
+The `?` is a an operator on all primitive types that evaluates to the "truthiness" of that value.
 
 #### Integers
 
@@ -92,8 +80,6 @@ float j = 3.14 // 3.14
 
 
 ----------
-
-
 ```
 
 #### Strings
@@ -165,51 +151,52 @@ The `object` type is a generic, non-primitive, dictionary-backed type that has a
 
 If a class has been defined, it may be constructed using the class name followed by parenthesis, in which are comma-separated 
 
-#### JSON Object TODO: JSON or json, all other types / keywords are lowercase.
+#### json
 
-JSON object is very similar to an Object, but instances do not represent rows in the database.  The keys and types of values must conform to the instance variables of the class on which it is based.  Each class defines an Object type and a JSON object type, and only JSON objects that are associated with classes may be instantiated.
+The `json` type is shares qualities of a dictionary and of an Object.  Every `json` type is directly connected to an Object class that is user-defined. They have keys and values like dictionaries, but have the strict requirements of shape like objects do.  Every property of a class is a mandatory key on the corresponding `json` object, and properties that have default values on objects have default values in `json`.  Unlike objects, however, `json` objects do not have methods associated with them, and instances do not represent rows in the database.  Each `class` declaration defines an Object type and a `json` object type, and only `json` objects that are associated with classes may be instantiated.
 
-For example, if we previously defined a `User` object with three instance variables `username`, `full_name`, and `password` (all strings), then we may declare a JSON User like so:
+For example, if we previously defined a `User` object with three instance variables `username`, `full_name`, and `password` (all strings), then we may declare a `json` User like so:
 
 ```
 /* JSON Object initialization */
 
-JSON /* id:classname */ /* id */ = {
-	/* expression:string */ : /* expression */,
-	/* expression:string */ : /* expression */,
+json< /* id:classname */ > /* id */ = json< /* id:classname */ >(
+	key = /* expression */,
+	key = /* expression */,
 	...
-	/* expression:string */ : /* expression */
-}
+	key = /* expression */
+)
 ```
 
 ```
-JSON User steve = {
-    "username": "sedwards",
-    "full_name": "Stephen Edwards",
-    "password": "easypeasy"
-}
+json<User> steve = json<User>(
+    username="sedwards",
+    full_name="Stephen Edwards",
+    password="easypeasy"
+)
 ```
 
-#### Error TODO: Error or error? all other types are lowercase
+#### Errors
 
-Errors in RAPID are not thrown and caught, rather they are returned directly by unsafe functions (see Functions).  Errors contain a string message, which can be dot-accessed, an integer error code that conforms with the HTTP/1.1 standard, and an optional string name.
+Errors in RAPID are not thrown and caught, rather they are returned directly by unsafe functions (see Functions).
+Errors contain a string message, which can be dot-accessed, an integer error code that conforms with the HTTP/1.1 standard, and an optional string name.
 
 For example, to declare a custom error:
 
 ```
-Error e = Error(name="RequestError", 
-				code=400, 
-				message="There was an error with that Request.")
+error e = error(message="There was an error with that Request.",
+                code=400,
+                name="RequestError")
 ```
 
-Unsafe operations return an Error:
+Unsafe operations return an error as the last return value:
 
 ```
 dict<string, int> d = {"foo": 4, "bar": 5}
-int val, Error e = d["baz"]
+int val, error e = d["baz"]
 if (!e?) {
-    printf("%s\n", e.message) // Key error when accessing "baz" on `d`.
     printf("%d\n", e.code)    // 500
+    printf("%s\n", e.message) // Key error when accessing "baz" on `d`.
     printf("%s\n", e.name)    // KeyError
 }
 ```
@@ -218,7 +205,7 @@ Many standard library classes and builtin objects define errors pertinent to the
 
 ```
 dict<string, int> d = {"foo": 4, "bar": 5}
-int val, Error e = d["baz"]
+int val, error e = d["baz"]
 if (!e?) {
     printf("%s", e == dict.KeyError) // true
 }
@@ -230,7 +217,7 @@ Unsafe functions (like list and dictionary access) may exist in the same express
 
 ```
 dict<string, list<int>> d = {"foo": [4,5], "bar": [1,2,3]}
-int val, Error e = d["foo"][2]     // List index out of bounds...
+int val, error e = d["foo"][2]     // List index out of bounds...
 printf("%d", val)                  // null
 printf("%s", e.name)               // IndexError
 printf("%t", e == list.IndexError) // true
@@ -241,38 +228,50 @@ printf("%s", e.name)             // KeyError
 printf("%t", e == dict.KeyError) // true
 ```
 
-##### Anonymous Errors
+More generally, if a subexpression of an expression is unsafe, it is presumed to be successful and the return value of the subexpression is used in the evaluation of the larger expression, unless the unsafe expression evaluates to an error, in which case evaluation of the large expression short-circuits, and the value of the large expression is `null, /* sub-expression's Error */`.
 
-Unsafe functions may also choose to return an *anonymous error*, which is an integer literal that will be cast to a generic Error object at compile time. See Functions for more details.
+##### Predefined Errors
 
-##### Status Code Definitions
+Unsafe functions may also choose to return an predefined error, which is an integer literal that will be cast to a generic error object at compile time. See Functions for more details.
 
-Code | Message / Name 
------|----------------
-100  | Continue
-200  | OK
-201  | Created
-301  | Moved Permanently
-302  | Found
-304  | Not Modified
-400  | Bad Request
-401  | Unauthorized
-403  | Forbidden 
-404  | Not Found
-405  | Method Not Allowed
-410  | Gone
-413  | Request Entity Too Large
-414  | Request-URI Too Long
-417  | Expectation Failed
-500  | Internal Server Error
-501  | Not Implemented
-502  | Bad Gateway
-503  | Service Unavailable
-504  | Gateway Timeout
+All predefined errors exist in the root scope and are named according to their status code, `e<code>`.
+
+`e404` is the error, `error("Not Found", 404, "NotFound")` (message, code, name).
+All the below errors are predefined as such.
+
+Error  | Message                  | Code | Name
+-------|--------------------------|------|-----------------
+`e100` | Continue                 | 100  | `Continue`
+`e200` | OK                       | 200  | `OK`
+`e201` | Created                  | 201  | `Created`
+`e301` | Moved Permanently        | 301  | `MovedPermanently`
+`e302` | Found                    | 302  | `Found`
+`e304` | Not Modified             | 304  | `NotModified`
+`e400` | Bad Request              | 400  | `BadRequest`
+`e401` | Unauthorized             | 401  | `Unauthorized`
+`e403` | Forbidden                | 403  | `Forbidden `
+`e404` | Not Found                | 404  | `NotFound`
+`e405` | Method Not Allowed       | 405  | `MethodNotAllowed`
+`e410` | Gone                     | 410  | `Gone`
+`e413` | Request Entity Too Large | 413  | `RequestEntityTooLarge`
+`e414` | Request-URI Too Long     | 414  | `RequestURITooLong`
+`e417` | Expectation Failed       | 417  | `ExpectationFailed`
+`e500` | Internal Server Error    | 500  | `InternalServerError`
+`e501` | Not Implemented          | 501  | `NotImplemented`
+`e502` | Bad Gateway              | 502  | `BadGateway`
+`e503` | Service Unavailable      | 503  | `ServiceUnavailable`
+`e504` | Gateway Timeout          | 504  | `GatewayTimeout`
+
+
+#### Functions
+
+Functions are first class objects, and may be passed around as variables (see Functions)
 
 ### 2.4 Casting
 
-Casting between float and int can be done using the `float()` and `int()` keyword functions. Floats are floored when they are cast to int.
+#### Integers and Floats
+
+Casting between float and int can be done using the `float()` and `int()` keyword functions. Floats are floored when they are cast to int. Additionally, integers are cast to floats if floats and integers are used together in a binary operator.
 
 ```
 float f = 7.5
@@ -281,9 +280,23 @@ float f = float(i) // f == 3.0
 int i = int(f)     // i == 7
 ```
 
-#### Functions
+#### Booleans
 
-Functions are first class objects, and may be passed around as variables (see Functions)
+Any value may be cast to boolean using the `?` operator. 
+
+See the following table for the result of using the `?` operator on various types:
+
+Type    | `true`             | `false`  | Comments   
+--------|:------------------:|:--------:|--------------------
+boolean | `true?`            | `false?` | Booleans retain their value
+int     | `1?`, `-1?`        | `0?`     | 0 is `false`, other ints are `true`
+float   | `1.0?`, `-1.0?`    | `0.0?`   | 0.0 is `false`, other floats are `true`
+null    | -                  | `null?`  | `null` is `false`
+list    | `[0]?`, `[false]?` | `[]?`    | Empty lists are `false`
+dict    | `{"key":false}?`   | `{}?`    | Empty dicts are `false`
+json    | `json<Obj>()?`     | -        | JSON objects are `true`
+object  | `Obj()?`           | -        | Objects are `true`
+
 
 ## 3. Lexical Conventions
 
@@ -292,18 +305,18 @@ Functions are first class objects, and may be passed around as variables (see Fu
 Identifiers must start with a letter or an underscore, followed by any combination of letters, numbers, and underscores.
 
 > **Valid Identifiers:**
-> 
+>
 > `abc`, `abc_def`, `a___1`, `__a__`, `_1`, `ABC`
 
 > **Invalid Identifiers:**
-> 
+>
 > `123`, `abc-def`, `1abc`, `ab\ cd`
 
 ### 3.2 Keywords
 
 The following identifiers are keywords in RAPID, and are reserved. They can not be used for any other purpose.
 
-`if`, `else`, `for`, `in`, `while`, `switch`, `case`, `default`, `fallthrough`, `http`, `func`, `JSON`, `class`, `namespace`, `param`, `true`, `false`, `new`, `optional`, `unsafe`
+`if`, `else`, `for`, `in`, `while`, `switch`, `case`, `default`, `fallthrough`, `http`, `func`, `json`, `class`, `namespace`, `param`, `true`, `false`, `new`, `optional`, `unsafe`
 
 ### 3.3 Literals
 
@@ -433,36 +446,34 @@ In this example, the "User" table has four columns: `username`, `full_name`, `ag
 New instances of a class may be declared using the `new` keyword.  The `new` keyword is followed by the name of the class and a pair of parenthesis, in which a JSON User literal (described more in-depth in the next section) may be passed to declare instance variables.
 
 ```
-User bob = new User({
-    "username": "burgerbob",
-    "full_name": "Bob Belcher",
-    "password": "burgersrock",    
-    "age": 42
-})
+User bob = new User(
+    username= "burgerbob",
+    full_name= "Bob Belcher",
+    password= "burgersrock",
+    age= 42
+)
 ```
 
-#### JSON
+#### json
 
-Defining the "User" class defines a `User` type, as well as a `JSON User` type.  The `JSON User` type has the same keys and value types as the User class, and may be declared in dictionary literal syntax.
+Defining the "User" class defines a `User` type, as well as a `json<User>` type.  The `json<User>` type has the same keys and value types as the User class, and may be declared in dictionary literal syntax.
 
-``` 
-JSON User bob_json = {
-    "username": "burgerbob",
-    "full_name": "Bob Belcher",
-    "password": "burgersrock",    
-    "age": 42
-}
+```
+json<User> bob_json = json<User>(
+    username="burgerbob",
+    full_name="Bob Belcher",
+    password="burgersrock",
+    age=42
+)
 ```
 
-This JSON User does not represent a row in the database, and will be deallocated when it leaves scope.
+This `json<User>` object does not represent a row in the database, and will be deallocated when it leaves scope.
 
 It may be passed into an instantiation statement for a User object, to be persisted:
 
 ```
 User bob = new User(bob_json)
 ```
-
-A JSON User literal may also be passed in to create a User instances (as seen in the previous section).
 
 ### 4.2 Querying TODO complete, define some parameters, filters, etc.
 
@@ -476,15 +487,17 @@ Tweet[] tweets = Tweet.get()
 
 ## 5. Functions
 
-### 5.1 Declaration TODO: Default return type of null?
+### 5.1 Declaration
 
-Functions in RAPID are first-class objects, but may not be declared anonymously.  Functions are declared using the `func` keyword.  The arguments (within parenthesis), return type (after the parenthesis, but before the braces), and the body of the function (within the braces) must be declared explicitly.  Return types may include multiple types separated by commas, or may be omitted (for a default value of `null`). 
+Functions in RAPID are first-class objects, but may not be declared anonymously.  Functions are declared using the `func` keyword.  The arguments (within parenthesis), return type (after the parenthesis, but before the braces), and the body of the function (within the braces) must be declared explicitly.  Return types may include multiple types separated by commas, or may be omitted for void functions.
 
-Return values are specified using the `return` keyword.  If it is followed by an expression, the expression is returned.  If not, `null` is returned. If the `return` keyword is omitted, the function also returns `null`
+Return values are specified using the `return` keyword, which must be followed by an expression to be returned for functions that have declared return types.  If the return type is omitted, the function is void, an the result of calling it may not be assigned to a value.  Void functions may use the `return` keyword by itself to exit prematurely from the function.
+
+Unsafe functions may not be void, because they must return errors.
 
 ```
 return /* expression */
-```   
+```
 
 The arguments must be in order `namespace` arguments, then formal arguments.
 
@@ -502,30 +515,38 @@ func sum(int a, int b) int {
 }
 ```
 
+Or:
+
+```
+func printInt(int a) {
+    printf("%d", a)
+}
+```
+
 ### 5.2 Unsafe Functions
 
 If a function performs actions that may be unsafe, it must be preceded by the keyword `unsafe`.   Unsafe functions return unsafe expressions, which is denoted by the presence of an `Error`-typed second value that is returned.
 
 ```
 unsafe func access(dict<string, int> d, string key) int {
-	int val, Error error = d[key]
+	int val, error error = d[key]
 	return val, error
 }
 ```
 Notice that the return type remains `int`, although an error is also returned. For more on unsafe expressions, see Expressions.
 
-Unsafe functions may also return *anonymous errors*, which are integer literals that will be cast to a generic Error object at compile time.  See Status Code Definitions for a complete list of error codes that may be declared as anonymous errors.
+Unsafe functions may also return a predefined error, which are integer literals that will be cast to a generic Error object at compile time.  See Status Code Definitions for a complete list of error codes that may be declared as anonymous errors.
 
 ```
 /* Default dict accessing:
- *    If there is a KeyError, return 0 with a 400 error
+ *    If there is a KeyError, return 0 with a 400 Not Found error
  */
 unsafe func access(dict<string, int> d, string key) int {
-	int val, Error error = d[key]
+	int val, error error = d[key]
 	if (error == dict.KeyError) {
-		return 0, 400
+		return 0, e400
 	}
-	return val, 200
+	return val, e200
 }
 ```
 
@@ -535,9 +556,9 @@ One of the core features of RAPID is it's ability to easily define routes for a 
 
 ### 6.1 Declaring Routes
 
-Routes may be declared like functions, but substituting the `http` keyword for the `func` keyword.  Routes specify a REST API endpoint, it's parameters, it's response, and any side effects. 
+Routes may be declared like functions, but substituting the `http` keyword for the `func` keyword.  Routes specify a REST API endpoint, it's parameters, it's response, and any side effects.
 
-Like functions, routes take namespace arguments, and then other formal arguments.  Unlike functions, however, routes may also take a single request body argument that of a JSON object type.  It will be read from the request body and interpreted as JSON.
+Like functions, routes take namespace arguments, and then other formal arguments.  Unlike functions, however, routes may also take a single request body argument that of a `json<Obj>` type.  It will be read from the request body and interpreted as JSON.
 
 ```
 http /* id */ ( /* namespace args */ /* formal args */ /* request body args */) {
@@ -545,13 +566,13 @@ http /* id */ ( /* namespace args */ /* formal args */ /* request body args */) 
 }
 ```
 
-Routes are unsafe by default, and therefore must include `Error` in their return types.  This may be an anonymous error (see Functions).
+Routes are unsafe by default, and therefore must include `error` in their return types.  This may be an anonymous error (see Functions).
 
 For example, the following route echos the URL parameter that it is passed.
 
 ```
 http echo(string foo) string, Error {
-	return foo, 200                
+	return foo, e200
 }
 ```
 
@@ -568,7 +589,7 @@ Classes provide path context.  Class names are put to lowercase, and appended to
 ```
 class Math {
 	http add(int a, int b) int {
-		return a + b, 200
+		return a + b, e200
 	}
 }
 ```
@@ -598,11 +619,11 @@ namespace /* id */ {
 ```
 class Math {
 	namespace ops {
-		http add(int a, int b) int { return a + b, 200 }
-		http sub(int a, int b) int { return a - b, 200 }	
+		http add(int a, int b) int { return a + b, e200 }
+		http sub(int a, int b) int { return a - b, e200 }	
 	}
 	namespace convert {
-		func ft_to_in(float feet) float { return feet*12, 200 }	
+		func ft_to_in(float feet) float { return feet*12, e200 }	
 	}
 }
 ```
@@ -613,7 +634,7 @@ A `GET` request to `/math/ops/add?a=3&b=4` will return `7`.
 
 #### Parameters
 
-Variable URL parameters may be defined similar to namespaces, using a named block with the `param` keyword.  The `param` keyword is followed by a type and an identifier.  
+Variable URL parameters may be defined similar to namespaces, using a named block with the `param` keyword.  The `param` keyword is followed by a type and an identifier.
 
 Any function or route defined within a `param` block must take the parameters defined by the `param` blocks in order from inside to out.
 
@@ -628,9 +649,9 @@ For example:
 class Math {
 	param int a {
 		param int b {
-			http add(int a, int b) int { return a + b, 200 }
+			http add(int a, int b) int { return a + b, e200 }
 		}	
-		http square(int a) int { return a*a, 200 }
+		http square(int a) int { return a*a, e200 }
 	}
 }
 ```
@@ -639,9 +660,9 @@ A `GET` request to `/math/5/7/add` will return `12`, and a `GET` request to `/ma
 
 ```
 math = Math()
-int sum, Error _ = math.add(5,7)
+int sum, error _ = math.add(5,7)
 printf("%d", sum)
-int sqr, Error _ = math.square(5)
+int sqr, error _ = math.square(5)
 printf("%d", sqr)
 ```
 
@@ -728,7 +749,7 @@ A variable declaration consists of a type and an id.
 
 ##### Function Declaration
 
-The declaration of a function is a valid statement (see Functions). 
+The declaration of a function is a valid statement (see Functions).
 
 ##### Route Declaration
 
@@ -753,7 +774,7 @@ int x = add(2, 6, 7)
 
 #### Control flow
 
-##### If 
+##### If
 
 If the expression between the parenthesis of an `if` statement evaluates to `true`, then the statements within the body are executed.  Note that non-boolean values will not be cast to boolean, and will result in a compile-time error.
 
@@ -880,7 +901,7 @@ printf("%d", add(3,4))
 func length(string s) int
 func length(list<T> l) int
 func length(dict<T,S> d) int
-func length(JSON T j) int
+func length(json<T> j) int
 ```
 
 Returns the length of the argument.  For strings, this is the number of characters in the string, for lists, this is the number of elements in the list.  For dictionaries, this is the number of keys, for JSON objects, this is the number of keys.
@@ -912,6 +933,40 @@ range(3,7,2)   // [3,5]
 range(10,4,-2) // [10,8,6]
 ```
 
+### 8.3 Output Functions
+
+There are four methods of outputing from the server.
+They all accept a format string as the first argument and optional additional arguments for format strings.
+
+
+#### Print Functions
+
+- `printf(String formatStr, [values])`
+
+`printf` does not include a newline at the end of the output.
+The output is directed to STDOUT.
+
+
+### Logging Functions
+
+- `log.info(String formatStr, [values])`
+- `log.warn(String formatStr, [values])`
+- `log.error(String formatStr, [values])`
+
+All output is preceded by a timestamp.
+The logging functions print with a newline at the end.
+The output is directed to STDERR.
+
+The method name being called precedes the message in all caps.
+
+
+```
+log.info("Hello, %s", "world")
+// 2009/11/10 23:00:00 INFO: Hello, world
+```
+
+
+
 ## 9. Standard Library TODO: complete
 
 ### 9.1 string
@@ -941,6 +996,7 @@ b.is_empty()	// true
 unsafe func substring(start, stop) string
 ```
 
+<<<<<<< HEAD
 Returns the substring of a string at the given indices. The start and stop incices are inclusive and exclusive respectively. Providing improper indicies will cause the function to throw an error.
 
 ```
@@ -952,11 +1008,15 @@ a.substring(3,99)	// error
 
 
 #### string.&#95;&#95;get&#95;&#95;()
+=======
+#### string.__get__()
+>>>>>>> fbcdfee5f55d32bf5c7191913beb45c3c434458f
 
 ```
 unsafe func __get__(int index) string
 ```
 
+<<<<<<< HEAD
 Returns the unit length substring at a given index the string on which it is called.
 
 ```
@@ -965,22 +1025,21 @@ TODO: example
 ```
 
 #### string.&#95;&#95;set&#95;&#95;()
+=======
+#### string.__set__()
+>>>>>>> fbcdfee5f55d32bf5c7191913beb45c3c434458f
 
 ```
 func __set__(int index, string char)
 ```
 
-#### string.&#95;&#95;iter&#95;&#95;() TODO Iterables?
+#### string.__iter__() TODO Iterables?
 
 ```
 func __iter__() iterator
 ```
 
-#### string.&#95;&#95;slice&#95;&#95;()
 
-```
-unsafe func __slice__(start, stop[, step=1])
-```
 
 ### 9.2 list
 
@@ -1004,7 +1063,7 @@ b.is_empty()		// true
 #### list.append()
 
 ```
-func append(T elem) 
+func append(T elem) list<T>
 ```
 
 Appends the argument to the end of a list.
@@ -1062,10 +1121,13 @@ a.reverse() 	// [5,4,3,2,1]
 
 #### list.copy()
 
+Copies by the list value.
+
 ```
 func copy() list<T>
 ```
 
+<<<<<<< HEAD
 Returns a copy of the list on which it is called
 
 ```
@@ -1075,24 +1137,27 @@ list<int> a = [1,2,3,4,5] 	// [1,2,3,4,5]
 
 
 #### list.&#95;&#95;get&#95;&#95;()
+=======
+#### list.__get__()
+>>>>>>> fbcdfee5f55d32bf5c7191913beb45c3c434458f
 
 ```
 unsafe func __get__(int index) T
 ```
 
-#### list.&#95;&#95;set&#95;&#95;()
+#### list.__set__()
 
 ```
-func __set__(int index, T elem) 
+func __set__(int index, T elem)
 ```
 
-#### list.&#95;&#95;iter&#95;&#95;() TODO: Iterables?
+#### list.__iter__() TODO: Iterables?
 
 ```
 func __iter__() iterable
 ```
 
-#### list.&#95;&#95;slice&#95;&#95;()
+#### list.__slice__()
 
 ```
 func __slice__(int start, int stop[, int step]) list<T>
@@ -1186,19 +1251,19 @@ e.is_empty() 	// true
 func values() list<S>
 ```
 
-#### dict.&#95;&#95;get&#95;&#95;()
+#### dict.__get__()
 
 ```
 unsafe func __get__(T key) S
 ```
 
-#### dict.&#95;&#95;set&#95;&#95;()
+#### dict.__set__()
 
 ```
 func __set__(T key, S value)
 ```
 
-#### dict.&#95;&#95;iter&#95;&#95;() TODO iterators?
+#### dict.__iter__() TODO iterators?
 
 ```
 func __iter__() iterator
@@ -1224,11 +1289,17 @@ int code
 string name
 ```
 
-### 9.2 sys TODO: include?
-
 ## 10. Program Execution TODO: explain compilation / execution
 
 RAPID programs compile to a Go executable.  If a RAPID program contains an `http` route, then running the executable will start a server on `localhost:5000`.  Otherwise, the statements will be executed in order.
 
 
-<!--se_discussion_list:{"zQORJhlYbDMZtVnLBFF07Yf0":{"selectionStart":2232,"selectionEnd":2233,"commentList":[{"author":"Nate","content":"are they?  we never discussed immutable values"},{"author":"Dan","content":"idk I just wrote this. Are go strings mutable or immutable?"},{"author":"Nate","content":"clarifying it to that strings are pass by value"}],"discussionIndex":"zQORJhlYbDMZtVnLBFF07Yf0"},"6MbsJsjDcGY1cUhC7pz69VHo":{"selectionStart":3690,"selectionEnd":3690,"commentList":[{"author":"Nate","content":"What is the use case for declaring an object as JSON? I thought we were only intending to handle regular objects and then serialize them when they're returned to the user?"},{"author":"Dan","content":"You'd rarely do this, it's mostly so that you can create some fake users in the database without acutally posting JSON. Also, the important point here is answering the question of what actually is getting passed into the Tweet constructor in our example program?"}],"discussionIndex":"6MbsJsjDcGY1cUhC7pz69VHo"},"0Bjr02Cp5Exac4vTcBETcCf8":{"selectionStart":9102,"selectionEnd":8996,"commentList":[{"author":"Nate","content":"I don't think it makes sense to have a special case for errors w.r.t the equality operator to suddenly just use types"},{"author":"Dan","content":"If we do types, we'll need inheritance. Do we want to implement that?"}],"discussionIndex":"0Bjr02Cp5Exac4vTcBETcCf8"},"4J6VrHafL9OQqYpxIME1ohbC":{"selectionStart":11371,"selectionEnd":11396,"commentList":[{"author":"Nate","content":"Why should we allow nesting of comments?"},{"author":"Dan","content":"So that you can comment out blocks of code that include comments"}],"discussionIndex":"4J6VrHafL9OQqYpxIME1ohbC"},"XNfBpahmJ9OSKiHJAPeIT2ti":{"selectionStart":13382,"selectionEnd":13411,"commentList":[{"author":"Nate","content":"What is the defined behavior for \"optional\" attributes here as well as default values?"},{"author":"Nate","content":"if the age is missing, should it be omitted or should 18 be put in"},{"author":"Dan","content":"I think 18 should be put in.  Any problems with that?"}],"discussionIndex":"XNfBpahmJ9OSKiHJAPeIT2ti"},"cjb2t10o4cxpmXyE0z1wOatk":{"selectionStart":19535,"selectionEnd":19610,"commentList":[{"author":"Nate","content":"added this defined behavior, comment if you disagree"}],"discussionIndex":"cjb2t10o4cxpmXyE0z1wOatk"},"Uz4Cqbm2symqFX77UWn9RQEe":{"selectionStart":19792,"selectionEnd":19792,"commentList":[{"author":"Nate","content":"I think this is too much magic for this aspect. I know that we have DB & HTTP magic, but function parameters should not be implicit like this."}],"discussionIndex":"Uz4Cqbm2symqFX77UWn9RQEe"},"6A4TW9AVUcnIAfICkXBqZS4V":{"selectionStart":20659,"selectionEnd":20720,"commentList":[{"author":"Nate","content":"I think this needs to be tied to scope, please see below example of an edge case"},{"author":"Dan","content":"See my answer below."},{"author":"Dan","content":"We could also get rid of this behavior"}],"discussionIndex":"6A4TW9AVUcnIAfICkXBqZS4V"}}-->
+
+
+#### Flags
+
+- `-L <filename>` :  log output will be appended to the specified file, defaults to `server.log`
+- `-P <port>` : alters the port the service will run on, defaults to 80
+- `-H` : prints all the options available
+
+
