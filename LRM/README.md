@@ -1,4 +1,11 @@
+<<<<<<< HEAD
+
+
+
+# RAPID Language Reference Manual 
+=======
 # RAPID Language Reference Manual
+>>>>>>> fbcdfee5f55d32bf5c7191913beb45c3c434458f
 ## Coms W 4115
 
 Ben Edelstein, Brian Shin, Brendon Fish, Dan Schlosser, Nate Brennand
@@ -6,7 +13,20 @@ Ben Edelstein, Brian Shin, Brendon Fish, Dan Schlosser, Nate Brennand
 
 [toc]
 
-## 1. Introduction TODO empty
+## 1. Introduction
+
+With increased demand in the public and private sector for cloud-connected mobile and web applications has come a rising need for web servers to maintain state across multiple devices and users. Development of web servers is complex, however. Building a web server using modern web server packages requires learning a server-side programming language, and then integrating a web server package and implementing required methods. Furthermore, local testing and development of these servers is excessively complex, as they have numerous dependencies and are difficult to build.
+
+
+RAPID is a programming language intended specifically for the rapid development of modern web APIs. Using RAPID, developers can quickly build a database-backed REST api server that guarantees JSON shapes in responses. RAPID is object oriented and database-backed, meaning that classes represent an SQL table, and upon instantion objects are automatically saved in the database. This abstracts away much of the boiler plate code that developers typically write when building an API server. 
+
+###Why RAPID?
+
+The name RAPID represents the goal of the language: making API server development quick. Also, it's a recurive acronym for *Rapid Application Programmer Interface Dialect*
+
+###RAPID Programs
+
+There are two types of RAPID programs, servers and scripts. If a program contains an HTTP method, it is a server, otherwise it is a script. (See more in later sections). 
 
 ## 2. Types
 
@@ -940,7 +960,8 @@ func range(int start, int stop[, int step=1]) int[]
 
 Returns a list of integers `r` where `r[i] = start + step*i`  where `i>=0` and while `r[i] < stop`.  If start is omitted, it defaults to 0.  If step is omitted, it defaults to 1.
 
-Step may be negative, in which case  `r[i] > stop`
+Step may be negative, in which 
+case  `r[i] > stop`
 
 Examples:
 ```
@@ -994,19 +1015,57 @@ log.info("Hello, %s", "world")
 func is_empty() boolean
 ```
 
+Returns a boolean value of whether the string on which it is called is empty.
+
+Examples:
+
+```
+string a = "dog"
+string b = ""
+
+a.is_empty() 	// false
+b.is_empty()	// true
+
+```
+
 #### string.substring()
 
 ```
 unsafe func substring(start, stop) string
 ```
 
+<<<<<<< HEAD
+Returns the substring of a string at the given indices. The start and stop incices are inclusive and exclusive respectively. Providing improper indicies will cause the function to throw an error.
+
+```
+string a = "catdog"
+
+a.substring(1,4) 	// "atd"
+a.substring(3,99)	// error
+```
+
+
+#### string.&#95;&#95;get&#95;&#95;()
+=======
 #### string.__get__()
+>>>>>>> fbcdfee5f55d32bf5c7191913beb45c3c434458f
 
 ```
 unsafe func __get__(int index) string
 ```
 
+<<<<<<< HEAD
+Returns the unit length substring at a given index the string on which it is called.
+
+```
+TODO: example
+
+```
+
+#### string.&#95;&#95;set&#95;&#95;()
+=======
 #### string.__set__()
+>>>>>>> fbcdfee5f55d32bf5c7191913beb45c3c434458f
 
 ```
 func __set__(int index, string char)
@@ -1028,10 +1087,31 @@ func __iter__() iterator
 func is_empty() boolean
 ```
 
+Returns whether the list on which it is called is empty.
+
+```
+list<int> a = []
+list<int> b = [3,4]
+
+a.is_empty() 		// false
+b.is_empty()		// true
+
+```
+
 #### list.append()
 
 ```
 func append(T elem) list<T>
+```
+
+Appends the argument to the end of a list.
+
+```
+list<int> a = []
+
+a.append(7) 		// [7]
+a.append(3)			// [7,3]
+
 ```
 
 #### list.pop()
@@ -1040,11 +1120,23 @@ func append(T elem) list<T>
 unsafe func pop() T
 ```
 
+Removes the last element in a list, and returns it. If the list is empty, an error is returned.
+
+```
+list<int> a = [3,4]
+
+a.pop() 	// 4
+a.pop()		// 3
+a.pop()		// error
+
+```
+
 #### list.push()
 
 ```
 func push(T elem) list<T>
 ```
+
 
 #### list.concat()
 
@@ -1057,6 +1149,13 @@ func concat(list<T> l) list<T>
 ```
 func reverse() list<T>
 ```
+Reverses the list on which it is called and returns the reversed list.
+
+```
+list<int> a = [1,2,3,4,5]
+
+a.reverse() 	// [5,4,3,2,1]
+```
 
 #### list.copy()
 
@@ -1066,7 +1165,19 @@ Copies by the list value.
 func copy() list<T>
 ```
 
+<<<<<<< HEAD
+Returns a copy of the list on which it is called
+
+```
+list<int> a = [1,2,3,4,5] 	// [1,2,3,4,5]
+
+```
+
+
+#### list.&#95;&#95;get&#95;&#95;()
+=======
 #### list.__get__()
+>>>>>>> fbcdfee5f55d32bf5c7191913beb45c3c434458f
 
 ```
 unsafe func __get__(int index) T
@@ -1098,10 +1209,31 @@ func __slice__(int start, int stop[, int step]) list<T>
 func is_empty() boolean
 ```
 
+Returns a boolean value of whether the dictionary on which it is called is empty.
+
+```
+dict<string, string> d = {"Dog" : "cat"}
+dict<string, string> e = {}
+
+d.is_empty() 	// false
+e.is_empty() 	// true
+
+```
+
 #### dict.has_key()
 
 ```
 func has_key(T key) boolean
+```
+
+Returns a boolean value corresponding to whether the dictionary on which it is called contains argument as a key.
+
+```
+dict<string, string> d = {"Dog" : "cat"}
+
+d.has_key("Dog") 	// true
+d.has_key("Cow")	// false
+
 ```
 
 #### dict.insert()
@@ -1110,17 +1242,46 @@ func has_key(T key) boolean
 func insert(T key, S value)
 ```
 
+Inserts the arguments as a key, value pair in the dictionary on which it is called.
+
+```
+dict<string, string> d = {"Dog" : "cat"}
+
+d.insert("Cow" : "Pig") 	// {"Dog" : "cat", "Cow" : "Pig"}
+ 
+```
+
 #### dict.remove()
 
 ```
 unsafe func remove(T key)
 ```
 
+Removes the value for the key given in the argument from the dictionary on which the function is called.
+
+```
+dict<string, string> d = {"Dog" : "cat", "Cow" : "Pig"}
+
+d.remove("Dog") 		// {"Cow" : "Pig"}
+
+```
+
+
 #### dict.keys()
 
 ```
 func keys() list<T>
 ```
+Returns a list of all keys in the dictionary on which it is called.
+
+```
+dict<string, string> d = {"Dog" : "cat", "Cow" : "Pig"}
+
+d.is_empty() 	// false
+e.is_empty() 	// true
+
+```
+
 
 #### dict.values()
 
