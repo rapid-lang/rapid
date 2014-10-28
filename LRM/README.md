@@ -499,6 +499,12 @@ User bob = new User(
 )
 ```
 
+### Deletion
+
+All objects have an instance method, `delete()`, defined that will delete the database record.
+There is no return value for the `delete` call.
+
+
 #### json
 
 Defining the "User" class defines a `User` type, as well as a `json<User>` type.  The `json<User>` type has the same keys and value types as the User class, and may be declared in dictionary literal syntax.
