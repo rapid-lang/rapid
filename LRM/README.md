@@ -37,7 +37,7 @@ RAPID is a programming language intended specifically for the rapid development 
 
 ###Why RAPID?
 
-The name RAPID represents the goal of the language: making API server development quick. Also, it's a recurive acronym for *Rapid Application Developer Interface Dialect*
+The name RAPID represents the goal of the language: making API server development quick. Also, it's a recurive acronym for *Rapid Application Programmer Interface Dialect*
 
 ###RAPID Programs
 
