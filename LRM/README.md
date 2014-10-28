@@ -1058,6 +1058,7 @@ Reverses the list on which it is called and returns the reversed list.
 list<int> a = [1,2,3,4,5]
 
 a.reverse() 	// [5,4,3,2,1]
+```
 
 #### list.copy()
 
