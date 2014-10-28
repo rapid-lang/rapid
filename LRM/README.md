@@ -1023,11 +1023,23 @@ a.append(3)			// [7,3]
 unsafe func pop() T
 ```
 
+Removes the last element in a list, and returns it. If the list is empty, an error is returned.
+
+```
+list<int> a = [3,4]
+
+a.pop() 	// 4
+a.pop()		// 3
+a.pop()		// error
+
+```
+
 #### list.push()
 
 ```
 func push(T elem) list<T>
 ```
+
 
 #### list.concat()
 
@@ -1040,12 +1052,26 @@ func concat(list<T> l) list<T>
 ```
 func reverse() list<T>
 ```
+Reverses the list on which it is called and returns the reversed list.
+
+```
+list<int> a = [1,2,3,4,5]
+
+a.reverse() 	// [5,4,3,2,1]
 
 #### list.copy()
 
 ```
 func copy() list<T>
 ```
+
+Returns a copy of the list on which it is called
+
+```
+list<int> a = [1,2,3,4,5] 	// [1,2,3,4,5]
+
+```
+
 
 #### list.&#95;&#95;get&#95;&#95;()
 
