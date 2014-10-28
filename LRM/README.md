@@ -1427,16 +1427,45 @@ for (int k, v in d) {
 string message
 ```
 
+Returns the value of the error message on for the Error object on which it is called.
+
+```
+error e = error(message="There was an error with that Request.",
+                code=400,
+                name="RequestError")
+
+e.message 		// "There was an error with that Request."
+```
+
 #### Error.code
 
 ```
 int code
+```
+Returns the value of the error message on for the Error object on which it is called.
+
+```
+error e = error(message="There was an error with that Request.",
+                code=400,
+                name="RequestError")
+
+e.code 		// 400
 ```
 
 #### Error.name
 
 ```
 string name
+```
+
+Returns the value of the error message on for the Error object on which it is called.
+
+```
+error e = error(message="There was an error with that Request.",
+                code=400,
+                name="RequestError")
+
+e.name 		// "RequestError"
 ```
 
 ## 10. Program Execution TODO: explain compilation / execution
