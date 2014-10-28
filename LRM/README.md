@@ -648,7 +648,7 @@ Routes are unsafe by default, and therefore must include `error` in their return
 For example, the following route echos the URL parameter that it is passed.
 
 ```
-http echo(string foo) string, Error {
+http echo(string foo) string, error {
 	return foo, e200
 }
 ```
@@ -677,7 +677,7 @@ Similarly, the following code will print `7`:
 
 ```
 math = Math()
-int sum, Error _ = math.add(3,4)
+int sum, error _ = math.add(3,4)
 printf("%d", sum)
 ```
 
@@ -1358,13 +1358,12 @@ d.remove("Dog")    // {"Cow" : "Pig"}
 ```
 func keys() list<T>
 ```
-Returns a list of all keys in the dictionary on which it is called.
+Returns a list of all keys in the dictionary on which it is called. The type of the returned list is that of the type of the keys in the dictionary.
 
 ```
 dict<string, string> d = {"Dog" : "cat", "Cow" : "Pig"}
 
-d.is_empty() 	// false
-e.is_empty() 	// true
+d.keys() 	// ["Dog", "Cow"]
 
 ```
 
@@ -1373,6 +1372,15 @@ e.is_empty() 	// true
 
 ```
 func values() list<S>
+```
+
+Returns a list of all values for the keyset in the dictonary on which it is called. The type of the returned list is that of the type of the values in the dictionary. 
+
+```
+dict<string, string> d = {"Dog" : "cat", "Cow" : "Pig"}
+
+d.values()      // ["Cat", "Pig"]
+
 ```
 
 #### Get (dict[k])
@@ -1426,16 +1434,45 @@ for (int k, v in d) {
 string message
 ```
 
-#### Error.code
+Returns the value of the error message on for the Error object on which it is called.
+
+```
+error e = error(message="There was an error with that Request.",
+                code=400,
+                name="RequestError")
+
+e.message 		// "There was an error with that Request."
+```
+
+#### error.code
 
 ```
 int code
 ```
+Returns the value of the error message on for the Error object on which it is called.
 
-#### Error.name
+```
+error e = error(message="There was an error with that Request.",
+                code=400,
+                name="RequestError")
+
+e.code 		// 400
+```
+
+#### error.name
 
 ```
 string name
+```
+
+Returns the value of the error message on for the Error object on which it is called.
+
+```
+error e = error(message="There was an error with that Request.",
+                code=400,
+                name="RequestError")
+
+e.name 		// "RequestError"
 ```
 
 ## 10. Program Execution TODO: explain compilation / execution
