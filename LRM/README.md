@@ -641,7 +641,7 @@ Routes are unsafe by default, and therefore must include `error` in their return
 For example, the following route echos the URL parameter that it is passed.
 
 ```
-http echo(string foo) string, Error {
+http echo(string foo) string, error {
 	return foo, e200
 }
 ```
@@ -670,7 +670,7 @@ Similarly, the following code will print `7`:
 
 ```
 math = Math()
-int sum, Error _ = math.add(3,4)
+int sum, error _ = math.add(3,4)
 printf("%d", sum)
 ```
 
@@ -1437,7 +1437,7 @@ error e = error(message="There was an error with that Request.",
 e.message 		// "There was an error with that Request."
 ```
 
-#### Error.code
+#### error.code
 
 ```
 int code
@@ -1452,7 +1452,7 @@ error e = error(message="There was an error with that Request.",
 e.code 		// 400
 ```
 
-#### Error.name
+#### error.name
 
 ```
 string name
