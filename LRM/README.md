@@ -1,7 +1,7 @@
 
 
 
-# RAPID Language Reference Manual
+# RAPID Language Reference Manual 
 ## Coms W 4115
 
 Ben Edelstein, Brian Shin, Brendon Fish, Dan Schlosser, Nate Brennand
