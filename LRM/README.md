@@ -8,14 +8,13 @@ Ben Edelstein, Brian Shin, Brendon Fish, Dan Schlosser, Nate Brennand
 
 With increased demand in the public and private sector for cloud-connected mobile and web applications has come a rising need for web servers to maintain state across multiple devices and users. Development of web servers is complex, however. Building a web server using modern web server packages requires learning a server-side programming language, and then integrating a web server package and implementing required methods. Furthermore, local testing and development of these servers is excessively complex, as they have numerous dependencies and are difficult to build.
 
-
 RAPID is a programming language intended specifically for the rapid development of modern web APIs. Using RAPID, developers can quickly build a database-backed REST API server that guarantees JSON shapes in responses. RAPID is object oriented and database-backed, meaning that classes represent an SQL table, and upon instantiation objects are automatically saved in the database. This abstracts away much of the boiler plate code that developers typically write when building an API server. 
 
-###Why RAPID?
+### 1.1 Why RAPID?
 
-The name RAPID represents the goal of the language: making API server development quick. Also, it's a recursive acronym for *Rapid Application Programmer Interface Dialect*
+The name RAPID represents the goal of the language: making API server development quick. Also, it's a recursive acronym for *RAPID Application Programmer Interface Dialect*.
 
-###RAPID Programs
+### 1.2 RAPID Programs
 
 There are two types of RAPID programs, servers and scripts. If a program contains an HTTP method, it is a server, otherwise it is a script. (See more in later sections). 
 
@@ -37,7 +36,7 @@ Boolean values are defined by the `true` and `false` keywords.  Because they are
 
 For example:
 ```
-(3+5)? // valid RAPID
+!(3+5)? // valid RAPID
 
 !(3+5) // not valid RAPID
 ```
@@ -68,9 +67,6 @@ Floating point numbers are preceded by the type `float`, and represent IEEE-754 
 ```
 float i        // null
 float j = 3.14 // 3.14
-
-
-----------
 ```
 
 #### Strings
@@ -138,9 +134,7 @@ ages["Caroline"] = 7    // {"Alice":3, "Bob":4, "Caroline":7}
 
 #### Object
 
-The `object` type is a generic, non-primitive, dictionary-backed type that has attributes for instance variables and functions.  Accessing instance variables or functions can be done with dot notation.  Objects may not be declared anonymously; they must be declared as instances of classes.  Objects have immutable key sets, so variables and functions may not be added or removed, although their values may be changed.
-
-If a class has been defined, it may be constructed using the class name followed by parenthesis, in which are comma-separated 
+The `object` type is a generic, non-primitive, dictionary-backed type that has attributes for instance variables and functions.  Accessing instance variables or functions can be done with dot notation.  Objects may not be declared anonymously; they must be declared as instances of classes.  Objects have immutable key sets, so variables and functions may not be added or removed, although their values may be changed.  For more on classes and instantiation, see Classes.
 
 #### json
 
@@ -192,7 +186,7 @@ if (!e?) {
 }
 ```
 
-Many standard library classes and builtin objects define errors pertinent to their functions, to which an Error instance may be compared.
+Many standard library classes and builtin objects define errors pertinent to their functions, to which an error instance may be compared.
 
 ```
 dict<string, int> d = {"foo": 4, "bar": 5}
@@ -204,7 +198,7 @@ if (!e?) {
 
 ##### Stacking
 
-Unsafe functions (like list and dictionary access) may exist in the same expression.  If unsafe functions return successfully, the Error that is returned is consumed (ignored), and the return value is taken.  If an unsafe function returns an error, the expression evaluation short-circuits, and the value of the expression is null and the Error that is returned by the failed function call.
+Unsafe functions (like list and dictionary access) may exist in the same expression.  If unsafe functions return successfully, the error that is returned is consumed (ignored), and the return value is taken.  If an unsafe function returns an error, the expression evaluation short-circuits, and the value of the expression is null and the error that is returned by the failed function call.
 
 ```
 dict<string, list<int>> d = {"foo": [4,5], "bar": [1,2,3]}
@@ -219,7 +213,7 @@ printf("%s", e.name)             // KeyError
 printf("%t", e == dict.KeyError) // true
 ```
 
-More generally, if a subexpression of an expression is unsafe, it is presumed to be successful and the return value of the subexpression is used in the evaluation of the larger expression, unless the unsafe expression evaluates to an error, in which case evaluation of the large expression short-circuits, and the value of the large expression is `null, /* sub-expression's Error */`.
+More generally, if a subexpression of an expression is unsafe, it is presumed to be successful and the return value of the subexpression is used in the evaluation of the larger expression, unless the unsafe expression evaluates to an error, in which case evaluation of the large expression short-circuits, and the value of the large expression is `null, /* sub-expression's error */`.
 
 ##### Predefined Responses
 
@@ -1078,9 +1072,9 @@ Returns the substring of a string at the given indexes. The start and stop index
 ```
 string a = "catdog"
 
-string sub, Error e = a.substring(1,4) 	 // "atd", null
-string sub, Error e = a.substring(3,99)	 // null, error
-string sub, Error e = a.substring(50,99) // null, error
+string sub, error e = a.substring(1,4) 	 // "atd", null
+string sub, error e = a.substring(3,99)	 // null, error
+string sub, error e = a.substring(50,99) // null, error
 ```
 
 #### Get (string[i])
@@ -1405,7 +1399,7 @@ Examples:
 
 ```
 dict<string, int> d = {"a":1, "b":2}
-d["a"], Error e = 5
+d["a"], error e = 5
 if (!e?) {
     printf("%d", d["a"]) 
 }
@@ -1426,15 +1420,15 @@ for (int k, v in d) {
 // prints a:1, b:2, 
 ```
 
-### 9.4 Error
+### 9.4 error
 
-#### Error.message
+#### error.message
 
 ```
 string message
 ```
 
-Returns the value of the error message on for the Error object on which it is called.
+Returns the value of the error message on for the error object on which it is called.
 
 ```
 error e = error(message="There was an error with that Request.",
@@ -1449,7 +1443,7 @@ e.message 		// "There was an error with that Request."
 ```
 int code
 ```
-Returns the value of the error message on for the Error object on which it is called.
+Returns the value of the error message on for the error object on which it is called.
 
 ```
 error e = error(message="There was an error with that Request.",
@@ -1465,7 +1459,7 @@ e.code 		// 400
 string name
 ```
 
-Returns the value of the error message on for the Error object on which it is called.
+Returns the value of the error message on for the error object on which it is called.
 
 ```
 error e = error(message="There was an error with that Request.",
