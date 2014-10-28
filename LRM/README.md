@@ -140,7 +140,7 @@ For example, if we previously defined a `User` object with three instance variab
 ```
 /* JSON Object initialization */
 
-json< /* id:classname */ > /* id */ = json< /* id:classname */>(
+json< /* id:classname */ > /* id */ = json< /* id:classname */ >(
 	key = /* expression */,
 	key = /* expression */,
 	...
@@ -426,12 +426,12 @@ In this example, the "User" table has four columns: `username`, `full_name`, `ag
 New instances of a class may be declared using the `new` keyword.  The `new` keyword is followed by the name of the class and a pair of parenthesis, in which a JSON User literal (described more in-depth in the next section) may be passed to declare instance variables.
 
 ```
-User bob = new User({
-    "username": "burgerbob",
-    "full_name": "Bob Belcher",
-    "password": "burgersrock",
-    "age": 42
-})
+User bob = new User(
+    username= "burgerbob",
+    full_name= "Bob Belcher",
+    password= "burgersrock",
+    age= 42
+)
 ```
 
 #### json
@@ -467,11 +467,13 @@ Tweet[] tweets = Tweet.get()
 
 ## 5. Functions
 
-### 5.1 Declaration TODO: Default return type of null?
+### 5.1 Declaration
 
-Functions in RAPID are first-class objects, but may not be declared anonymously.  Functions are declared using the `func` keyword.  The arguments (within parenthesis), return type (after the parenthesis, but before the braces), and the body of the function (within the braces) must be declared explicitly.  Return types may include multiple types separated by commas, or may be omitted (for a default value of `null`).
+Functions in RAPID are first-class objects, but may not be declared anonymously.  Functions are declared using the `func` keyword.  The arguments (within parenthesis), return type (after the parenthesis, but before the braces), and the body of the function (within the braces) must be declared explicitly.  Return types may include multiple types separated by commas, or may be omitted for void functions.
 
-Return values are specified using the `return` keyword.  If it is followed by an expression, the expression is returned.  If not, `null` is returned. If the `return` keyword is omitted, the function also returns `null`
+Return values are specified using the `return` keyword, which must be followed by an expression to be returned for functions that have declared return types.  If the return type is omitted, the function is void, an the result of calling it may not be assigned to a value.  Void functions may use the `return` keyword by itself to exit prematurely from the function.
+
+Unsafe functions may not be void, because they must return errors.
 
 ```
 return /* expression */
@@ -493,6 +495,14 @@ func sum(int a, int b) int {
 }
 ```
 
+Or:
+
+```
+func printInt(int a) {
+    printf("%d", a)
+}
+```
+
 ### 5.2 Unsafe Functions
 
 If a function performs actions that may be unsafe, it must be preceded by the keyword `unsafe`.   Unsafe functions return unsafe expressions, which is denoted by the presence of an `Error`-typed second value that is returned.
@@ -505,18 +515,18 @@ unsafe func access(dict<string, int> d, string key) int {
 ```
 Notice that the return type remains `int`, although an error is also returned. For more on unsafe expressions, see Expressions.
 
-Unsafe functions may also return *anonymous errors*, which are integer literals that will be cast to a generic Error object at compile time.  See Status Code Definitions for a complete list of error codes that may be declared as anonymous errors.
+Unsafe functions may also return a predefined error, which are integer literals that will be cast to a generic Error object at compile time.  See Status Code Definitions for a complete list of error codes that may be declared as anonymous errors.
 
 ```
 /* Default dict accessing:
- *    If there is a KeyError, return 0 with a 400 error
+ *    If there is a KeyError, return 0 with a 400 Not Found error
  */
 unsafe func access(dict<string, int> d, string key) int {
 	int val, error error = d[key]
 	if (error == dict.KeyError) {
-		return 0, 400
+		return 0, e400
 	}
-	return val, 200
+	return val, e200
 }
 ```
 
@@ -542,7 +552,7 @@ For example, the following route echos the URL parameter that it is passed.
 
 ```
 http echo(string foo) string, Error {
-	return foo, 200
+	return foo, e200
 }
 ```
 
@@ -559,7 +569,7 @@ Classes provide path context.  Class names are put to lowercase, and appended to
 ```
 class Math {
 	http add(int a, int b) int {
-		return a + b, 200
+		return a + b, e200
 	}
 }
 ```
@@ -589,11 +599,11 @@ namespace /* id */ {
 ```
 class Math {
 	namespace ops {
-		http add(int a, int b) int { return a + b, 200 }
-		http sub(int a, int b) int { return a - b, 200 }	
+		http add(int a, int b) int { return a + b, e200 }
+		http sub(int a, int b) int { return a - b, e200 }	
 	}
 	namespace convert {
-		func ft_to_in(float feet) float { return feet*12, 200 }	
+		func ft_to_in(float feet) float { return feet*12, e200 }	
 	}
 }
 ```
@@ -619,9 +629,9 @@ For example:
 class Math {
 	param int a {
 		param int b {
-			http add(int a, int b) int { return a + b, 200 }
+			http add(int a, int b) int { return a + b, e200 }
 		}	
-		http square(int a) int { return a*a, 200 }
+		http square(int a) int { return a*a, e200 }
 	}
 }
 ```
