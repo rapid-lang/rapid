@@ -901,7 +901,8 @@ func range(int start, int stop[, int step=1]) int[]
 
 Returns a list of integers `r` where `r[i] = start + step*i`  where `i>=0` and while `r[i] < stop`.  If start is omitted, it defaults to 0.  If step is omitted, it defaults to 1.
 
-Step may be negative, in which case  `r[i] > stop`
+Step may be negative, in which 
+case  `r[i] > stop`
 
 Examples:
 ```
@@ -921,11 +922,27 @@ range(10,4,-2) // [10,8,6]
 func is_empty() boolean
 ```
 
+Returns a boolean value of whether the argument is empty. The argument can be a string, list, or dictionary. 
+
+Examples:
+
+```
+is_empty("")		// true
+is_empty([1,2])		// false
+is_empty({}) 		// true
+
+
+```
+
+
 #### string.substring()
 
 ```
 unsafe func substring(start, stop) string
 ```
+
+
+
 
 #### string.&#95;&#95;get&#95;&#95;()
 
