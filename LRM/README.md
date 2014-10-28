@@ -877,22 +877,38 @@ range(3,7,2)   // [3,5]
 range(10,4,-2) // [10,8,6]
 ```
 
-### 8.3 Output
+### 8.3 Output Functions
 
 There are four methods of outputing from the server.
 They all accept a format string as the first argument and optional additional arguments for format strings.
 
 
-STDOUT
-----
-printf()
+#### Print Functions
+
+- `printf(String formatStr, [values])`
+
+`printf` does not include a newline at the end of the output.
+The output is directed to STDOUT.
 
 
-STDERR
----
-log.info()
-log.warn()
-log.error()
+### Logging Functions
+
+- `log.info(String formatStr, [values])`
+- `log.warn(String formatStr, [values])`
+- `log.error(String formatStr, [values])`
+
+All output is preceded by a timestamp.
+The logging functions print with a newline at the end.
+The output is directed to STDERR.
+
+The method name being called precedes the message in all caps.
+
+
+```
+log.info("Hello, %s", "world")
+// 2009/11/10 23:00:00 INFO: Hello, world
+```
+
 
 
 ## 9. Standard Library TODO: complete
