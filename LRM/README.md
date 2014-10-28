@@ -436,6 +436,28 @@ class /* id:classname */ {
 }
 ```
 
+The identifier specified after the `instance` keyword will represent the instance in all functions defined inside the `instance` block.  
+
+Instance methods may not be `http` routes. The `.` is syntactic sugar for calling instance methods.
+
+For example:
+
+```
+class User {
+    string first_name
+    string last_name
+
+    instance my {
+        func get_full_name() string {
+            return my.first_name + " " + my.last_name
+        }
+    }
+}
+
+User obama = User(first_name="Barrak", last_name="Obama")
+printf("%s", obama.get_full_name()) // Barrak Obama
+```
+
 
 #### Instantiation
 
@@ -443,10 +465,10 @@ New instances of a class may be declared using the `new` keyword.  The `new` key
 
 ```
 User bob = new User(
-    username= "burgerbob",
-    full_name= "Bob Belcher",
-    password= "burgersrock",
-    age= 42
+    username="burgerbob",
+    full_name="Bob Belcher",
+    password="burgersrock",
+    age=42
 )
 ```
 
