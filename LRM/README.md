@@ -1105,10 +1105,31 @@ func __slice__(int start, int stop[, int step]) list<T>
 func is_empty() boolean
 ```
 
+Returns a boolean value of whether the dictionary on which it is called is empty.
+
+```
+dict<string, string> d = {"Dog" : "cat"}
+dict<string, string> e = {}
+
+d.is_empty() 	// false
+e.is_empty() 	// true
+
+```
+
 #### dict.has_key()
 
 ```
 func has_key(T key) boolean
+```
+
+Returns a boolean value corresponding to whether the dictionary on which it is called contains argument as a key.
+
+```
+dict<string, string> d = {"Dog" : "cat"}
+
+d.has_key("Dog") 	// true
+d.has_key("Cow")	// false
+
 ```
 
 #### dict.insert()
@@ -1117,17 +1138,46 @@ func has_key(T key) boolean
 func insert(T key, S value)
 ```
 
+Inserts the arguments as a key, value pair in the dictionary on which it is called.
+
+```
+dict<string, string> d = {"Dog" : "cat"}
+
+d.insert("Cow" : "Pig") 	// {"Dog" : "cat", "Cow" : "Pig"}
+ 
+```
+
 #### dict.remove()
 
 ```
 unsafe func remove(T key)
 ```
 
+Removes the value for the key given in the argument from the dictionary on which the function is called.
+
+```
+dict<string, string> d = {"Dog" : "cat", "Cow" : "Pig"}
+
+d.remove("Dog") 		// {"Cow" : "Pig"}
+
+```
+
+
 #### dict.keys()
 
 ```
 func keys() list<T>
 ```
+Returns a list of all keys in the dictionary on which it is called.
+
+```
+dict<string, string> d = {"Dog" : "cat", "Cow" : "Pig"}
+
+d.is_empty() 	// false
+e.is_empty() 	// true
+
+```
+
 
 #### dict.values()
 
