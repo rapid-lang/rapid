@@ -1,6 +1,3 @@
-
-
-
 # RAPID Language Reference Manual
 ## Coms W 4115
 
@@ -40,17 +37,20 @@ RAPID is a statically typed language; variables must be explicitly typed upon de
 
 #### null
 
-In RAPID, the `null` keyword represents
+In RAPID, the `null` keyword represents an uninitialized value.  Any type in rapid may take on `null` if it hasn't been initialized, or otherwise doesn't exist.
 
 #### Booleans
 
 Boolean values are defined by the `true` and `false` keywords.  Because they are their own type, non-boolean values must be cast to `boolean` in order to be used in logical expressions. 
 
-> **Example:**
-> 
-> `(3+5)?` is valid RAPID, but `!(3+5)` is not.
+For example:
+```
+(3+5)? // valid RAPID
 
-(`?` is a an operator on all primitive types that evaluates to the "truthiness" of that value)
+!(3+5) // not valid RAPID
+```
+
+The `?` is a an operator on all primitive types that evaluates to the "truthiness" of that value.
 
 #### Integers
 
@@ -152,29 +152,29 @@ The `object` type is a generic, non-primitive, dictionary-backed type that has a
 
 If a class has been defined, it may be constructed using the class name followed by parenthesis, in which are comma-separated 
 
-#### JSON Object TODO: JSON or json, all other types / keywords are lowercase.
+#### json
 
-JSON object is very similar to an Object, but instances do not represent rows in the database.  The keys and types of values must conform to the instance variables of the class on which it is based.  Each class defines an Object type and a JSON object type, and only JSON objects that are associated with classes may be instantiated.
+The `json` type is shares qualities of a dictionary and of an Object.  Every `json` type is directly connected to an Object class that is user-defined. They have keys and values like dictionaries, but have the strict requirements of shape like objects do.  Every property of a class is a mandatory key on the corresponding `json` object, and properties that have default values on objects have default values in `json`.  Unlike objects, however, `json` objects do not have methods associated with them, and instances do not represent rows in the database.  Each `class` declaration defines an Object type and a `json` object type, and only `json` objects that are associated with classes may be instantiated.
 
-For example, if we previously defined a `User` object with three instance variables `username`, `full_name`, and `password` (all strings), then we may declare a JSON User like so:
+For example, if we previously defined a `User` object with three instance variables `username`, `full_name`, and `password` (all strings), then we may declare a `json` User like so:
 
 ```
 /* JSON Object initialization */
 
-JSON /* id:classname */ /* id */ = {
-	/* expression:string */ : /* expression */,
-	/* expression:string */ : /* expression */,
+json< /* id:classname */ > /* id */ = json< /* id:classname */>(
+	key = /* expression */,
+	key = /* expression */,
 	...
-	/* expression:string */ : /* expression */
-}
+	key = /* expression */
+)
 ```
 
 ```
-JSON User steve = {
-    "username": "sedwards",
-    "full_name": "Stephen Edwards",
-    "password": "easypeasy"
-}
+json<User> steve = json<User>(
+    username="sedwards",
+    full_name="Stephen Edwards",
+    password="easypeasy"
+)
 ```
 
 #### Errors
@@ -185,9 +185,9 @@ Errors contain a string message, which can be dot-accessed, an integer error cod
 For example, to declare a custom error:
 
 ```
-error e = error(name="RequestError",
+error e = error(message="There was an error with that Request.",
                 code=400,
-                message="There was an error with that Request.")
+                name="RequestError")
 ```
 
 Unsafe operations return an error as the last return value:
@@ -196,8 +196,8 @@ Unsafe operations return an error as the last return value:
 dict<string, int> d = {"foo": 4, "bar": 5}
 int val, error e = d["baz"]
 if (!e?) {
-    printf("%s\n", e.message) // Key error when accessing "baz" on `d`.
     printf("%d\n", e.code)    // 500
+    printf("%s\n", e.message) // Key error when accessing "baz" on `d`.
     printf("%s\n", e.name)    // KeyError
 }
 ```
@@ -229,37 +229,50 @@ printf("%s", e.name)             // KeyError
 printf("%t", e == dict.KeyError) // true
 ```
 
+More generally, if a subexpression of an expression is unsafe, it is presumed to be successful and the return value of the subexpression is used in the evaluation of the larger expression, unless the unsafe expression evaluates to an error, in which case evaluation of the large expression short-circuits, and the value of the large expression is `null, /* sub-expression's Error */`.
+
 ##### Predefined Errors
 
 Unsafe functions may also choose to return an predefined error, which is an integer literal that will be cast to a generic error object at compile time. See Functions for more details.
 
 All predefined errors exist in the root scope and are named according to their status code, `e<code>`.
+
 `e404` is the error, `error("Not Found", 404, "NotFound")` (message, code, name).
 All the below errors are predefined as such.
 
+Error  | Message                  | Code | Name
+-------|--------------------------|------|-----------------
+`e100` | Continue                 | 100  | `Continue`
+`e200` | OK                       | 200  | `OK`
+`e201` | Created                  | 201  | `Created`
+`e301` | Moved Permanently        | 301  | `MovedPermanently`
+`e302` | Found                    | 302  | `Found`
+`e304` | Not Modified             | 304  | `NotModified`
+`e400` | Bad Request              | 400  | `BadRequest`
+`e401` | Unauthorized             | 401  | `Unauthorized`
+`e403` | Forbidden                | 403  | `Forbidden `
+`e404` | Not Found                | 404  | `NotFound`
+`e405` | Method Not Allowed       | 405  | `MethodNotAllowed`
+`e410` | Gone                     | 410  | `Gone`
+`e413` | Request Entity Too Large | 413  | `RequestEntityTooLarge`
+`e414` | Request-URI Too Long     | 414  | `RequestURITooLong`
+`e417` | Expectation Failed       | 417  | `ExpectationFailed`
+`e500` | Internal Server Error    | 500  | `InternalServerError`
+`e501` | Not Implemented          | 501  | `NotImplemented`
+`e502` | Bad Gateway              | 502  | `BadGateway`
+`e503` | Service Unavailable      | 503  | `ServiceUnavailable`
+`e504` | Gateway Timeout          | 504  | `GatewayTimeout`
 
-###### Error Status Code Definitions
 
-Code | Message / Name
------|----------------
-400  | Bad Request
-401  | Unauthorized
-403  | Forbidden
-404  | Not Found
-405  | Method Not Allowed
-410  | Gone
-413  | Request Entity Too Large
-414  | Request-URI Too Long
-417  | Expectation Failed
-500  | Internal Server Error
-501  | Not Implemented
-502  | Bad Gateway
-503  | Service Unavailable
-504  | Gateway Timeout
+#### Functions
+
+Functions are first class objects, and may be passed around as variables (see Functions)
 
 ### 2.4 Casting
 
-Casting between float and int can be done using the `float()` and `int()` keyword functions. Floats are floored when they are cast to int.
+#### Integers and Floats
+
+Casting between float and int can be done using the `float()` and `int()` keyword functions. Floats are floored when they are cast to int. Additionally, integers are cast to floats if floats and integers are used together in a binary operator.
 
 ```
 float f = 7.5
@@ -268,9 +281,23 @@ float f = float(i) // f == 3.0
 int i = int(f)     // i == 7
 ```
 
-#### Functions
+#### Booleans
 
-Functions are first class objects, and may be passed around as variables (see Functions)
+Any value may be cast to boolean using the `?` operator. 
+
+See the following table for the result of using the `?` operator on various types:
+
+Type    | `true`             | `false`  | Comments   
+--------|:------------------:|:--------:|--------------------
+boolean | `true?`            | `false?` | Booleans retain their value
+int     | `1?`, `-1?`        | `0?`     | 0 is `false`, other ints are `true`
+float   | `1.0?`, `-1.0?`    | `0.0?`   | 0.0 is `false`, other floats are `true`
+null    | -                  | `null?`  | `null` is `false`
+list    | `[0]?`, `[false]?` | `[]?`    | Empty lists are `false`
+dict    | `{"key":false}?`   | `{}?`    | Empty dicts are `false`
+json    | `json<Obj>()?`     | -        | JSON objects are `true`
+object  | `Obj()?`           | -        | Objects are `true`
+
 
 ## 3. Lexical Conventions
 
@@ -290,7 +317,7 @@ Identifiers must start with a letter or an underscore, followed by any combinati
 
 The following identifiers are keywords in RAPID, and are reserved. They can not be used for any other purpose.
 
-`if`, `else`, `for`, `in`, `while`, `switch`, `case`, `default`, `fallthrough`, `http`, `func`, `JSON`, `class`, `namespace`, `param`, `true`, `false`, `new`, `optional`, `unsafe`
+`if`, `else`, `for`, `in`, `while`, `switch`, `case`, `default`, `fallthrough`, `http`, `func`, `json`, `class`, `namespace`, `param`, `true`, `false`, `new`, `optional`, `unsafe`
 
 ### 3.3 Literals
 
@@ -428,28 +455,26 @@ User bob = new User({
 })
 ```
 
-#### JSON
+#### json
 
-Defining the "User" class defines a `User` type, as well as a `JSON User` type.  The `JSON User` type has the same keys and value types as the User class, and may be declared in dictionary literal syntax.
+Defining the "User" class defines a `User` type, as well as a `json<User>` type.  The `json<User>` type has the same keys and value types as the User class, and may be declared in dictionary literal syntax.
 
 ``` 
-JSON User bob_json = {
-    "username": "burgerbob",
-    "full_name": "Bob Belcher",
-    "password": "burgersrock",    
-    "age": 42
-}
+json<User> bob_json = json<User>(
+    username="burgerbob",
+    full_name="Bob Belcher",
+    password="burgersrock",    
+    age=42
+)
 ```
 
-This JSON User does not represent a row in the database, and will be deallocated when it leaves scope.
+This `json<User>` object does not represent a row in the database, and will be deallocated when it leaves scope.
 
 It may be passed into an instantiation statement for a User object, to be persisted:
 
 ```
 User bob = new User(bob_json)
 ```
-
-A JSON User literal may also be passed in to create a User instances (as seen in the previous section).
 
 ### 4.2 Querying TODO complete, define some parameters, filters, etc.
 
@@ -471,7 +496,7 @@ Return values are specified using the `return` keyword.  If it is followed by an
 
 ```
 return /* expression */
-```   
+```
 
 The arguments must be in order `namespace` arguments, then formal arguments.
 
@@ -524,7 +549,7 @@ One of the core features of RAPID is it's ability to easily define routes for a 
 
 Routes may be declared like functions, but substituting the `http` keyword for the `func` keyword.  Routes specify a REST API endpoint, it's parameters, it's response, and any side effects. 
 
-Like functions, routes take namespace arguments, and then other formal arguments.  Unlike functions, however, routes may also take a single request body argument that of a JSON object type.  It will be read from the request body and interpreted as JSON.
+Like functions, routes take namespace arguments, and then other formal arguments.  Unlike functions, however, routes may also take a single request body argument that of a `json<Obj>` type.  It will be read from the request body and interpreted as JSON.
 
 ```
 http /* id */ ( /* namespace args */ /* formal args */ /* request body args */) {
@@ -867,7 +892,7 @@ printf("%d", add(3,4))
 func length(string s) int
 func length(list<T> l) int
 func length(dict<T,S> d) int
-func length(JSON T j) int
+func length(json<T> j) int
 ```
 
 Returns the length of the argument.  For strings, this is the number of characters in the string, for lists, this is the number of elements in the list.  For dictionaries, this is the number of keys, for JSON objects, this is the number of keys.
