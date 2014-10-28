@@ -4,9 +4,6 @@
 
 Ben Edelstein, Brian Shin, Brendon Fish, Dan Schlosser, Nate Brennand
 
-
-[toc]
-
 ## 1. Introduction
 
 With increased demand in the public and private sector for cloud-connected mobile and web applications has come a rising need for web servers to maintain state across multiple devices and users. Development of web servers is complex, however. Building a web server using modern web server packages requires learning a server-side programming language, and then integrating a web server package and implementing required methods. Furthermore, local testing and development of these servers is excessively complex, as they have numerous dependencies and are difficult to build.
@@ -1069,42 +1066,68 @@ b.is_empty()	// true
 unsafe func substring(start, stop) string
 ```
 
-Returns the substring of a string at the given indices. The start and stop incices are inclusive and exclusive respectively. Providing improper indicies will cause the function to throw an error.
+Returns the substring of a string at the given indices. The start and stop indexes are inclusive and exclusive respectively. Providing improper indicies will cause the function to throw an error (both must be 0 <= i <= length(s))
 
 ```
 string a = "catdog"
 
-a.substring(1,4) 	// "atd"
-a.substring(3,99)	// error
+string sub, Error e = a.substring(1,4) 	 // "atd", null
+string sub, Error e = a.substring(3,99)	 // null, error
+string sub, Error e = a.substring(50,99) // null, error
 ```
 
+#### Get (string[i])
 
-#### string.&#95;&#95;get&#95;&#95;()
+Strings may be indexed using brackets.  Inside the brackets must be a zero-indexed integer. Getting is unsafe, and returns `string, error`.
 
-```
-unsafe func __get__(int index) string
-```
-
-Returns the unit length substring at a given index the string on which it is called.
+Examples:
 
 ```
-TODO: example
+string a = "catdog"
 
+printf("%s", a[3]) // prints d
 ```
 
-#### string.&#95;&#95;set&#95;&#95;()
+#### Set (string[i] = s)
+
+After indexing, an assignment may occur, to set a value of the list.  Setting is `unsafe`, and returns `string, error`
+
+Examples:
 
 ```
-func __set__(int index, string char)
+string a = "catdog"
+a[2], error e = "p"
+if (!e?) {
+    printf("%s", a)
+}
+// prints capdog
 ```
 
-#### string.__iter__() TODO Iterables?
+#### Iterate (c in string)
+
+Strings may be iterated over in for loops.  Each element is returned in order.
+
+Examples:
 
 ```
-func __iter__() iterator
+string a = "catdog"
+for (string c in a) {
+    printf("%s", c)
+} 
+// prints catdog
 ```
 
+#### Slice (string[i:j])
 
+Strings may be sliced into substrings using slicing with brackets.  Slicing is `unsafe`, and returns `string, error`. Note that unlike for `list.substring`, the second index of a slice may be larger than the length of the string.
+
+```
+string a = "catdog"
+
+a[1:4]    // "atd"
+a[3:99]   // "dog"
+a[50:99]   // error
+```
 
 ### 9.2 list
 
@@ -1199,28 +1222,62 @@ list<int> a = [1,2,3,4,5]   // [1,2,3,4,5]
 ```
 
 
-#### list.&#95;&#95;get&#95;&#95;()
+#### Get (list[i])
+
+Lists may be indexed using brackets.  Inside the brackets must be a zero-indexed integer. Getting is unsafe, and for a `list<T>` returns `T, error`
+
+Examples:
 
 ```
-unsafe func __get__(int index) T
+list<int> a, error E = [1,2,3,4]
+printf("%d", a[2])
 ```
 
-#### list.__set__()
+#### Set (list[i] = j)
+
+After indexing, an assignment may occur, to set a value of the list.  Setting is `unsafe`, and for a `list<T>` returns `T, error`.
+
+Examples:
 
 ```
-func __set__(int index, T elem)
+list<int> a = [1,2,3,4]
+a[2], error e = 5
+if (!e?) {
+    for (int i in a) {
+        printf("%d", i)
+    } 
+}
+// prints 1254
 ```
 
-#### list.__iter__() TODO: Iterables?
+#### Iterate (j in list)
+
+Lists may be iterated over in for loops.  Each element is returned in order.
+
+Examples:
 
 ```
-func __iter__() iterable
+list<int> a = [1,2,3,4]
+for (int i in a) {
+    printf("%d", i)
+} 
+// prints 1234
 ```
 
-#### list.__slice__()
+#### Slice (list[i:j])
+
+Lists may be sliced into sub-lists using slicing with brackets.  Slicing is `unsafe`, and for a `list<T>` returns `list<T>, error`.
+
 
 ```
-func __slice__(int start, int stop[, int step]) list<T>
+list<int> a = [1,2,3,4]
+list<int> b, error e = a[2:4]
+if (!e?) {
+    for (int i in a) {
+        printf("%d", i)
+    } 
+}
+// prints 234
 ```
 
 ### 9.3 dict
@@ -1311,22 +1368,47 @@ e.is_empty() 	// true
 func values() list<S>
 ```
 
-#### dict.__get__()
+#### Get (dict[k])
+
+Lists may be indexed using brackets.  Inside the brackets must be a key in the dictionary. Getting is `unsafe`, and for a `dict<S,T>` returns `T, error`.
+
+Examples:
 
 ```
-unsafe func __get__(T key) S
+dict<string, int> d = {"a":1, "b":2}
+if (!e?) {
+    printf("%d", d["a"]) 
+}
+// prints 1
 ```
 
-#### dict.__set__()
+#### Set (dict[k] = v)
+
+After indexing, an assignment may occur, to set a value of the list.  Setting is `unsafe`, and for a `dict<S,T>` returns `T , error`..
+
+Examples:
 
 ```
-func __set__(T key, S value)
+dict<string, int> d = {"a":1, "b":2}
+d["a"], Error e = 5
+if (!e?) {
+    printf("%d", d["a"]) 
+}
+// prints 5
 ```
 
-#### dict.__iter__() TODO iterators?
+#### Iterate (j in dict)
+
+Lists may be iterated over in for loops.  Each element is returned in order.
+
+Examples:
 
 ```
-func __iter__() iterator
+dict<string, int> d = {"a":1, "b":2}
+for (int k, v in d) {
+    printf("%s:%s, ", k, v)
+} 
+// prints a:1, b:2, 
 ```
 
 ### 9.4 Error
