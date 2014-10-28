@@ -970,9 +970,9 @@ printf("%d", add(3,4))
 // 7
 ```
 
-## 8. Built-in Functions TODO: complete
+## 8. Built-in Functions
 
-### 8.1 length() TODO overloading or common behavior?
+### 8.1 length()
 
 ```
 func length(string s) int
@@ -1044,7 +1044,7 @@ log.info("Hello, %s", "world")
 
 
 
-## 9. Standard Library TODO: complete
+## 9. Standard Library
 
 ### 9.1 string
 
@@ -1475,7 +1475,7 @@ error e = error(message="There was an error with that Request.",
 e.name 		// "RequestError"
 ```
 
-## 10. Program Execution TODO: explain compilation / execution
+## 10. Program Execution
 
 RAPID programs compile to a Go executable which is a platform specific binary.
 Statements will be executed in order of their declaration.
