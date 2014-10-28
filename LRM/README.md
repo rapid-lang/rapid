@@ -922,18 +922,18 @@ range(10,4,-2) // [10,8,6]
 func is_empty() boolean
 ```
 
-Returns a boolean value of whether the argument is empty. The argument can be a string, list, or dictionary. 
+Returns a boolean value of whether the string on which it is called is empty.
 
 Examples:
 
 ```
-is_empty("")		// true
-is_empty([1,2])		// false
-is_empty({}) 		// true
+string a = "dog"
+string b = ""
 
+a.is_empty() 	// false
+b.is_empty()	// true
 
 ```
-
 
 #### string.substring()
 
@@ -941,13 +941,27 @@ is_empty({}) 		// true
 unsafe func substring(start, stop) string
 ```
 
+Returns the substring of a string at the given indices. The start and stop incices are inclusive and exclusive respectively. Providing improper indicies will cause the function to throw an error.
 
+```
+string a = "catdog"
+
+a.substring(1,4) 	// "atd"
+a.substring(3,99)	// error
+```
 
 
 #### string.&#95;&#95;get&#95;&#95;()
 
 ```
 unsafe func __get__(int index) string
+```
+
+Returns the unit length substring at a given index the string on which it is called.
+
+```
+TODO: example
+
 ```
 
 #### string.&#95;&#95;set&#95;&#95;()
@@ -976,10 +990,31 @@ unsafe func __slice__(start, stop[, step=1])
 func is_empty() boolean
 ```
 
+Returns whether the list on which it is called is empty.
+
+```
+list<int> a = []
+list<int> b = [3,4]
+
+a.is_empty() 		// false
+b.is_empty()		// true
+
+```
+
 #### list.append()
 
 ```
 func append(T elem) 
+```
+
+Appends the argument to the end of a list.
+
+```
+list<int> a = []
+
+a.append(7) 		// [7]
+a.append(3)			// [7,3]
+
 ```
 
 #### list.pop()
