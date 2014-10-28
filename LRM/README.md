@@ -177,23 +177,24 @@ JSON User steve = {
 }
 ```
 
-#### Error TODO: Error or error? all other types are lowercase
+#### Errors
 
-Errors in RAPID are not thrown and caught, rather they are returned directly by unsafe functions (see Functions).  Errors contain a string message, which can be dot-accessed, an integer error code that conforms with the HTTP/1.1 standard, and an optional string name.
+Errors in RAPID are not thrown and caught, rather they are returned directly by unsafe functions (see Functions).
+Errors contain a string message, which can be dot-accessed, an integer error code that conforms with the HTTP/1.1 standard, and an optional string name.
 
 For example, to declare a custom error:
 
 ```
-Error e = Error(name="RequestError", 
-				code=400, 
-				message="There was an error with that Request.")
+error e = error(name="RequestError",
+                code=400,
+                message="There was an error with that Request.")
 ```
 
-Unsafe operations return an Error:
+Unsafe operations return an error as the last return value:
 
 ```
 dict<string, int> d = {"foo": 4, "bar": 5}
-int val, Error e = d["baz"]
+int val, error e = d["baz"]
 if (!e?) {
     printf("%s\n", e.message) // Key error when accessing "baz" on `d`.
     printf("%d\n", e.code)    // 500
@@ -205,7 +206,7 @@ Many standard library classes and builtin objects define errors pertinent to the
 
 ```
 dict<string, int> d = {"foo": 4, "bar": 5}
-int val, Error e = d["baz"]
+int val, error e = d["baz"]
 if (!e?) {
     printf("%s", e == dict.KeyError) // true
 }
@@ -217,7 +218,7 @@ Unsafe functions (like list and dictionary access) may exist in the same express
 
 ```
 dict<string, list<int>> d = {"foo": [4,5], "bar": [1,2,3]}
-int val, Error e = d["foo"][2]     // List index out of bounds...
+int val, error e = d["foo"][2]     // List index out of bounds...
 printf("%d", val)                  // null
 printf("%s", e.name)               // IndexError
 printf("%t", e == list.IndexError) // true
@@ -228,23 +229,22 @@ printf("%s", e.name)             // KeyError
 printf("%t", e == dict.KeyError) // true
 ```
 
-##### Anonymous Errors
+##### Predefined Errors
 
-Unsafe functions may also choose to return an *anonymous error*, which is an integer literal that will be cast to a generic Error object at compile time. See Functions for more details.
+Unsafe functions may also choose to return an predefined error, which is an integer literal that will be cast to a generic error object at compile time. See Functions for more details.
 
-##### Status Code Definitions
+All predefined errors exist in the root scope and are named according to their status code, `e<code>`.
+`e404` is the error, `error("Not Found", 404, "NotFound")` (message, code, name).
+All the below errors are predefined as such.
 
-Code | Message / Name 
+
+###### Error Status Code Definitions
+
+Code | Message / Name
 -----|----------------
-100  | Continue
-200  | OK
-201  | Created
-301  | Moved Permanently
-302  | Found
-304  | Not Modified
 400  | Bad Request
 401  | Unauthorized
-403  | Forbidden 
+403  | Forbidden
 404  | Not Found
 405  | Method Not Allowed
 410  | Gone
@@ -495,7 +495,7 @@ If a function performs actions that may be unsafe, it must be preceded by the ke
 
 ```
 unsafe func access(dict<string, int> d, string key) int {
-	int val, Error error = d[key]
+	int val, error error = d[key]
 	return val, error
 }
 ```
@@ -508,7 +508,7 @@ Unsafe functions may also return *anonymous errors*, which are integer literals 
  *    If there is a KeyError, return 0 with a 400 error
  */
 unsafe func access(dict<string, int> d, string key) int {
-	int val, Error error = d[key]
+	int val, error error = d[key]
 	if (error == dict.KeyError) {
 		return 0, 400
 	}
@@ -532,7 +532,7 @@ http /* id */ ( /* namespace args */ /* formal args */ /* request body args */) 
 }
 ```
 
-Routes are unsafe by default, and therefore must include `Error` in their return types.  This may be an anonymous error (see Functions).
+Routes are unsafe by default, and therefore must include `error` in their return types.  This may be an anonymous error (see Functions).
 
 For example, the following route echos the URL parameter that it is passed.
 
@@ -626,9 +626,9 @@ A `GET` request to `/math/5/7/add` will return `12`, and a `GET` request to `/ma
 
 ```
 math = Math()
-int sum, Error _ = math.add(5,7)
+int sum, error _ = math.add(5,7)
 printf("%d", sum)
-int sqr, Error _ = math.square(5)
+int sqr, error _ = math.square(5)
 printf("%d", sqr)
 ```
 
