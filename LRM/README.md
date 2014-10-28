@@ -316,7 +316,7 @@ Identifiers must start with a letter or an underscore, followed by any combinati
 
 The following identifiers are keywords in RAPID, and are reserved. They can not be used for any other purpose.
 
-`if`, `else`, `for`, `in`, `while`, `switch`, `case`, `default`, `fallthrough`, `http`, `func`, `json`, `class`, `namespace`, `param`, `true`, `false`, `new`, `optional`, `unsafe`
+`if`, `else`, `for`, `in`, `while`, `switch`, `case`, `default`, `fallthrough`, `http`, `func`, `json`, `class`, `namespace`, `param`, `true`, `false`, `new`, `optional`, `unsafe`, `instance`
 
 ### 3.3 Literals
 
@@ -440,6 +440,22 @@ class User {
 ```
 
 In this example, the "User" table has four columns: `username`, `full_name`, `age`, and `password`.  The `full_name` column may be omitted in the instantiation, and if `age` is omitted, it will take the value `18`.
+
+#### Instance Methods
+
+Instances of objects may have methods that operate on their instances variables.  Using the `instance` keyword, a block may be created in which instance methods may be defined:
+
+```
+class /* id:classname */ {
+    instance /* id:selfname */ {
+        /* declaration */
+        /* declaration */
+        ...
+        /* declaration */
+    }
+}
+```
+
 
 #### Instantiation
 
@@ -1291,15 +1307,18 @@ string name
 
 ## 10. Program Execution TODO: explain compilation / execution
 
-RAPID programs compile to a Go executable.  If a RAPID program contains an `http` route, then running the executable will start a server on `localhost:5000`.  Otherwise, the statements will be executed in order.
-
-
-
+RAPID programs compile to a Go executable which is a platform specific binary.
+Statements will be executed in order of their declaration.
+If a RAPID program contains an `http` route, then running the executable will start a server on `localhost:5000` after all statements are executed.
 
 #### Flags
 
-- `-L <filename>` :  log output will be appended to the specified file, defaults to `server.log`
-- `-P <port>` : alters the port the service will run on, defaults to 80
-- `-H` : prints all the options available
+There are several flags to customize the runtime of the app.
+
+- `-D <pg_url>`   : a string of "<user>:<password>@<host>/<database name>". This is used to connect to the postgres server
+- `-L <filename>` : log output will be appended to the specified file, defaults to `server.log`
+- `-P <port>`     : alters the port the service will run on, defaults to 80
+- `-H`            : prints all the options available
+- `-V`            : verbosely logs every HTTP request and the return values.
 
 
