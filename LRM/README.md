@@ -1351,13 +1351,12 @@ d.remove("Dog")    // {"Cow" : "Pig"}
 ```
 func keys() list<T>
 ```
-Returns a list of all keys in the dictionary on which it is called.
+Returns a list of all keys in the dictionary on which it is called. The type of the returned list is that of the type of the keys in the dictionary.
 
 ```
 dict<string, string> d = {"Dog" : "cat", "Cow" : "Pig"}
 
-d.is_empty() 	// false
-e.is_empty() 	// true
+d.keys() 	// ["Dog", "Cow"]
 
 ```
 
@@ -1366,6 +1365,15 @@ e.is_empty() 	// true
 
 ```
 func values() list<S>
+```
+
+Returns a list of all values for the keyset in the dictonary on which it is called. The type of the returned list is that of the type of the values in the dictionary. 
+
+```
+dict<string, string> d = {"Dog" : "cat", "Cow" : "Pig"}
+
+d.values()      // ["Cat", "Pig"]
+
 ```
 
 #### Get (dict[k])
