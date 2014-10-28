@@ -1,11 +1,5 @@
-<<<<<<< HEAD
-
-
-
-# RAPID Language Reference Manual 
-=======
 # RAPID Language Reference Manual
->>>>>>> fbcdfee5f55d32bf5c7191913beb45c3c434458f
+
 ## Coms W 4115
 
 Ben Edelstein, Brian Shin, Brendon Fish, Dan Schlosser, Nate Brennand
@@ -1034,7 +1028,6 @@ b.is_empty()	// true
 unsafe func substring(start, stop) string
 ```
 
-<<<<<<< HEAD
 Returns the substring of a string at the given indices. The start and stop incices are inclusive and exclusive respectively. Providing improper indicies will cause the function to throw an error.
 
 ```
@@ -1046,15 +1039,11 @@ a.substring(3,99)	// error
 
 
 #### string.&#95;&#95;get&#95;&#95;()
-=======
-#### string.__get__()
->>>>>>> fbcdfee5f55d32bf5c7191913beb45c3c434458f
 
 ```
 unsafe func __get__(int index) string
 ```
 
-<<<<<<< HEAD
 Returns the unit length substring at a given index the string on which it is called.
 
 ```
@@ -1063,9 +1052,6 @@ TODO: example
 ```
 
 #### string.&#95;&#95;set&#95;&#95;()
-=======
-#### string.__set__()
->>>>>>> fbcdfee5f55d32bf5c7191913beb45c3c434458f
 
 ```
 func __set__(int index, string char)
@@ -1165,19 +1151,14 @@ Copies by the list value.
 func copy() list<T>
 ```
 
-<<<<<<< HEAD
 Returns a copy of the list on which it is called
 
 ```
 list<int> a = [1,2,3,4,5] 	// [1,2,3,4,5]
-
 ```
 
 
 #### list.&#95;&#95;get&#95;&#95;()
-=======
-#### list.__get__()
->>>>>>> fbcdfee5f55d32bf5c7191913beb45c3c434458f
 
 ```
 unsafe func __get__(int index) T
