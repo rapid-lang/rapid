@@ -225,7 +225,7 @@ All predefined errors exist in the root scope and are named according to their s
 `e404` is the error, `error("Not Found", 404, "NotFound")` (message, code, name).
 All the below errors are predefined as such.
 
-Error  | Message                  | Code | Name
+Response  | Message                  | Code | Name
 -------|--------------------------|------|-----------------
 `e100` | Continue                 | 100  | `Continue`
 `e200` | OK                       | 200  | `OK`
@@ -596,7 +596,7 @@ func printInt(int a) {
 
 ### 5.2 Unsafe Functions
 
-If a function performs actions that may be unsafe, it must be preceded by the keyword `unsafe`.   Unsafe functions return unsafe expressions, which is denoted by the presence of an `Error`-typed second value that is returned.
+If a function performs actions that may be unsafe, it must be preceded by the keyword `unsafe`.   Unsafe functions return unsafe expressions, which is denoted by the presence of an `error`-typed second value that is returned.
 
 ```
 unsafe func access(dict<string, int> d, string key) int {
@@ -606,7 +606,7 @@ unsafe func access(dict<string, int> d, string key) int {
 ```
 Notice that the return type remains `int`, although an error is also returned. For more on unsafe expressions, see Expressions.
 
-Unsafe functions may also return a error, which are integer literals that will be cast to a generic Error object at compile time.  See Status Code Definitions for a complete list of error codes that may be declared as anonymous errors.
+Unsafe functions may also return a error, which are integer literals that will be cast to a generic error object at compile time.  See Status Code Definitions for a complete list of error codes that may be declared as anonymous errors.
 
 ```
 /* Default dict accessing:
@@ -984,6 +984,8 @@ length([0,1,2,3])                              // 4
 length({"a":0, "b":null, "c": False, "d": ""}) // 4
 ```
 
+Taking the `length` of a `null` value will return `null`
+
 ### 8.2 range()
 
 ```
@@ -1037,7 +1039,6 @@ log.info("Hello, %s", "world")
 ```
 
 
-
 ## 9. Standard Library
 
 ### 9.1 string
@@ -1048,7 +1049,7 @@ log.info("Hello, %s", "world")
 func is_empty() boolean
 ```
 
-Returns a boolean value of whether the string on which it is called is empty.
+Returns a boolean value of whether the string on which it is called is of length 0 or `null`.
 
 Examples:
 
@@ -1056,8 +1057,8 @@ Examples:
 string a = "dog"
 string b = ""
 
-a.is_empty() 	// false
-b.is_empty()	// true
+a.is_empty()  // false
+b.is_empty()  // true
 
 ```
 
@@ -1077,7 +1078,7 @@ string sub, error e = a.substring(3,99)	 // null, error
 string sub, error e = a.substring(50,99) // null, error
 ```
 
-#### Get (string[i])
+#### Get (c = string[i])
 
 Strings may be indexed using brackets.  Inside the brackets must be a zero-indexed integer. Getting is unsafe, and returns `string, error`.
 
@@ -1091,7 +1092,7 @@ printf("%s", a[3]) // prints d
 
 #### Set (string[i] = s)
 
-After indexing, an assignment may occur, to set a value of the list.  Setting is `unsafe`, and returns `string, error`
+After indexing, an assignment may occur, to set a value of the list.  Setting is `unsafe` due to the possiblity of index errors, and returns `string, error`.
 
 Examples:
 
@@ -1114,7 +1115,7 @@ Examples:
 string a = "catdog"
 for (string c in a) {
     printf("%s", c)
-} 
+}
 // prints catdog
 ```
 
@@ -1144,8 +1145,8 @@ Returns whether the list on which it is called is empty.
 list<int> a = []
 list<int> b = [3,4]
 
-a.is_empty() 		// false
-b.is_empty()		// true
+a.is_empty()    // false
+b.is_empty()    // true
 
 ```
 
@@ -1156,6 +1157,7 @@ func append(T elem) list<T>
 ```
 
 Appends the argument to the end of a list.
+The list is returned which allows for chaining of `append` calls but the function has side effects and does not need to be used in an assignment.
 
 ```
 list<int> a = []
@@ -1216,7 +1218,7 @@ Copies by the list value.
 func copy() list<T>
 ```
 
-Returns a copy of the list on which it is called
+Returns a copy by value of the list on which it is called
 
 ```
 list<int> a = [1,2,3,4,5]   // [1,2,3,4,5]
@@ -1385,8 +1387,9 @@ Examples:
 
 ```
 dict<string, int> d = {"a":1, "b":2}
+Int v, error e = d["a"]
 if (!e?) {
-    printf("%d", d["a"]) 
+    printf("%d", v)
 }
 // prints 1
 ```
