@@ -1146,12 +1146,18 @@ string name
 
 ## 10. Program Execution TODO: explain compilation / execution
 
-RAPID programs compile to a Go executable.  If a RAPID program contains an `http` route, then running the executable will start a server on `localhost:5000`.  Otherwise, the statements will be executed in order.
+RAPID programs compile to a Go executable which is a platform specific binary.
+Statements will be executed in order of their declaration.
+If a RAPID program contains an `http` route, then running the executable will start a server on `localhost:5000` after all statements are executed.
 
 #### Flags
 
-- `-L <filename>` :  log output will be appended to the specified file, defaults to `server.log`
-- `-P <port>` : alters the port the service will run on, defaults to 80
-- `-H` : prints all the options available
+There are several flags to customize the runtime of the app.
+
+- `-D <pg_url>`   : a string of "<user>:<password>@<host>/<database name>". This is used to connect to the postgres server
+- `-L <filename>` : log output will be appended to the specified file, defaults to `server.log`
+- `-P <port>`     : alters the port the service will run on, defaults to 80
+- `-H`            : prints all the options available
+- `-V`            : verbosely logs every HTTP request and the return values.
 
 
