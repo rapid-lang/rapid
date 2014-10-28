@@ -221,9 +221,10 @@ printf("%t", e == dict.KeyError) // true
 
 More generally, if a subexpression of an expression is unsafe, it is presumed to be successful and the return value of the subexpression is used in the evaluation of the larger expression, unless the unsafe expression evaluates to an error, in which case evaluation of the large expression short-circuits, and the value of the large expression is `null, /* sub-expression's Error */`.
 
-##### Predefined Errors
+##### Predefined Responses
 
-Unsafe functions may also choose to return an predefined error, which is an integer literal that will be cast to a generic error object at compile time. See Functions for more details.
+Unsafe functions may also choose to return an predefined response, which is an predefined literal that will be cast to a generic error object at compile time.
+See Functions for more details.
 
 All predefined errors exist in the root scope and are named according to their status code, `e<code>`.
 
@@ -611,7 +612,7 @@ unsafe func access(dict<string, int> d, string key) int {
 ```
 Notice that the return type remains `int`, although an error is also returned. For more on unsafe expressions, see Expressions.
 
-Unsafe functions may also return a predefined error, which are integer literals that will be cast to a generic Error object at compile time.  See Status Code Definitions for a complete list of error codes that may be declared as anonymous errors.
+Unsafe functions may also return a error, which are integer literals that will be cast to a generic Error object at compile time.  See Status Code Definitions for a complete list of error codes that may be declared as anonymous errors.
 
 ```
 /* Default dict accessing:
