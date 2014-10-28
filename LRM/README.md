@@ -202,7 +202,7 @@ if (!e?) {
 }
 ```
 
-##### Unsafe Calls Stacking
+##### Stacking
 
 Unsafe functions (like list and dictionary access) may exist in the same expression.  If unsafe functions return successfully, the Error that is returned is consumed (ignored), and the return value is taken.  If an unsafe function returns an error, the expression evaluation short-circuits, and the value of the expression is null and the Error that is returned by the failed function call.
 
@@ -232,6 +232,12 @@ All the below errors are predefined as such.
 
 Error  | Message                  | Code | Name
 -------|--------------------------|------|-----------------
+`e100` | Continue                 | 100  | `Continue`
+`e200` | OK                       | 200  | `OK`
+`e201` | Created                  | 201  | `Created`
+`e301` | Moved Permanently        | 301  | `MovedPermanently`
+`e302` | Found                    | 302  | `Found`
+`e304` | Not Modified             | 304  | `NotModified`
 `e400` | Bad Request              | 400  | `BadRequest`
 `e401` | Unauthorized             | 401  | `Unauthorized`
 `e403` | Forbidden                | 403  | `Forbidden `
