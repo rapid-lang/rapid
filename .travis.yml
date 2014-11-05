@@ -1,6 +1,6 @@
 language: c
 env:
-    - OCAML_VERSION=4.01.0 OPAM_VERSION=1.1.0
+    - OCAML_VERSION=4.01.0 OPAM_VERSION=1.2.0
 script:
     - bash -ex config/travis_install.sh
     - cd compiler && make
