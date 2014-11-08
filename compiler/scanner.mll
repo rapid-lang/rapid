@@ -7,9 +7,10 @@ rule token = parse
 (* blocks *)
 | "(" { LPAREN }   | ")" { RPAREN }
 | "{" { LBRACE }   | "}" { RBRACE }
-| "[" { LBRACKET } | "]" { RBRACKET }
+(* | "[" { LBRACKET } | "]" { RBRACKET }  TODO: add when working on lists *)
 
-| ";" { SEMI } | ":" { COLON } | "," { COMMA }
+| ";" { SEMI } | "," { COMMA }
+(* | ":" { COLON }  *)
 
 (* operators *)
 | '+' { PLUS }  | '-' { MINUS }
@@ -21,34 +22,49 @@ rule token = parse
 | ">"  { GT } | ">=" { GEQ }
 
 (* control structures *)
+
 | "if"  { IF }  | "else" { ELSE }
 | "for" { FOR } | "in"   { IN }
+(*
 | "while" { WHILE }
-
-(* functions *)
-| "unsafe" { UNSAFE }
-| "func" { FUNC } | "return" { RETURN }
+*)
 
 (* primatives *)
 | '=' { ASSIGN }
-| "boolean" { BOOL } | '?' { QUESTION }
+| "boolean" { BOOL }
+(* | '?' { QUESTION } *)
 | "true" { TRUE } | "false" { FALSE }
 | "int"  { INT }  | "float" { FLOAT } | "string" { STRING }
+(*
 | "dict" { DICT } | "list"  { LIST }
+*)
+
+
+(* functions *)
+(*
+| "unsafe" { UNSAFE }
+| "func" { FUNC } | "return" { RETURN }
+*)
 
 (* classes *)
+(*
 | "class"  { CLASS }
 | "optional" { OPTIONAL }
 | "instance" { INSTANCE }
+*)
 
 (* http related *)
+(*
 | "http"   { HTTP }
 | "param" { PARAM } | "namespace" { NAMESPACE }
+*)
 
 (* switch statements *)
+(*
 | "switch" { SWITCH }
 | "case"{ DEFAULT } | "default"{ DEFAULT }
 | "fallthrough"{ FALLTHROUGH }
+*)
 
 (* literals *)
 | ['0'-'9']+ as lxm { LITERAL(int_of_string lxm) }
