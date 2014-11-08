@@ -1,4 +1,9 @@
-{ open Parser }
+{ open Parser;;
+  let string_to_bool = function
+    | "false" -> false
+    | "true" -> true
+    | _ -> false
+ }
 
 rule token = parse
   [' ' '\t' '\r' '\n'] { token lexbuf }              (* Whitespace *)
@@ -25,15 +30,14 @@ rule token = parse
 
 | "if"  { IF }  | "else" { ELSE }
 | "for" { FOR } | "in"   { IN }
-(*
-| "while" { WHILE }
-*)
+
+(*| "while" { WHILE }*)
 
 (* primatives *)
 | '=' { ASSIGN }
 | "boolean" { BOOL }
 (* | '?' { QUESTION } *)
-| "true" { TRUE } | "false" { FALSE }
+| "true"  | "false" as bool_val{ BOOL_VAL( string_to_bool(bool_val) ) }
 | "int"  { INT }  | "float" { FLOAT } | "string" { STRING }
 (*
 | "dict" { DICT } | "list"  { LIST }
