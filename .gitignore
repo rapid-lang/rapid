@@ -5,4 +5,5 @@ parser.ml
 parser.mli
 scanner.ml
 scanner.mli
+rapid
 
