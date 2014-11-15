@@ -23,27 +23,27 @@
 %%
 
 program:
-   /* nothing */ { [], [] }
- | program vdecl { ($2 :: fst $1), snd $1 }
- | program fdecl { fst $1, ($2 :: snd $1) }
+  | /* nothing */ { [], [] }
+  | program vdecl { ($2 :: fst $1), snd $1 }
+  | program fdecl { fst $1, ($2 :: snd $1) }
 
 fdecl:
    ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
      { { fname = $1;
-	 formals = $3;
-	 locals = List.rev $6;
-	 body = List.rev $7 } }
+     formals = $3;
+     locals = List.rev $6;
+     body = List.rev $7 } }
 
 formals_opt:
-    /* nothing */ { [] }
+  | /* nothing */ { [] }
   | formal_list   { List.rev $1 }
 
 formal_list:
-    ID                   { [$1] }
+  | ID                   { [$1] }
   | formal_list COMMA ID { $3 :: $1 }
 
 vdecl_list:
-    /* nothing */    { [] }
+  | /* nothing */    { [] }
   | vdecl_list vdecl { $2 :: $1 }
 
 vdecl:
@@ -53,7 +53,7 @@ vdecl:
  | STRING ID SEMI { $2 }
 
 stmt_list:
-    /* nothing */  { [] }
+  | /* nothing */  { [] }
   | stmt_list stmt { $2 :: $1 }
 
 stmt:
