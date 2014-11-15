@@ -4,30 +4,36 @@ OBJS = ast.cmo parser.cmo scanner.cmo interpret.cmo bytecode.cmo \
 TARFILES = Makefile testall.sh scanner.mll parser.mly \
 	ast.ml bytecode.ml interpret.ml compile.ml execute.ml rapid.ml
 
-rapid : $(OBJS)
+rapid: $(OBJS)
 	ocamlc -o rapid $(OBJS)
 
-.PHONY : test
-test : rapid testall.sh
+
+PARSER_FILES = parser.cmo scanner.cmo test_parser.cmo
+.PHONY: test_parser
+parser: $(PARSER_FILES)
+	ocamlc -o parser $(PARSER_FILES)
+
+.PHONY: test
+test: rapid testall.sh
 	./testall.sh
 
-scanner.ml : scanner.mll
+scanner.ml: scanner.mll
 	ocamllex scanner.mll
 
-parser.ml parser.mli : parser.mly
+parser.ml parser.mli: parser.mly
 	ocamlyacc parser.mly
 
-%.cmo : %.ml
+%.cmo: %.ml
 	ocamlc -w A -c $<
 
-%.cmi : %.mli
+%.cmi: %.mli
 	ocamlc -w A -c $<
 
-rapid.tar.gz : $(TARFILES)
+rapid.tar.gz: $(TARFILES)
 	cd .. && tar czf rapid/rapid.tar.gz $(TARFILES:%=rapid/%)
 
-.PHONY : clean
-clean :
+.PHONY: clean
+clean:
 	rm -f rapid parser.ml parser.mli scanner.ml testall.log \
 	*.cmo *.cmi *.out *.diff
 
