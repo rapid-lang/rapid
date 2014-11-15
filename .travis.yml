@@ -4,5 +4,5 @@ env:
 script:
     - bash -ex config/travis_install.sh
     - cd compiler && make
-    - cd compiler && make parser
+    - make parser
 
