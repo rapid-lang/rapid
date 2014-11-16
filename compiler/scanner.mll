@@ -9,6 +9,7 @@ rule token = parse
   [' ' '\t' '\r' '\n'] { token lexbuf }              (* Whitespace *)
 | "/*" { comment lexbuf } | "//" { comment2 lexbuf } (* Comments *)
 
+
 (* blocks *)
 | "(" { LPAREN }   | ")" { RPAREN }
 | "{" { LBRACE }   | "}" { RBRACE }
@@ -35,10 +36,12 @@ rule token = parse
 
 (* primatives *)
 | '=' { ASSIGN }
-| "boolean" { BOOL }
+
 (* | '?' { QUESTION } *)
-| "true"  | "false" as bool_val{ BOOL_VAL( string_to_bool(bool_val) ) }
-| "int"  { INT }  | "float" { FLOAT } | "string" { STRING }
+
+| "true"  | "false" as bool_val { BOOL_VAL( string_to_bool(bool_val) ) }
+| "boolean" | "int"  | "float"| "string" as prim { TYPE(prim) }
+
 (*
 | "dict" { DICT } | "list"  { LIST }
 *)
@@ -71,7 +74,8 @@ rule token = parse
 *)
 
 (* literals *)
-| ['0'-'9']+ as lxm { LITERAL(int_of_string lxm) }
+| ['0'-'9']+ as lxm { LITERAL(int_of_string(lxm) ) }
+| ['\"']['a'-'z' 'A'-'Z' '0'-'9' '_']* as s ['\"'] { STRING_LIT(s) }
 
 (* ID's *)
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }

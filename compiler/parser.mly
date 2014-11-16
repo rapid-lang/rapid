@@ -5,8 +5,8 @@
 %token EQ NEQ LT LEQ GT GEQ
 %token RETURN IF ELSE FOR WHILE INT IN BOOL FLOAT STRING
 %token <int> LITERAL
-%token <bool> BOOL_VAL
-%token <string> ID
+%token <bool> BOOL_VAL 
+%token <string> ID TYPE STRING_LIT
 %token EOF
 
 %nonassoc NOELSE
@@ -21,6 +21,10 @@
 %type <Ast.program> program
 
 %%
+
+primtype:
+  TYPE {string_to_t($1)}
+  /* todo: add arrays and dicts to primtype */
 
 program:
   | /* nothing */ { [], [] }
@@ -47,10 +51,8 @@ vdecl_list:
   | vdecl_list vdecl { $2 :: $1 }
 
 vdecl:
-   INT ID SEMI { $2 }
- | BOOL ID SEMI { $2 }
- | FLOAT ID SEMI { $2 }
- | STRING ID SEMI { $2 }
+  primtype ID { $2 } /* Maybe return a tuple here of (primtype, string)? */
+  | primtype ID ASSIGN lit { $2 }  /* Todo: call a function Assign($1, $2, $4) or something */
 
 stmt_list:
   | /* nothing */  { [] }
@@ -69,10 +71,12 @@ stmt:
 expr_opt:
     /* nothing */ { Noexpr }
   | expr          { $1 }
-
-expr:
-    LITERAL          { Literal($1) }
+lit:
+  LITERAL            { Literal($1) }
   | BOOL_VAL         { BoolVal($1) } 
+  | STRING_LIT       { StringLit($1)}
+expr:
+  lit                {$1}
   /* Todo add float handling */
   | ID               { Id($1) }
   | expr PLUS   expr { Binop($1, Add,   $3) }

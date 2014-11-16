@@ -3,11 +3,18 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq
 type expr =
     Literal of int
   | BoolVal of bool
+  | StringLit of string
   | Id of string
   | Binop of expr * op * expr
   | Assign of string * expr
   | Call of string * expr list
   | Noexpr
+
+type t = 
+  Int
+  | String
+  | Bool 
+  | Float
 
 type stmt =
     Block of stmt list
@@ -25,6 +32,12 @@ type func_decl = {
   }
 
 type program = string list * func_decl list
+
+let string_to_t = function
+  | "boolean" -> Bool
+  | "int" -> Int
+  | "float" -> Float
+  | "string" -> String
 
 (* Low-level AST printing, to help debug the structure.  These functions are
    only for debugging (the -r flag) and can be removed. *)
