@@ -9,8 +9,8 @@ rapid: $(OBJS)
 
 
 PARSER_FILES = ast.cmo parser.cmo scanner.cmo test_parser.cmo
-.PHONY: test_parser
-test_parser: $(PARSER_FILES)
+.PHONY: parser
+parser: $(PARSER_FILES)
 	ocamlc -o parser $(PARSER_FILES)
 
 .PHONY: test

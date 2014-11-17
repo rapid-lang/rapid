@@ -1,6 +1,9 @@
 language: c
 env:
     - OCAML_VERSION=4.01.0 OPAM_VERSION=1.2.0
+notifications:
+    email:
+        - rapidlang@googlegroups.com
 script:
     - bash -ex config/travis_install.sh
     - cd compiler && make
