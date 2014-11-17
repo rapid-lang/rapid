@@ -26,7 +26,8 @@ primtype:
   TYPE {string_to_t($1)}
   /* todo: add arrays and dicts to primtype */
 
-/* Base level expressions:
+
+/* Base level expressions of a program:
  *
  * global Variables can be declared
  * functions are declared at the bottom level
@@ -39,16 +40,41 @@ program:
   | program var_decl { ($2 :: fst $1), snd $1 }
   | program func_decl { fst $1, ($2 :: snd $1) }
 
+
+type_list:
+  /* TODO: allow user defined types */
+  | primtype                 { [$1] }
+  | type_list COMMA primtype { $3 :: $1 }
+
+
+return_type:
+  /* TODO: allow user defined types */
+  | primtype                { [$1] }
+  | LPAREN type_list RPAREN { $2 }
+
+
+
 func_decl:
-    FUNC ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
+  // func w/ return types
+  | FUNC ID LPAREN arguments RPAREN return_type LBRACE vdecl_list stmt_list RBRACE
+    {{
+        fname = $2;
+        formals = $4;
+        locals = List.rev $8;
+        body = List.rev $9
+    }}
+  // func w/o return types
+  | FUNC ID LPAREN arguments RPAREN LBRACE vdecl_list stmt_list RBRACE
     {{
         fname = $2;
         formals = $4;
         locals = List.rev $7;
         body = List.rev $8
     }}
+  /* TODO: unsafe functions */
 
-formals_opt:
+
+arguments:
   | /* nothing */ { [] }
   | formal_list   { List.rev $1 }
 
@@ -62,8 +88,10 @@ vdecl_list:
   | vdecl_list var_decl { $2 :: $1 }
 
 var_decl:
-  primtype ID { $2 } /* Maybe return a tuple here of (primtype, string)? */
-  | primtype ID ASSIGN lit { $2 }  /* Todo: call a function Assign($1, $2, $4) or something */
+  /* Maybe return a tuple here of (primtype, string)? */
+  | primtype ID { $2 }
+  /* Todo: call a function Assign($1, $2, $4) or something */
+  | primtype ID ASSIGN lit { $2 }
 
 stmt_list:
   | /* nothing */  { [] }
@@ -79,15 +107,20 @@ stmt:
      { For($3, $5, $7, $9) }
   | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
 
+
 expr_opt:
-    /* nothing */ { Noexpr }
+  | /* nothing */ { Noexpr }
   | expr          { $1 }
+
+
 lit:
-  LITERAL            { Literal($1) }
+  | LITERAL          { Literal($1) }
   | BOOL_VAL         { BoolVal($1) } 
   | STRING_LIT       { StringLit($1)}
+
+
 expr:
-  lit                {$1}
+  | lit              {$1}
   /* Todo add float handling */
   | ID               { Id($1) }
   | expr PLUS   expr { Binop($1, Add,   $3) }
@@ -104,12 +137,14 @@ expr:
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | LPAREN expr RPAREN { $2 }
 
+
 actuals_opt:
-    /* nothing */ { [] }
+  | /* nothing */ { [] }
   | actuals_list  { List.rev $1 }
 
+
 actuals_list:
-    expr                    { [$1] }
+  | expr                    { [$1] }
   | actuals_list COMMA expr { $3 :: $1 }
 
 %%

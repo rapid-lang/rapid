@@ -1,2 +1,6 @@
 func foo(){
 }
+
+// now w/ return type
+func foo() int {
+}
