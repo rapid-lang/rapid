@@ -14,8 +14,8 @@ parser: $(PARSER_FILES)
 	ocamlc -o parser $(PARSER_FILES)
 
 .PHONY: test
-test: rapid testall.sh
-	./testall.sh
+test: parser parser_tests.sh
+	./parser_tests.sh
 
 scanner.ml: scanner.mll
 	ocamllex scanner.mll

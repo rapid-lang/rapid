@@ -9,9 +9,9 @@ for file in $parser_tests
 do
     if ./parser < "$file" 2> /dev/null | grep -q $success
     then
-        echo "$file worked"
+        echo "success: $file worked"
     else
-        echo "$file did not work"
+        echo "FAIL:    test $file"
         all_successful="1"
     fi
 done
