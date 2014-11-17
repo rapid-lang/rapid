@@ -3,7 +3,7 @@
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
 %token PLUS MINUS TIMES DIVIDE ASSIGN
 %token EQ NEQ LT LEQ GT GEQ
-%token RETURN IF ELSE FOR WHILE INT IN BOOL FLOAT STRING
+%token RETURN IF ELSE FOR WHILE INT IN BOOL FLOAT STRING FUNC
 %token <int> LITERAL
 %token <bool> BOOL_VAL 
 %token <string> ID TYPE STRING_LIT
@@ -26,17 +26,25 @@ primtype:
   TYPE {string_to_t($1)}
   /* todo: add arrays and dicts to primtype */
 
+/* Base level expressions:
+ *
+ * global Variables can be declared
+ * functions are declared at the bottom level
+ *
+ * TODO:
+     - Classes
+*/
 program:
   | /* nothing */ { [], [] }
-  | program vdecl { ($2 :: fst $1), snd $1 }
-  | program fdecl { fst $1, ($2 :: snd $1) }
+  | program var_decl { ($2 :: fst $1), snd $1 }
+  | program func_decl { fst $1, ($2 :: snd $1) }
 
-fdecl:
-   ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
-     { { fname = $1;
-     formals = $3;
-     locals = List.rev $6;
-     body = List.rev $7 } }
+func_decl:
+   FUNC ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
+     { { fname = $2;
+     formals = $4;
+     locals = List.rev $7;
+     body = List.rev $8 } }
 
 formals_opt:
   | /* nothing */ { [] }
@@ -48,9 +56,9 @@ formal_list:
 
 vdecl_list:
   | /* nothing */    { [] }
-  | vdecl_list vdecl { $2 :: $1 }
+  | vdecl_list var_decl { $2 :: $1 }
 
-vdecl:
+var_decl:
   primtype ID { $2 } /* Maybe return a tuple here of (primtype, string)? */
   | primtype ID ASSIGN lit { $2 }  /* Todo: call a function Assign($1, $2, $4) or something */
 

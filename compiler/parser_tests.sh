@@ -11,7 +11,7 @@ do
     if echo "$file" |  grep -q "fail_"
     then
 
-        # should fail
+        # test should fail
         if ./parser < "$file" 2> /dev/null | grep -q $success
         then
             echo "FAIL:    $file"
@@ -19,9 +19,10 @@ do
         else
             echo "success: $file worked"
         fi
+
     else
 
-        # should not fail
+        # test should not fail
         if ./parser < "$file" 2> /dev/null | grep -q $success
         then
             echo "success: $file worked"

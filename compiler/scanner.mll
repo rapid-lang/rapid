@@ -48,9 +48,10 @@ rule token = parse
 
 
 (* functions *)
+| "func"   { FUNC }
+| "return" { RETURN }
 (*
 | "unsafe" { UNSAFE }
-| "func" { FUNC } | "return" { RETURN }
 *)
 
 (* classes *)
