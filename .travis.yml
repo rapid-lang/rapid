@@ -8,4 +8,5 @@ script:
     - bash -ex config/travis_install.sh
     - cd compiler && make
     - make parser
+    - make test
 
