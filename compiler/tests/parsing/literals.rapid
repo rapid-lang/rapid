@@ -1,0 +1,4 @@
+string s = "hello world"
+
+string b = "~~ strings work ~~"
+

@@ -22,6 +22,7 @@
 
 %%
 
+
 primtype:
   TYPE {string_to_t($1)}
   /* todo: add arrays and dicts to primtype */
@@ -78,24 +79,29 @@ arguments:
   | /* nothing */ { [] }
   | formal_list   { List.rev $1 }
 
+
 formal_list:
   /* TODO: allow user defined types */
   | primtype ID                   { [$2] }
   | formal_list COMMA primtype ID { $4 :: $1 }
 
+
 vdecl_list:
   | /* nothing */    { [] }
   | vdecl_list var_decl { $2 :: $1 }
 
+
 var_decl:
   /* Maybe return a tuple here of (primtype, string)? */
   | primtype ID { $2 }
-  /* Todo: call a function Assign($1, $2, $4) or something */
+  /* TODO: call a function Assign($1, $2, $4) or something */
   | primtype ID ASSIGN lit { $2 }
+
 
 stmt_list:
   | /* nothing */  { [] }
   | stmt_list stmt { $2 :: $1 }
+
 
 stmt:
     expr SEMI { Expr($1) }
@@ -121,7 +127,7 @@ lit:
 
 expr:
   | lit              {$1}
-  /* Todo add float handling */
+  /* TODO add float handling */
   | ID               { Id($1) }
   | expr PLUS   expr { Binop($1, Add,   $3) }
   | expr MINUS  expr { Binop($1, Sub,   $3) }
