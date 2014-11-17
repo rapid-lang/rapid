@@ -40,19 +40,22 @@ program:
   | program func_decl { fst $1, ($2 :: snd $1) }
 
 func_decl:
-   FUNC ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
-     { { fname = $2;
-     formals = $4;
-     locals = List.rev $7;
-     body = List.rev $8 } }
+    FUNC ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
+    {{
+        fname = $2;
+        formals = $4;
+        locals = List.rev $7;
+        body = List.rev $8
+    }}
 
 formals_opt:
   | /* nothing */ { [] }
   | formal_list   { List.rev $1 }
 
 formal_list:
-  | ID                   { [$1] }
-  | formal_list COMMA ID { $3 :: $1 }
+  /* TODO: allow user defined types */
+  | primtype ID                   { [$2] }
+  | formal_list COMMA primtype ID { $4 :: $1 }
 
 vdecl_list:
   | /* nothing */    { [] }
