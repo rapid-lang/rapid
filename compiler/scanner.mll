@@ -48,9 +48,10 @@ rule token = parse
 
 
 (* functions *)
+| "func"   { FUNC }
+| "return" { RETURN }
 (*
 | "unsafe" { UNSAFE }
-| "func" { FUNC } | "return" { RETURN }
 *)
 
 (* classes *)
@@ -75,7 +76,7 @@ rule token = parse
 
 (* literals *)
 | ['0'-'9']+ as lxm { LITERAL(int_of_string(lxm) ) }
-| ['\"']['a'-'z' 'A'-'Z' '0'-'9' '_']* as s ['\"'] { STRING_LIT(s) }
+| '"' ([^'"']* as str) '"' { STRING_LIT(str) }
 
 (* ID's *)
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }

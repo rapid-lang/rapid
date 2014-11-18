@@ -1,0 +1,5 @@
+func foo(int a){
+}
+
+func foo(int a, int b, string c) {
+}
