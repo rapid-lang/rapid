@@ -3,9 +3,11 @@
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
 %token PLUS MINUS TIMES DIVIDE ASSIGN
 %token EQ NEQ LT LEQ GT GEQ
-%token RETURN IF ELSE FOR WHILE INT IN BOOL FLOAT STRING FUNC
+%token RETURN IF ELSE FOR WHILE FUNC IN
+// %token INT BOOL FLOAT STRING 
+
 %token <int> LITERAL
-%token <bool> BOOL_VAL 
+%token <bool> BOOL_VAL
 %token <string> ID TYPE STRING_LIT
 %token EOF
 
@@ -24,17 +26,15 @@
 
 
 primtype:
-  TYPE {string_to_t($1)}
+  | TYPE { string_to_t($1) }
   /* todo: add arrays and dicts to primtype */
 
 
 /* Base level expressions of a program:
- *
- * global Variables can be declared
- * functions are declared at the bottom level
- *
+ * - global Variables can be declared
+ * - functions are declared at the bottom level
  * TODO:
-     - Classes
+ * - Classes
 */
 program:
   | /* nothing */ { [], [] }
@@ -121,7 +121,7 @@ expr_opt:
 
 lit:
   | LITERAL          { Literal($1) }
-  | BOOL_VAL         { BoolVal($1) } 
+  | BOOL_VAL         { BoolVal($1) }
   | STRING_LIT       { StringLit($1)}
 
 
