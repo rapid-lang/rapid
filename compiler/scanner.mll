@@ -1,38 +1,55 @@
-{ open Parser;;
-  let string_to_bool = function
-    | "false" -> false
-    | "true" -> true
-    | _ -> false
- }
+{
+    open Parser;;
+    let string_to_bool = function
+        | "false" -> false
+        | "true" -> true
+        | _ -> false
+}
 
 rule token = parse
-  [' ' '\t' '\r' '\n'] { token lexbuf }              (* Whitespace *)
+| [' ' '\t' '\r' '\n'] { token lexbuf }              (* Whitespace *)
 | "/*" { comment lexbuf } | "//" { comment2 lexbuf } (* Comments *)
 
 
 (* blocks *)
-| "(" { LPAREN }   | ")" { RPAREN }
-| "{" { LBRACE }   | "}" { RBRACE }
-(* | "[" { LBRACKET } | "]" { RBRACKET }  TODO: add when working on lists *)
+| "(" { LPAREN }
+| ")" { RPAREN }
+| "{" { LBRACE }
+| "}" { RBRACE }
 
-| ";" { SEMI } | "," { COMMA }
+(*
+TODO: add when working on lists
+| "[" { LBRACKET }
+| "]" { RBRACKET }
+*)
+
+| ";" { SEMI }
+| "," { COMMA }
 (* | ":" { COLON }  *)
 
 (* operators *)
-| '+' { PLUS }  | '-' { MINUS }
-| '*' { TIMES } | '/' { DIVIDE }
+| '+' { PLUS }
+| '-' { MINUS }
+| '*' { TIMES }
+| '/' { DIVIDE }
 
 (* comparisons *)
-| "==" { EQ } | "!=" { NEQ }
-| "<"  { LT } | "<=" { LEQ }
-| ">"  { GT } | ">=" { GEQ }
+| "==" { EQ }
+| "!=" { NEQ }
+| "<"  { LT }
+| "<=" { LEQ }
+| ">"  { GT }
+| ">=" { GEQ }
 
 (* control structures *)
+| "if"   { IF }
+| "else" { ELSE }
+| "for"  { FOR }
+| "in"   { IN }
 
-| "if"  { IF }  | "else" { ELSE }
-| "for" { FOR } | "in"   { IN }
-
-(*| "while" { WHILE }*)
+(*
+| "while" { WHILE }
+*)
 
 (* primatives *)
 | '=' { ASSIGN }
@@ -43,7 +60,8 @@ rule token = parse
 | "boolean" | "int"  | "float"| "string" as prim { TYPE(prim) }
 
 (*
-| "dict" { DICT } | "list"  { LIST }
+| "dict" { DICT }
+| "list" { LIST }
 *)
 
 
@@ -56,22 +74,24 @@ rule token = parse
 
 (* classes *)
 (*
-| "class"  { CLASS }
+| "class"    { CLASS }
 | "optional" { OPTIONAL }
 | "instance" { INSTANCE }
 *)
 
 (* http related *)
 (*
-| "http"   { HTTP }
-| "param" { PARAM } | "namespace" { NAMESPACE }
+| "http"      { HTTP }
+| "param"     { PARAM }
+| "namespace" { NAMESPACE }
 *)
 
 (* switch statements *)
 (*
-| "switch" { SWITCH }
-| "case"{ DEFAULT } | "default"{ DEFAULT }
-| "fallthrough"{ FALLTHROUGH }
+| "switch"      { SWITCH }
+| "case"        { CASE }
+| "default"     { DEFAULT }
+| "fallthrough" { FALLTHROUGH }
 *)
 
 (* literals *)
