@@ -51,7 +51,7 @@ type program = string list * func_decl list
 (* alias print functions for cleaner code *)
 let sprintf = Format.sprintf
 let concat = String.concat
-let str_concat (l) = concat "" l
+let str_concat l = concat "" l
 
 
 (* Converts a string to a datatype *)
@@ -200,6 +200,6 @@ let string_of_fdecl fdecl =
 
 let string_of_program (vars, funcs) =
     sprintf "%s\n%s"
-        (concat "" (List.map string_of_vdecl vars))
+        (str_concat (List.map string_of_vdecl vars))
         (concat "\n" (List.map string_of_fdecl funcs))
 
