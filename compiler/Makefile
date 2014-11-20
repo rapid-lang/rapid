@@ -6,7 +6,7 @@ OCAMLYACC=ocamlyacc
 
 RAPID_OBJS = ast.cmo parser.cmo scanner.cmo compile.cmo generate.cmo rapid.cmo
 PARSER_FILES = ast.cmo parser.cmo scanner.cmo test_parser.cmo
-TARFILES = Makefile testall.sh scanner.mll parser.mly ast.ml interpret.ml compile.ml rapid.ml
+TARFILES = Makefile testall.sh scanner.mll parser.mly ast.ml compile.ml rapid.ml
 
 all: clean rapid parser
 
@@ -46,8 +46,6 @@ compile.cmo : ast.cmo
 compile.cmx : ast.cmx
 generate.cmo :
 generate.cmx :
-interpret.cmo : ast.cmo
-interpret.cmx : ast.cmx
 parser.cmo : ast.cmo parser.cmi
 parser.cmx : ast.cmx parser.cmi
 rapid.cmo : scanner.cmo parser.cmi generate.cmo compile.cmo ast.cmo
