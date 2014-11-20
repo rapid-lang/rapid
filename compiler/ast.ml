@@ -117,15 +117,11 @@ let rec stmt_s = function
         (stmt_s s)
 
 
-let func_decl_s f = sprintf "{
-    fname = \"%s\"
-    formats = [%s]
-    locals = [%s]
-    body = [%s]
-    }" f.fname
-        (concat ", " f.formals)
-        (concat ", " f.locals)
-        (concat ",\n" (List.map stmt_s f.body))
+let func_decl_s f = sprintf "{\nfname = \"%s\"\nformats = [%s]\n\tlocals = [%s]\n\tbody = [%s]\n}"
+    f.fname
+    (concat ", " f.formals)
+    (concat ", " f.locals)
+    (concat ",\n" (List.map stmt_s f.body))
 
 
 let program_s (vars, funcs) = sprintf "([%s],\n%s)"
@@ -137,22 +133,23 @@ let program_s (vars, funcs) = sprintf "([%s],\n%s)"
     from the AST.  These functions are only for pretty-printing (the -a flag)
     the AST and can be removed. *)
 
+let bin_op = function
+    | Add -> "+"
+    | Sub -> "-"
+    | Mult -> "*"
+    | Div -> "/"
+    | Equal -> "=="
+    | Neq -> "!="
+    | Less -> "<"
+    | Leq -> "<="
+    | Greater -> ">"
+    | Geq -> ">="
 let rec string_of_expr = function
     | Literal(l) -> string_of_int l
     | Id(s) -> s
-    | Binop(e1, o, e2) ->
-        sprintf "%s %s %s" (string_of_expr e1)
-        (match o with
-            | Add -> "+"
-            | Sub -> "-"
-            | Mult -> "*"
-            | Div -> "/"
-            | Equal -> "=="
-            | Neq -> "!="
-            | Less -> "<"
-            | Leq -> "<="
-            | Greater -> ">"
-            | Geq -> ">=")
+    | Binop(e1, o, e2) -> sprintf "%s %s %s"
+        (string_of_expr e1)
+        (bin_op o)
         (string_of_expr e2)
     | Assign(v, e) -> sprintf "%s = %s" v
         (string_of_expr e)
