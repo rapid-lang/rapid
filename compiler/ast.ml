@@ -4,6 +4,10 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq
 
 
 exception Error of string
+exception LitError of string
+exception ExprError of string
+exception StmtError of string
+exception VarDeclError of string
 
 
 type expr =
@@ -92,7 +96,6 @@ let rec expr_s = function
     | BoolVal(b) -> string_of_bool b
     | StringLit(s) -> s
     | Noexpr -> "Noexpr"
-
 
 
 (* Prettyprint statements *)
@@ -184,6 +187,7 @@ let rec string_of_stmt = function
         (string_of_stmt s)
 
 
+(* TODO: should not default to int  *)
 let string_of_vdecl id = sprintf "int %s\n" id
 
 

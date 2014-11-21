@@ -22,7 +22,8 @@
 %start program
 %type <Ast.program> program
 
-%%
+
+%% /* Parser Rules */
 
 
 primtype:
@@ -52,7 +53,6 @@ return_type:
     /* TODO: allow user defined types */
     | primtype                { [$1] }
     | LPAREN type_list RPAREN { $2 }
-
 
 
 func_decl:
@@ -96,6 +96,7 @@ var_decl:
     | primtype ID { $2 }
     /* TODO: call a function Assign($1, $2, $4) or something */
     | primtype ID ASSIGN lit { $2 }
+    | ID ASSIGN lit { $1 }
 
 
 stmt_list:
@@ -104,14 +105,15 @@ stmt_list:
 
 
 stmt:
-    | expr SEMI { Expr($1) }
-    | RETURN expr SEMI { Return($2) }
+    | expr { Expr($1) }
+    | RETURN expr { Return($2) }
     | LBRACE stmt_list RBRACE { Block(List.rev $2) }
     | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
     | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
     | FOR LPAREN expr_opt SEMI expr_opt SEMI expr_opt RPAREN stmt
         { For($3, $5, $7, $9) }
     | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
+    | { raise (StmtError "Unrecognized statement ") }
 
 
 expr_opt:
@@ -123,6 +125,7 @@ lit:
     | LITERAL          { Literal($1) }
     | BOOL_VAL         { BoolVal($1) }
     | STRING_LIT       { StringLit($1)}
+    | { raise (LitError "Unrecognized expression ") }
 
 
 expr:
@@ -142,6 +145,8 @@ expr:
     | ID ASSIGN expr   { Assign($1, $3) }
     | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
     | LPAREN expr RPAREN { $2 }
+    | { raise (ExprError "Unrecognized expression ") }
+
 
 
 actuals_opt:
