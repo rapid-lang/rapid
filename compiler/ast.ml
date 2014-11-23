@@ -118,24 +118,7 @@ let rec stmt_s = function
     | While(e, s) -> sprintf "While (%s) (%s)"
         (expr_s e)
         (stmt_s s)
-
-
-let func_decl_s f = sprintf "{\nfname = \"%s\"\nformats = [%s]\n\tbody = [%s]\n}"
-    f.fname
-    (concat ", " f.formals)
-    (*(concat ", " f.locals)*)
-    (concat ",\n" (List.map stmt_s f.body))
-
-
-let program_s (vars, funcs) = sprintf "([%s],\n%s)"
-    (concat ", " vars)
-    (concat "\n" (List.map func_decl_s(funcs)))
-
-
-(* "Pretty printed" version of the AST, meant to generate a MicroC program
-    from the AST.  These functions are only for pretty-printing (the -a flag)
-    the AST and can be removed. *)
-
+        
 let bin_op = function
     | Add -> "+"
     | Sub -> "-"
@@ -147,6 +130,7 @@ let bin_op = function
     | Leq -> "<="
     | Greater -> ">"
     | Geq -> ">="
+
 let rec string_of_expr = function
     | Literal(l) -> string_of_int l
     | Id(s) -> s
@@ -161,7 +145,7 @@ let rec string_of_expr = function
     | BoolVal(b) -> string_of_bool b
     | StringLit(s) -> s
     | Noexpr -> ""
-    
+
 let string_of_t = function
     | Int -> "int"
     | Bool -> "bool"
@@ -173,6 +157,27 @@ let string_of_t = function
 let string_of_vdecl (t , ex) = sprintf "%s %s\n"
     (string_of_t t)
     (string_of_expr ex)
+
+
+let func_decl_s f = sprintf "{\nfname = \"%s\"\nformats = [%s]\n\tbody = [%s]\n}"
+    f.fname
+    (concat ", " f.formals)
+    (*(concat ", " f.locals)*)
+    (concat ",\n" (List.map stmt_s f.body))
+
+let rec string_list_of_v = function
+    | hd::tl -> string_of_vdecl hd :: string_list_of_v tl
+    | [] -> []
+
+let program_s (vars, funcs) = sprintf "([%s],\n%s)"
+    (concat ", " (string_list_of_v vars) )
+    (concat "\n" (List.map func_decl_s(funcs)))
+
+
+(* "Pretty printed" version of the AST, meant to generate a MicroC program
+    from the AST.  These functions are only for pretty-printing (the -a flag)
+    the AST and can be removed. *)
+
 
 let rec string_of_stmt = function
     | Block(stmts) -> sprintf "{\n%s}\n"
