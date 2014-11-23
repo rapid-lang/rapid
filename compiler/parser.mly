@@ -54,7 +54,7 @@ return_type:
     | LPAREN type_list RPAREN { $2 }
 
 
-
+/*var declarations can now be done inline*/
 func_decl:
     // func w/ return types
     | FUNC ID LPAREN arguments RPAREN return_type LBRACE stmt_list RBRACE
