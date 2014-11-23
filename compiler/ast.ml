@@ -6,6 +6,7 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq
 exception Error of string
 
 
+
 type expr =
     | Literal of int
     | BoolVal of bool
@@ -27,6 +28,7 @@ type t =
     | Float
     | User_def
 
+type vdecl = t * expr
 
 type stmt =
     | Block of stmt list
@@ -35,17 +37,18 @@ type stmt =
     | If of expr * stmt * stmt
     | For of expr * expr * expr * stmt
     | While of expr * stmt
+    | VarDecl of vdecl
 
 
 type func_decl = {
     fname : string;
     formals : string list;
-    locals : string list;
+    (*locals : string list;*)
     body : stmt list;
 }
 
 
-type program = string list * func_decl list
+type program = vdecl list * func_decl list
 
 
 (* alias print functions for cleaner code *)
@@ -117,16 +120,16 @@ let rec stmt_s = function
         (stmt_s s)
 
 
-let func_decl_s f = sprintf "{\nfname = \"%s\"\nformats = [%s]\n\tlocals = [%s]\n\tbody = [%s]\n}"
+let func_decl_s f = sprintf "{\nfname = \"%s\"\nformats = [%s]\n\tbody = [%s]\n}"
     f.fname
     (concat ", " f.formals)
-    (concat ", " f.locals)
+    (*(concat ", " f.locals)*)
     (concat ",\n" (List.map stmt_s f.body))
 
 
 let program_s (vars, funcs) = sprintf "([%s],\n%s)"
     (concat ", " vars)
-    (concat "\n" (List.map func_decl_s funcs))
+    (concat "\n" (List.map func_decl_s(funcs)))
 
 
 (* "Pretty printed" version of the AST, meant to generate a MicroC program
@@ -158,7 +161,18 @@ let rec string_of_expr = function
     | BoolVal(b) -> string_of_bool b
     | StringLit(s) -> s
     | Noexpr -> ""
+    
+let string_of_t = function
+    | Int -> "int"
+    | Bool -> "bool"
+    | String -> "string"
+    | Float -> "float"
+    | User_def -> "var" (*TODO: change user def to something else*)
 
+
+let string_of_vdecl (t , ex) = sprintf "%s %s\n"
+    (string_of_t t)
+    (string_of_expr ex)
 
 let rec string_of_stmt = function
     | Block(stmts) -> sprintf "{\n%s}\n"
@@ -182,16 +196,17 @@ let rec string_of_stmt = function
     | While(e, s) -> sprintf "while (%s) %s"
         (string_of_expr e)
         (string_of_stmt s)
+    | VarDecl(vd) -> string_of_vdecl vd
 
 
-let string_of_vdecl id = sprintf "int %s\n" id
+
 
 
 let string_of_fdecl fdecl =
-    sprintf "%s(%s)\n{\n%s%s}\n"
+    sprintf "%s(%s)\n{\n%s}\n"
         (fdecl.fname)
         (concat ", " fdecl.formals)
-        (str_concat (List.map string_of_vdecl fdecl.locals))
+        (*(str_concat (List.map string_of_vdecl fdecl.locals))*)
         (str_concat (List.map string_of_stmt fdecl.body))
 
 

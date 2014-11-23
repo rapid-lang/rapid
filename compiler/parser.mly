@@ -57,20 +57,18 @@ return_type:
 
 func_decl:
     // func w/ return types
-    | FUNC ID LPAREN arguments RPAREN return_type LBRACE vdecl_list stmt_list RBRACE
+    | FUNC ID LPAREN arguments RPAREN return_type LBRACE stmt_list RBRACE
     {{
         fname = $2;
         formals = $4;
-        locals = List.rev $8;
-        body = List.rev $9
+        body = List.rev $8
     }}
     // func w/o return types
-    | FUNC ID LPAREN arguments RPAREN LBRACE vdecl_list stmt_list RBRACE
+    | FUNC ID LPAREN arguments RPAREN LBRACE stmt_list RBRACE
     {{
         fname = $2;
         formals = $4;
-        locals = List.rev $7;
-        body = List.rev $8
+        body = List.rev $7
     }}
     /* TODO: unsafe functions */
 
@@ -93,9 +91,9 @@ vdecl_list:
 
 var_decl:
     /* Maybe return a tuple here of (primtype, string)? */
-    | primtype ID { $2 }
+    | primtype ID { ($1 , Id($2)) }
     /* TODO: call a function Assign($1, $2, $4) or something */
-    | primtype ID ASSIGN lit { $2 }
+    | primtype ID ASSIGN lit { ($1 , Assign($2 , $4)) }
 
 
 stmt_list:
@@ -112,6 +110,7 @@ stmt:
     | FOR LPAREN expr_opt SEMI expr_opt SEMI expr_opt RPAREN stmt
         { For($3, $5, $7, $9) }
     | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
+    | var_decl SEMI {VarDecl($1)}
 
 
 expr_opt:
