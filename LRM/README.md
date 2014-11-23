@@ -18,13 +18,129 @@ The name RAPID represents the goal of the language: making API server developmen
 
 There are two types of RAPID programs, servers and scripts. If a program contains an HTTP method, it is a server, otherwise it is a script. (See more in later sections). 
 
-## 2. Types
+## 2. Lexical Conventions
 
-### 2.1 Static Typing
+### 2.1 Identifiers
+
+Identifiers must start with a letter or an underscore, followed by any combination of letters, numbers, and underscores.
+
+> **Valid Identifiers:**
+>
+> `abc`, `abc_def`, `a___1`, `__a__`, `_1`, `ABC`
+
+> **Invalid Identifiers:**
+>
+> `123`, `abc-def`, `1abc`, `ab\ cd`
+
+### 2.2 Keywords
+
+The following identifiers are keywords in RAPID, and are reserved. They can not be used for any other purpose.
+
+`if`, `else`, `for`, `in`, `while`, `switch`, `case`, `default`, `fallthrough`, `http`, `func`, `json`, `class`, `namespace`, `param`, `true`, `false`, `new`, `optional`, `unsafe`, `instance`
+
+### 2.3 Literals
+
+#### Integer literals
+
+Integer literals may be declared using digits.
+
+```
+int x = 5
+```
+
+#### Float literals
+
+Float literals are declared as an integer part, a decimal point, and a fraction part, all of which are mandatory.  The integer part may not start with a zero, unless it is only a zero (for floats less than `1.0`), in which case it is still required.  There may not be any whitespace between these three parts.
+
+```
+// Valid float literals:
+float x = 15.0
+float y = 0.25
+
+// Invalid float literals:
+float z = .5
+float w = 10.
+float v = 1 . 4
+```
+
+#### String literals
+
+String literals are declared using double quotes.  Special characters may be declared using the `\` escape character.
+
+```
+string a = "hello"
+string b = " \"world\"\n"
+```
+
+#### Boolean literals
+
+Boolean literals are declared using the `true` and `false` keywords.  
+
+```
+boolean t = true
+boolean f = false
+```
+
+#### List literals
+
+List literals may be declared between square brackets, with comma-separated values. 
+
+```
+list<int> a = [1,2,3,4]
+list<string> b = ["hello", "world"]
+```
+
+#### Dictionary literals
+
+Dictionary literals may be declared as comma-separated key value pairs between braces, with a colon separating the key and value.  Whitespace is ignored.
+
+```
+dict<string, int> a = {"hello": 4, "world": 5}
+dict<string, ing> b = {
+    "a": 42,
+    "b": 27
+}
+```
+
+### 2.4 Comments
+
+There are two types of comments in RAPID: single line comments, and block comments.  Single line comments are preceded by `//` and block comments begin with `/*` and end with `*/`
+
+```
+// This is a single line comment
+
+/*
+This is a multi-line
+comment
+/* They may be nested */
+*/
+```
+
+### 2.5 Operators
+
+Operator | Use | Associativity
+:-------:|-----|-----------------
+`+` | Addition | left
+`*` | Multiplication | left
+`/` | Division | left
+`-` | Subtraction | left
+`%` | Modulus | left
+`=`  | Assignment | non-associative
+`==` | Equal to | non-associative
+`!=` | Not equal to | non-associative
+`>` | Greater than | non-associative
+`<` | Less than | non-associative
+`>=` | Greater than or equal to | non-associative
+`<=` | Less than or equal to | non-associative
+
+
+## 3. Types
+
+### 3.1 Static Typing
 
 RAPID is a statically typed language; variables must be explicitly typed upon declaration. Variables can be cast to other types (see Casting).
 
-### 2.2 Primitive Types
+### 3.2 Primitive Types
 
 #### null
 
@@ -85,7 +201,7 @@ He calls himself "Batman".
 """                           // multi[0] => "\n"
 ```
 
-### 2.3 Non-Primitive Types
+### 3.3 Non-Primitive Types
 
 #### List
 
@@ -253,7 +369,7 @@ Response  | Message                  | Code | Name
 
 Functions are first class objects, and may be passed around as variables (see Functions)
 
-### 2.4 Casting
+### 3.4 Casting
 
 #### Integers and Floats
 
@@ -282,124 +398,6 @@ list    | `[0]?`, `[false]?` | `[]?`    | Empty lists are `false`
 dict    | `{"key":false}?`   | `{}?`    | Empty dicts are `false`
 json    | `json<Obj>()?`     | -        | JSON objects are `true`
 object  | `Obj()?`           | -        | Objects are `true`
-
-
-## 3. Lexical Conventions
-
-### 3.1 Identifiers
-
-Identifiers must start with a letter or an underscore, followed by any combination of letters, numbers, and underscores.
-
-> **Valid Identifiers:**
->
-> `abc`, `abc_def`, `a___1`, `__a__`, `_1`, `ABC`
-
-> **Invalid Identifiers:**
->
-> `123`, `abc-def`, `1abc`, `ab\ cd`
-
-### 3.2 Keywords
-
-The following identifiers are keywords in RAPID, and are reserved. They can not be used for any other purpose.
-
-`if`, `else`, `for`, `in`, `while`, `switch`, `case`, `default`, `fallthrough`, `http`, `func`, `json`, `class`, `namespace`, `param`, `true`, `false`, `new`, `optional`, `unsafe`, `instance`
-
-### 3.3 Literals
-
-#### Integer literals
-
-Integer literals may be declared using digits.
-
-```
-int x = 5
-```
-
-#### Float literals
-
-Float literals are declared as an integer part, a decimal point, and a fraction part, all of which are mandatory.  The integer part may not start with a zero, unless it is only a zero (for floats less than `1.0`), in which case it is still required.  There may not be any whitespace between these three parts.
-
-```
-// Valid float literals:
-float x = 15.0
-float y = 0.25
-
-// Invalid float literals:
-float z = .5
-float w = 10.
-float v = 1 . 4
-```
-
-#### String literals
-
-String literals are declared using double quotes.  Special characters may be declared using the `\` escape character.
-
-```
-string a = "hello"
-string b = " \"world\"\n"
-```
-
-#### Boolean literals
-
-Boolean literals are declared using the `true` and `false` keywords.  
-
-```
-boolean t = true
-boolean f = false
-```
-
-#### List literals
-
-List literals may be declared between square brackets, with comma-separated values. 
-
-```
-list<int> a = [1,2,3,4]
-list<string> b = ["hello", "world"]
-```
-
-#### Dictionary literals
-
-Dictionary literals may be declared as comma-separated key value pairs between braces, with a colon separating the key and value.  Whitespace is ignored.
-
-```
-dict<string, int> a = {"hello": 4, "world": 5}
-dict<string, ing> b = {
-    "a": 42,
-    "b": 27
-}
-```
-
-### 3.4 Comments
-
-There are two types of comments in RAPID: single line comments, and block comments.  Single line comments are preceded by `//` and block comments begin with `/*` and end with `*/`
-
-```
-// This is a single line comment
-
-/*
-This is a multi-line
-comment
-/* They may be nested */
-*/
-```
-
-### 3.5 Operators
-
-Operator | Use | Associativity
-:-------:|-----|-----------------
-`+` | Addition | left
-`*` | Multiplication | left
-`/` | Division | left
-`-` | Subtraction | left
-`%` | Modulus | left
-`=`  | Assignment | non-associative
-`==` | Equal to | non-associative
-`!=` | Not equal to | non-associative
-`>` | Greater than | non-associative
-`<` | Less than | non-associative
-`>=` | Greater than or equal to | non-associative
-`<=` | Less than or equal to | non-associative
-
-
 
 ## 4. Database Backing
 
