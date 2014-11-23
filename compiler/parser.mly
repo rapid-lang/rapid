@@ -110,7 +110,7 @@ stmt:
     | FOR LPAREN expr_opt SEMI expr_opt SEMI expr_opt RPAREN stmt
         { For($3, $5, $7, $9) }
     | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
-    | var_decl SEMI {VarDecl($1)}
+    | var_decl {VarDecl($1)}
 
 
 expr_opt:
