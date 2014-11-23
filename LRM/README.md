@@ -747,9 +747,9 @@ A valid RAPID program is a series of valid statements.  If the program contains 
 
 Expressions are series of operators and operands that may be evaluated to a value and type.  Any subexpressions are evaluated from left to right, and side effects of evaluations occur by the time the evaluation is complete.  Type checking on operations occur in compile time.
 
-#### Constants
+#### Literals
 
-Constants may be string, integer, float, or boolean, dict, list, or JSON object literals.  See Lexical Conventions for more information.
+Literls may be of type string, integer, float, boolean, dict, or list.  See Lexical Conventions for more information.
 
 #### Identifiers
 
