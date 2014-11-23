@@ -1,6 +1,6 @@
 
 func foo(int a){
-    int x = 2
+    int x = 2;
     // a = a + 2
 }
 
