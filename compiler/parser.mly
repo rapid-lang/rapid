@@ -93,9 +93,9 @@ vdecl_list:
 
 var_decl:
     /* Maybe return a tuple here of (primtype, string)? */
-    | primtype ID { ($1 , Id($2)) }
+    | primtype ID SEMI { ($1 , Id($2)) }
     /* TODO: call a function Assign($1, $2, $4) or something */
-    | primtype ID ASSIGN lit { ($1 , Assign($2 , $4)) }
+    | primtype ID ASSIGN lit SEMI { ($1 , Assign($2 , $4)) }
 
 
 stmt_list:
@@ -113,7 +113,7 @@ stmt:
     | FOR LPAREN expr_opt SEMI expr_opt SEMI expr_opt RPAREN stmt
         { For($3, $5, $7, $9) }
     | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
-    | var_decl SEMI {VarDecl($1)}
+    | var_decl {VarDecl($1)}
 
 
 print:

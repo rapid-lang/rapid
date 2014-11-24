@@ -1,5 +1,8 @@
 
-int x = 5
-x = 4
-x = "no types yet"
+int x = 5;
+
+func foo() {
+    x = 4
+    x = "no types yet"
+}
 
