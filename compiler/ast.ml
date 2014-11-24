@@ -46,7 +46,7 @@ type stmt =
 type func_decl = {
     fname : string;
     formals : string list;
-    (*locals : string list;*)
+    return : var_type list;
     body : stmt list;
 }
 
@@ -225,9 +225,10 @@ let rec string_of_stmt = function
     | VarDecl(vd) -> string_of_vdecl vd
 
 let string_of_fdecl fdecl =
-    sprintf "%s(%s)\n{\n%s}\n"
+    sprintf "func %s(%s)(%s)\n{\n%s}\n"
         (fdecl.fname)
         (concat ", " fdecl.formals)
+        (concat ", " (List.map string_of_t fdecl.return))
         (*(str_concat (List.map string_of_vdecl fdecl.locals))*)
         (str_concat (List.map string_of_stmt fdecl.body))
 

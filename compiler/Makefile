@@ -11,6 +11,7 @@ TARFILES = Makefile scanner.mll parser.mly ast.ml compile.ml rapid.ml
 all: clean rapid parser
 
 rapid: $(RAPID_OBJS)
+	yacc ./parser.mly
 	$(OCAMLC) -o rapid $(RAPID_OBJS)
 
 parser: $(PARSER_FILES)

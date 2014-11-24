@@ -61,6 +61,7 @@ func_decl:
     {{
         fname = $2;
         formals = $4;
+        return = $6;
         body = List.rev $8
     }}
     // func w/o return types
@@ -68,6 +69,7 @@ func_decl:
     {{
         fname = $2;
         formals = $4;
+        return = [];
         body = List.rev $7
     }}
     /* TODO: unsafe functions */

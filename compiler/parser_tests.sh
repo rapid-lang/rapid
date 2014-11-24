@@ -10,10 +10,8 @@ export OCAMLRUNPARAM='p'
 
 reduce_path_to_test_name () {
     local fullpath=$1
-    # strip the preceding path
-    local filename="${fullpath##*/}"
-    # strip the file type & set a global variable
-    test_name="${filename%.*}"
+    local filename="${fullpath##*/}" # strip the preceding path
+    test_name="${filename%.*}"       # strip the file type & set a global variable
 }
 
 
@@ -30,13 +28,15 @@ do
 
 
     # should fail & failed OR should pass & passed
-    # not XOR'd
+    #  ! XOR'd
     if [[ $fail_test && ! $outcome ]] ||  [[ ! $fail_test && $outcome ]]
     then
         echo "success: $test_name"
     else
+        echo
         echo "FAIL:    $test_name"
         printf "    " && cat "$tmp_file"
+        echo
         had_failures="1"
     fi
 done
