@@ -65,6 +65,8 @@ TODO: add when working on lists
 *)
 
 
+| "printf"  { PRINTF }
+| "println" { PRINTLN }
 (* functions *)
 | "func"   { FUNC }
 | "return" { RETURN }
@@ -95,7 +97,7 @@ TODO: add when working on lists
 *)
 
 (* literals *)
-| ['0'-'9']+ as lxm { LITERAL(int_of_string(lxm) ) }
+| ['0'-'9']+ as lxm { INT_VAL(int_of_string(lxm) ) }
 | '"' ([^'"']* as str) '"' { STRING_LIT(str) }
 
 (* ID's *)

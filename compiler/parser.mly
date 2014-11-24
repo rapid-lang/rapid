@@ -1,12 +1,15 @@
-%{ open Ast %}
+%{
+    open Ast
+%}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
 %token PLUS MINUS TIMES DIVIDE ASSIGN
 %token EQ NEQ LT LEQ GT GEQ
 %token RETURN IF ELSE FOR WHILE FUNC IN
+%token PRINTLN PRINTF // LOG
 // %token INT BOOL FLOAT STRING
 
-%token <int> LITERAL
+%token <int> INT_VAL
 %token <bool> BOOL_VAL
 %token <string> ID TYPE STRING_LIT
 %token EOF
@@ -32,27 +35,24 @@ primtype:
 
 
 /* Base level expressions of a program:
- * - global Variables can be declared
- * - functions are declared at the bottom level
- * TODO:
- * - Classes
-*/
+ * TODO: Classes */
 program:
-    | /* nothing */ { [], [] }
-    | program var_decl { ($2 :: fst $1), snd $1 }
+    | /* nothing */     { [], [] }
+    | program var_decl  { ($2 :: fst $1), snd $1 }
     | program func_decl { fst $1, ($2 :: snd $1) }
 
 
-type_list:
+datatype_list:
     /* TODO: allow user defined types */
+    | datatype_list COMMA primtype { $3 :: $1 }
     | primtype                 { [$1] }
-    | type_list COMMA primtype { $3 :: $1 }
+    | /* nothing */            { [] }
 
 
 return_type:
     /* TODO: allow user defined types */
     | primtype                { [$1] }
-    | LPAREN type_list RPAREN { $2 }
+    | LPAREN datatype_list RPAREN { $2 }
 
 
 func_decl:
@@ -99,13 +99,15 @@ var_decl:
     | ID ASSIGN lit { $1 }
 
 
+
 stmt_list:
     | /* nothing */  { [] }
     | stmt_list stmt { $2 :: $1 }
 
 
 stmt:
-    | expr { Expr($1) }
+    | expr  { Expr($1) }
+    | print { Output($1) }
     | RETURN expr { Return($2) }
     | LBRACE stmt_list RBRACE { Block(List.rev $2) }
     | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
@@ -113,7 +115,15 @@ stmt:
     | FOR LPAREN expr_opt SEMI expr_opt SEMI expr_opt RPAREN stmt
         { For($3, $5, $7, $9) }
     | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
-    | { raise (StmtError "Unrecognized statement ") }
+
+
+print:
+    | PRINTF LPAREN STRING_LIT COMMA print_list RPAREN { Printf($3, $5) }
+
+
+print_list:
+    | expr                    { [$1] }
+    | print_list COMMA expr   { $3 :: $1 }
 
 
 expr_opt:
@@ -122,16 +132,15 @@ expr_opt:
 
 
 lit:
-    | LITERAL          { Literal($1) }
+    | INT_VAL          { IntLit($1) }
     | BOOL_VAL         { BoolVal($1) }
     | STRING_LIT       { StringLit($1)}
-    | { raise (LitError "Unrecognized expression ") }
 
 
 expr:
-    | lit              {$1}
+    | lit              { $1 }
     /* TODO add float handling */
-    | ID               { Id($1) }
+    | ID               { Identity($1) }
     | expr PLUS   expr { Binop($1, Add,   $3) }
     | expr MINUS  expr { Binop($1, Sub,   $3) }
     | expr TIMES  expr { Binop($1, Mult,  $3) }
@@ -145,8 +154,6 @@ expr:
     | ID ASSIGN expr   { Assign($1, $3) }
     | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
     | LPAREN expr RPAREN { $2 }
-    | { raise (ExprError "Unrecognized expression ") }
-
 
 
 actuals_opt:

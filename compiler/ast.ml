@@ -1,6 +1,3 @@
-open Format
-
-type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq
 
 
 exception Error of string
@@ -10,11 +7,13 @@ exception StmtError of string
 exception VarDeclError of string
 
 
+type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq
+
 type expr =
-    | Literal of int
+    | Identity of string
+    | IntLit of int
     | BoolVal of bool
     | StringLit of string
-    | Id of string
     | Binop of expr * op * expr
     | Assign of string * expr
     | Call of string * expr list
@@ -24,12 +23,16 @@ type expr =
 (* AST type for datatypes
  *
  * Primative types and a placeholder for userdefined types *)
-type t =
+type var_type =
     | Int
     | String
     | Bool
     | Float
     | User_def
+
+
+type print =
+    | Printf of string * expr list
 
 
 type stmt =
@@ -39,6 +42,7 @@ type stmt =
     | If of expr * stmt * stmt
     | For of expr * expr * expr * stmt
     | While of expr * stmt
+    | Output of print
 
 
 type func_decl = {
@@ -83,8 +87,8 @@ let bin_op_s = function
 
 (* Prettyprint expressions *)
 let rec expr_s = function
-    | Literal(l) -> "Literal " ^ string_of_int l
-    | Id(s) -> "Id " ^ s
+    | IntLit(l) -> "Literal " ^ string_of_int l
+    | Identity(s) -> "Id " ^ s
     | Binop(e1, o, e2) -> sprintf "Binop (%s) %s (%s)"
         (expr_s e1)
         (bin_op_s o)
@@ -96,6 +100,12 @@ let rec expr_s = function
     | BoolVal(b) -> string_of_bool b
     | StringLit(s) -> s
     | Noexpr -> "Noexpr"
+
+
+let output_s = function
+    | Printf(f, el) -> sprintf "Printf(%s, %s)"
+        f
+        (String.concat ", " (List.map expr_s el))
 
 
 (* Prettyprint statements *)
@@ -118,6 +128,7 @@ let rec stmt_s = function
     | While(e, s) -> sprintf "While (%s) (%s)"
         (expr_s e)
         (stmt_s s)
+    | Output(o) -> output_s o
 
 
 let func_decl_s f = sprintf "{\nfname = \"%s\"\nformats = [%s]\n\tlocals = [%s]\n\tbody = [%s]\n}"
@@ -148,8 +159,8 @@ let bin_op = function
     | Greater -> ">"
     | Geq -> ">="
 let rec string_of_expr = function
-    | Literal(l) -> string_of_int l
-    | Id(s) -> s
+    | IntLit(l) -> string_of_int l
+    | Identity(s) -> s
     | Binop(e1, o, e2) -> sprintf "%s %s %s"
         (string_of_expr e1)
         (bin_op o)
@@ -185,6 +196,7 @@ let rec string_of_stmt = function
     | While(e, s) -> sprintf "while (%s) %s"
         (string_of_expr e)
         (string_of_stmt s)
+    | Output(o) -> output_s o
 
 
 (* TODO: should not default to int  *)
