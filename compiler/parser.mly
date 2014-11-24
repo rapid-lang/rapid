@@ -38,7 +38,7 @@ primtype:
  * TODO: Classes */
 program:
     | /* nothing */     { [], [] }
-    | program var_decl  { ($2 :: fst $1), snd $1 }
+    | program stmt SEMI { ($2 :: fst $1), snd $1 }
     | program func_decl { fst $1, ($2 :: snd $1) }
 
 
@@ -93,14 +93,14 @@ vdecl_list:
 
 var_decl:
     /* Maybe return a tuple here of (primtype, string)? */
-    | primtype ID SEMI { ($1 , Id($2)) }
+    | primtype ID { ($1 , Id($2)) }
     /* TODO: call a function Assign($1, $2, $4) or something */
-    | primtype ID ASSIGN lit SEMI { ($1 , Assign($2 , $4)) }
+    | primtype ID ASSIGN lit { ($1 , Assign($2 , $4)) }
 
 
 stmt_list:
     | /* nothing */  { [] }
-    | stmt_list stmt { $2 :: $1 }
+    | stmt_list stmt SEMI { $2 :: $1 }
 
 
 fstmt_list:
@@ -110,13 +110,12 @@ fstmt_list:
 
 func_stmt:
     | RETURN expr { Return($2) }
-    | stmt        { FStmt($1) }
+    | stmt SEMI   { FStmt($1) }
 
 
 stmt:
     | expr  { Expr($1) }
     | print { Output($1) }
-    | LBRACE stmt_list RBRACE { Block(List.rev $2) }
     | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
     | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
     | FOR LPAREN expr_opt SEMI expr_opt SEMI expr_opt RPAREN stmt

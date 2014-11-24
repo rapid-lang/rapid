@@ -53,7 +53,7 @@ type func_decl = {
     body : func_stmt list;
 }
 
-type program = vdecl list * func_decl list
+type program = stmt list * func_decl list
 
 (* alias print functions for cleaner code *)
 let sprintf = Format.sprintf
@@ -240,8 +240,8 @@ let string_of_fdecl fdecl =
         (*(str_concat (List.map string_of_vdecl fdecl.locals))*)
         (str_concat (List.map string_of_fstmt fdecl.body))
 
-let string_of_program (vars, funcs) =
+let string_of_program (stmts, funcs) =
     sprintf "%s\n%s"
-        (str_concat (List.map string_of_vdecl vars))
+        (str_concat (List.map string_of_stmt stmts))
         (concat "\n" (List.map string_of_fdecl funcs))
 
