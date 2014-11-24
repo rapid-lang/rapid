@@ -42,8 +42,8 @@ program:
     | program func_decl { fst $1, ($2 :: snd $1) }
 
 
+/* TODO: allow user defined types */
 datatype_list:
-    /* TODO: allow user defined types */
     | datatype_list COMMA primtype { $3 :: $1 }
     | primtype                 { [$1] }
     | /* nothing */            { [] }
@@ -118,6 +118,7 @@ stmt:
 
 
 print:
+    | PRINTLN LPAREN STRING_LIT RPAREN { Println($3) }
     | PRINTF LPAREN STRING_LIT COMMA print_list RPAREN { Printf($3, $5) }
 
 

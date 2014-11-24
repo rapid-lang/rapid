@@ -9,5 +9,5 @@ script:
     - cd compiler && make
     - make parser
     - make test
-    - yacc -v parser.mly
+    - yacc -v parser.mly; return 0
 

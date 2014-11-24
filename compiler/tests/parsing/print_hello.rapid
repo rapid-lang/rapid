@@ -1,4 +1,5 @@
 
-
-printf("hello world")
+func hello() {
+    println("hello world")
+}
 

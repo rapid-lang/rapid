@@ -33,6 +33,7 @@ type var_type =
 
 type print =
     | Printf of string * expr list
+    | Println of string
 
 
 type stmt =
@@ -106,6 +107,7 @@ let output_s = function
     | Printf(f, el) -> sprintf "Printf(%s, %s)"
         f
         (String.concat ", " (List.map expr_s el))
+    | Println(s) -> sprintf "Println(%s)\n" s
 
 
 (* Prettyprint statements *)

@@ -1,0 +1,6 @@
+
+func print_name(string name) {
+    printf("hi %s", name)
+}
+
+
