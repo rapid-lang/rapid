@@ -96,29 +96,6 @@ let rec expr_s = function
     | StringLit(s) -> s
     | Noexpr -> "Noexpr"
 
-
-
-(* Prettyprint statements *)
-let rec stmt_s = function
-    | Block(ss) -> sprintf "Block [%s]"
-        (concat ",\n" (List.map (fun s -> sprintf "(%s)" (stmt_s s)) ss))
-    | Expr(e) -> sprintf "Expr (%s)"
-        (expr_s e)
-    | Return(e) -> sprintf "Return (%s)"
-        (expr_s e)
-    | If(e, s1, s2) -> sprintf "If (%s) (%s) (%s)"
-        (expr_s e)
-        (stmt_s s1)
-        (stmt_s s2)
-    | For(e1, e2, e3, s) -> sprintf "For (%s) (%s) (%s) (%s)"
-        (expr_s e1)
-        (expr_s e2)
-        (expr_s e3)
-        (stmt_s s)
-    | While(e, s) -> sprintf "While (%s) (%s)"
-        (expr_s e)
-        (stmt_s s)
-        
 let bin_op = function
     | Add -> "+"
     | Sub -> "-"
@@ -157,6 +134,30 @@ let string_of_t = function
 let string_of_vdecl (t , ex) = sprintf "%s %s\n"
     (string_of_t t)
     (string_of_expr ex)
+
+(* Prettyprint statements *)
+let rec stmt_s = function
+    | Block(ss) -> sprintf "Block [%s]"
+        (concat ",\n" (List.map (fun s -> sprintf "(%s)" (stmt_s s)) ss))
+    | Expr(e) -> sprintf "Expr (%s)"
+        (expr_s e)
+    | Return(e) -> sprintf "Return (%s)"
+        (expr_s e)
+    | If(e, s1, s2) -> sprintf "If (%s) (%s) (%s)"
+        (expr_s e)
+        (stmt_s s1)
+        (stmt_s s2)
+    | For(e1, e2, e3, s) -> sprintf "For (%s) (%s) (%s) (%s)"
+        (expr_s e1)
+        (expr_s e2)
+        (expr_s e3)
+        (stmt_s s)
+    | While(e, s) -> sprintf "While (%s) (%s)"
+        (expr_s e)
+        (stmt_s s)
+    | VarDecl(vd) -> string_of_vdecl vd
+        
+
 
 
 let func_decl_s f = sprintf "{\nfname = \"%s\"\nformats = [%s]\n\tbody = [%s]\n}"
