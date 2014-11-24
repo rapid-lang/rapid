@@ -173,8 +173,8 @@ let func_decl_s f = sprintf "{\nfname = \"%s\"\nformals = [%s]\n\tbody = [%s]\n}
     (concat ", " f.formals)
     (concat ",\n" (List.map fstmt_s f.body))
 
-let program_s (vars, funcs) = sprintf "([%s],\n%s)"
-    (concat ", " (List.map string_of_vdecl vars))
+let program_s (stmts, funcs) = sprintf "([%s],\n%s)"
+    (concat ", " (List.map stmt_s stmts))
     (concat "\n" (List.map func_decl_s funcs))
 
 let bin_op = function
