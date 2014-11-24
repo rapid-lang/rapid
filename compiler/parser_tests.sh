@@ -5,6 +5,8 @@ success="TEST_SUCCESS"
 had_failures="0"
 tmp_file=".tmp_err_output"  # stderr of parser stored here
 
+# Verbose output from YACC
+export OCAMLRUNPARAM='p'
 
 reduce_path_to_test_name () {
     local fullpath=$1
