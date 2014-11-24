@@ -52,7 +52,6 @@ type func_decl = {
 
 type program = vdecl list * func_decl list
 
-
 (* alias print functions for cleaner code *)
 let sprintf = Format.sprintf
 let concat = String.concat
@@ -169,17 +168,9 @@ let func_decl_s f = sprintf "{\nfname = \"%s\"\nformats = [%s]\n\tbody = [%s]\n}
     (*(concat ", " f.locals)*)
     (concat ",\n" (List.map stmt_s f.body))
 
-let rec string_list_of_v = function
-    | hd::tl -> string_of_vdecl hd :: string_list_of_v tl
-    | [] -> []
-
 let program_s (vars, funcs) = sprintf "([%s],\n%s)"
-    (concat ", " (string_list_of_v vars) )
-    (concat "\n" (List.map func_decl_s(funcs)))
-
-(* "Pretty printed" version of the AST, meant to generate a MicroC program
-    from the AST.  These functions are only for pretty-printing (the -a flag)
-    the AST and can be removed. *)
+    (concat ", " (List.map string_of_vdecl vars))
+    (concat "\n" (List.map func_decl_s funcs))
 
 let bin_op = function
     | Add -> "+"
@@ -232,10 +223,6 @@ let rec string_of_stmt = function
         (string_of_stmt s)
     | Output(o) -> output_s o
     | VarDecl(vd) -> string_of_vdecl vd
-
-(* TODO: should not default to int  *)
-let string_of_vdecl id =
-    sprintf "int %s\n" id
 
 let string_of_fdecl fdecl =
     sprintf "%s(%s)\n{\n%s}\n"
