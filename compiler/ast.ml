@@ -10,7 +10,7 @@ exception VarDeclError of string
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq
 
 type expr =
-    | Identity of string
+    | Id of string
     | IntLit of int
     | BoolVal of bool
     | StringLit of string
@@ -89,7 +89,7 @@ let bin_op_s = function
 (* Prettyprint expressions *)
 let rec expr_s = function
     | IntLit(l) -> "Literal " ^ string_of_int l
-    | Identity(s) -> "Id " ^ s
+    | Id(s) -> "Id " ^ s
     | Binop(e1, o, e2) -> sprintf "Binop (%s) %s (%s)"
         (expr_s e1)
         (bin_op_s o)
@@ -162,7 +162,7 @@ let bin_op = function
     | Geq -> ">="
 let rec string_of_expr = function
     | IntLit(l) -> string_of_int l
-    | Identity(s) -> s
+    | Id(s) -> s
     | Binop(e1, o, e2) -> sprintf "%s %s %s"
         (string_of_expr e1)
         (bin_op o)
