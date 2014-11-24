@@ -962,6 +962,25 @@ printf("%d", add(3,4))
 // 7
 ```
 
+#### Break Statements
+
+A `break` statement can be used to exit a loop prematurely. 
+
+```
+while (/* expression */) {
+    break
+}
+``` 
+In the case of nested loops, the `break` statement only breaks the loop in which it is stated.
+
+```
+while (/* expression */) {
+    while (/* expression */) {
+        break /* only breaks inner loop */
+    }
+}
+```
+
 ## 8. Built-in Functions
 
 ### 8.1 length()
