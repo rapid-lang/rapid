@@ -57,7 +57,7 @@ return_type:
 /*var declarations can now be done inline*/
 func_decl:
     // func w/ return types
-    | FUNC ID LPAREN arguments RPAREN return_type LBRACE stmt_list RBRACE
+    | FUNC ID LPAREN arguments RPAREN return_type LBRACE fstmt_list RBRACE
     {{
         fname = $2;
         formals = $4;
@@ -65,7 +65,7 @@ func_decl:
         body = List.rev $8
     }}
     // func w/o return types
-    | FUNC ID LPAREN arguments RPAREN LBRACE stmt_list RBRACE
+    | FUNC ID LPAREN arguments RPAREN LBRACE fstmt_list RBRACE
     {{
         fname = $2;
         formals = $4;
@@ -103,10 +103,19 @@ stmt_list:
     | stmt_list stmt { $2 :: $1 }
 
 
+fstmt_list:
+    | /* nothing */         { [] }
+    | fstmt_list func_stmt { $2 :: $1 }
+
+
+func_stmt:
+    | RETURN expr { Return($2) }
+    | stmt        { FStmt($1) }
+
+
 stmt:
     | expr  { Expr($1) }
     | print { Output($1) }
-    | RETURN expr { Return($2) }
     | LBRACE stmt_list RBRACE { Block(List.rev $2) }
     | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
     | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }

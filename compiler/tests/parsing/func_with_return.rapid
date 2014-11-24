@@ -1,0 +1,6 @@
+
+func useless(int x) {
+    return x
+}
+
+

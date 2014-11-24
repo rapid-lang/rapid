@@ -1,0 +1,6 @@
+
+
+// should fail because it is not in a function block
+return x
+
+
