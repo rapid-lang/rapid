@@ -1,11 +1,9 @@
 
-
 exception Error of string
 exception LitError of string
 exception ExprError of string
 exception StmtError of string
 exception VarDeclError of string
-
 
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq
 
@@ -19,7 +17,6 @@ type expr =
     | Call of string * expr list
     | Noexpr
 
-
 (* AST type for datatypes
  *
  * Primative types and a placeholder for userdefined types *)
@@ -30,11 +27,11 @@ type var_type =
     | Float
     | User_def
 
+type vdecl = var_type * expr
 
 type print =
     | Printf of string * expr list
     | Println of string
-
 
 type stmt =
     | Block of stmt list
@@ -44,24 +41,22 @@ type stmt =
     | For of expr * expr * expr * stmt
     | While of expr * stmt
     | Output of print
-
+    | VarDecl of vdecl
 
 type func_decl = {
     fname : string;
     formals : string list;
-    locals : string list;
+    (*locals : string list;*)
     body : stmt list;
 }
 
-
-type program = string list * func_decl list
+type program = vdecl list * func_decl list
 
 
 (* alias print functions for cleaner code *)
 let sprintf = Format.sprintf
 let concat = String.concat
 let str_concat l = concat "" l
-
 
 (* Converts a string to a datatype *)
 let string_to_t = function
@@ -71,7 +66,6 @@ let string_to_t = function
     | "string" -> String
     | "" -> raise(Error("No type"))
     | _ -> User_def
-
 
 (* Prettyprint expressions *)
 let bin_op_s = function
@@ -102,6 +96,39 @@ let rec expr_s = function
     | StringLit(s) -> s
     | Noexpr -> "Noexpr"
 
+let bin_op = function
+    | Add -> "+"
+    | Sub -> "-"
+    | Mult -> "*"
+    | Div -> "/"
+    | Equal -> "=="
+    | Neq -> "!="
+    | Less -> "<"
+    | Leq -> "<="
+    | Greater -> ">"
+    | Geq -> ">="
+
+let rec string_of_expr = function
+    | IntLit(l) -> string_of_int l
+    | Id(s) -> s
+    | Binop(e1, o, e2) -> sprintf "%s %s %s"
+        (string_of_expr e1)
+        (bin_op o)
+        (string_of_expr e2)
+    | Assign(v, e) -> sprintf "%s = %s" v
+        (string_of_expr e)
+    | Call(f, el) -> sprintf "%s(%s)" f
+        (concat ", " (List.map string_of_expr el))
+    | BoolVal(b) -> string_of_bool b
+    | StringLit(s) -> s
+    | Noexpr -> ""
+
+let string_of_t = function
+    | Int -> "int"
+    | Bool -> "bool"
+    | String -> "string"
+    | Float -> "float"
+    | User_def -> "var" (*TODO: change user def to something else*)
 
 let output_s = function
     | Printf(f, el) -> sprintf "Printf(%s, %s)"
@@ -109,6 +136,9 @@ let output_s = function
         (String.concat ", " (List.map expr_s el))
     | Println(s) -> sprintf "Println(%s)\n" s
 
+let string_of_vdecl (t , ex) = sprintf "%s %s\n"
+    (string_of_t t)
+    (string_of_expr ex)
 
 (* Prettyprint statements *)
 let rec stmt_s = function
@@ -131,19 +161,21 @@ let rec stmt_s = function
         (expr_s e)
         (stmt_s s)
     | Output(o) -> output_s o
+    | VarDecl(vd) -> string_of_vdecl vd
 
-
-let func_decl_s f = sprintf "{\nfname = \"%s\"\nformats = [%s]\n\tlocals = [%s]\n\tbody = [%s]\n}"
+let func_decl_s f = sprintf "{\nfname = \"%s\"\nformats = [%s]\n\tbody = [%s]\n}"
     f.fname
     (concat ", " f.formals)
-    (concat ", " f.locals)
+    (*(concat ", " f.locals)*)
     (concat ",\n" (List.map stmt_s f.body))
 
+let rec string_list_of_v = function
+    | hd::tl -> string_of_vdecl hd :: string_list_of_v tl
+    | [] -> []
 
 let program_s (vars, funcs) = sprintf "([%s],\n%s)"
-    (concat ", " vars)
-    (concat "\n" (List.map func_decl_s funcs))
-
+    (concat ", " (string_list_of_v vars) )
+    (concat "\n" (List.map func_decl_s(funcs)))
 
 (* "Pretty printed" version of the AST, meant to generate a MicroC program
     from the AST.  These functions are only for pretty-printing (the -a flag)
@@ -160,6 +192,7 @@ let bin_op = function
     | Leq -> "<="
     | Greater -> ">"
     | Geq -> ">="
+
 let rec string_of_expr = function
     | IntLit(l) -> string_of_int l
     | Id(s) -> s
@@ -174,7 +207,6 @@ let rec string_of_expr = function
     | BoolVal(b) -> string_of_bool b
     | StringLit(s) -> s
     | Noexpr -> ""
-
 
 let rec string_of_stmt = function
     | Block(stmts) -> sprintf "{\n%s}\n"
@@ -199,19 +231,18 @@ let rec string_of_stmt = function
         (string_of_expr e)
         (string_of_stmt s)
     | Output(o) -> output_s o
-
+    | VarDecl(vd) -> string_of_vdecl vd
 
 (* TODO: should not default to int  *)
-let string_of_vdecl id = sprintf "int %s\n" id
-
+let string_of_vdecl id =
+    sprintf "int %s\n" id
 
 let string_of_fdecl fdecl =
-    sprintf "%s(%s)\n{\n%s%s}\n"
+    sprintf "%s(%s)\n{\n%s}\n"
         (fdecl.fname)
         (concat ", " fdecl.formals)
-        (str_concat (List.map string_of_vdecl fdecl.locals))
+        (*(str_concat (List.map string_of_vdecl fdecl.locals))*)
         (str_concat (List.map string_of_stmt fdecl.body))
-
 
 let string_of_program (vars, funcs) =
     sprintf "%s\n%s"
