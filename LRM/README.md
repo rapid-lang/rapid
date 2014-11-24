@@ -1413,16 +1413,14 @@ if (!e?) {
 
 #### Set (dict[k] = v)
 
-After indexing, an assignment may occur, to set a value of the list.  Setting is `unsafe`, and for a `dict<S,T>` returns `T , error`..
+After indexing, an assignment may occur, to set a value of the list. 
 
 Examples:
 
 ```
 dict<string, int> d = {"a":1, "b":2}
-d["a"], error e = 5
-if (!e?) {
-    printf("%d", d["a"]) 
-}
+d["a"] = 5
+printf("%d", d["a"]) 
 // prints 5
 ```
 
