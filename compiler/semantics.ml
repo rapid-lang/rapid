@@ -12,7 +12,7 @@ type symbol_table = {
 
 
 
-let semantic_check ast =
+let gen_sast ast =
     ""
 
 

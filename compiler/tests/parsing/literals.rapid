@@ -1,4 +1,5 @@
-string s = "hello world"
 
-string b = "~~ strings work ~~"
+string s = "hello world";
+
+string b = "~~ strings work ~~";
 
