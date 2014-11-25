@@ -91,10 +91,9 @@ vdecl_list:
     | vdecl_list var_decl { $2 :: $1 }
 
 
+/* a tuple here of (primtype, ID) */
 var_decl:
-    /* Maybe return a tuple here of (primtype, string)? */
     | primtype ID { ($1 , Id($2)) }
-    /* TODO: call a function Assign($1, $2, $4) or something */
     | primtype ID ASSIGN lit { ($1 , Assign($2 , $4)) }
 
 
@@ -109,8 +108,8 @@ fstmt_list:
 
 
 func_stmt:
-    | RETURN expr { Return($2) }
-    | stmt SEMI   { FStmt($1) }
+    | RETURN expr SEMI { Return($2) }
+    | stmt SEMI        { FStmt($1) }
 
 
 stmt:

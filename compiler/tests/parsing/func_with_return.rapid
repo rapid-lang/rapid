@@ -1,6 +1,6 @@
 
 func useless(int x) {
-    return x
+    return x;
 }
 
 
