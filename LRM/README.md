@@ -747,7 +747,7 @@ Expressions are series of operators and operands that may be evaluated to a valu
 
 #### Literals
 
-Literls may be of type string, integer, float, boolean, dict, or list.  See Lexical Conventions for more information.
+Literals may be of type string, integer, float, boolean, dict, or list.  See Lexical Conventions for more information.
 
 #### Identifiers
 
