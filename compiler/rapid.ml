@@ -17,5 +17,5 @@ let _ =
             | Ast -> let listing = Ast.string_of_program program in
                 print_string listing
             | Compile -> let stmts = (Compile.translate program) in
-                 print_string(Generate.build_prog stmts)
+                print_string(Generate.build_prog stmts)
 
