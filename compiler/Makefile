@@ -5,19 +5,24 @@ OCAMLLEX=ocamllex
 OCAMLYACC=ocamlyacc
 
 RAPID_OBJS = ast.cmo parser.cmo scanner.cmo compile.cmo generate.cmo rapid.cmo
-PARSER_FILES = ast.cmo parser.cmo scanner.cmo test_parser.cmo
+PARSER_OBJS = ast.cmo parser.cmo scanner.cmo test_parser.cmo
+SAST_OBJS = ast.cmo parser.cmo scanner.cmo test_parser.cmo semantic_check.cmo test_sast.cmo
 TARFILES = Makefile scanner.mll parser.mly ast.ml compile.ml rapid.ml
 
-all: clean rapid parser
+all: clean rapid parser sast
 
 rapid: $(RAPID_OBJS)
 	$(OCAMLC) -o rapid $(RAPID_OBJS)
 
-parser: $(PARSER_FILES)
-	$(OCAMLC) -o parser $(PARSER_FILES)
+parser: $(PARSER_OBJS)
+	$(OCAMLC) -o parser $(PARSER_OBJS)
 
-test: parser parser_tests.sh
+sast: $(SAST_OBJS)
+	$(OCAMLC) -o sast $(SAST_OBJS)
+
+test: parser sast parser_tests.sh
 	./parser_tests.sh
+	./sast_tests.sh
 
 scanner.ml: scanner.mll
 	$(OCAMLLEX) scanner.mll
@@ -52,8 +57,11 @@ rapid.cmo : scanner.cmo parser.cmi generate.cmo compile.cmo ast.cmo
 rapid.cmx : scanner.cmx parser.cmx generate.cmx compile.cmx ast.cmx
 scanner.cmo : parser.cmi
 scanner.cmx : parser.cmx
-semantics.cmo : ast.cmo
-semantics.cmx : ast.cmx
+semantic_check.cmo : ast.cmo
+semantic_check.cmx : ast.cmx
 test_parser.cmo : scanner.cmo parser.cmi ast.cmo
 test_parser.cmx : scanner.cmx parser.cmx ast.cmx
+test_sast.cmo : semantic_check.cmo scanner.cmo parser.cmi
+test_sast.cmx : semantic_check.cmx scanner.cmx parser.cmx
 parser.cmi : ast.cmo
+sast.cmi :
