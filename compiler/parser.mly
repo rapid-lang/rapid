@@ -124,13 +124,14 @@ stmt:
 
 
 print:
-    | PRINTLN LPAREN STRING_LIT RPAREN { Println($3) }
-    | PRINTF LPAREN STRING_LIT COMMA print_list RPAREN { Printf($3, $5) }
+    | PRINTLN LPAREN expr print_list RPAREN { Println($3 :: $4) }
+    | PRINTF LPAREN STRING_LIT print_list RPAREN { Printf($3, $4) }
 
 
 print_list:
-    | expr                    { [$1] }
-    | print_list COMMA expr   { $3 :: $1 }
+    | /* nothing */         { [] }
+    | COMMA expr            { [$2] }
+    | print_list COMMA expr { $3 :: $1 }
 
 
 expr_opt:

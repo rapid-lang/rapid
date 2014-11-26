@@ -31,7 +31,7 @@ type vdecl = var_type * expr
 
 type print =
     | Printf of string * expr list
-    | Println of string
+    | Println of expr list
 
 type stmt =
     | Block of stmt list
@@ -136,7 +136,8 @@ let output_s = function
     | Printf(f, el) -> sprintf "Printf(%s, %s)"
         f
         (String.concat ", " (List.map expr_s el))
-    | Println(s) -> sprintf "Println(%s)\n" s
+    | Println(el) -> sprintf "Println(%s)\n"
+        (String.concat ", " (List.map expr_s el))
 
 let string_of_vdecl (t , ex) = sprintf "%s %s\n"
     (string_of_t t)
