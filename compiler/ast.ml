@@ -27,7 +27,7 @@ type var_type =
     | Float
     | User_def
 
-type vdecl = var_type * expr
+type vdecl = var_type * string * expr option
 
 type print =
     | Printf of string * expr list
@@ -139,9 +139,12 @@ let output_s = function
     | Println(el) -> sprintf "Println(%s)\n"
         (String.concat ", " (List.map expr_s el))
 
-let string_of_vdecl (t , ex) = sprintf "%s %s\n"
+let string_of_vdecl (t, nm, e) = sprintf "%s %s %s\n"
     (string_of_t t)
-    (string_of_expr ex)
+    nm
+    (match e with
+        | Some exp -> sprintf "= %s" (expr_s exp)
+        | None     -> "(Not assigned)")
 
 (* Prettyprint statements *)
 let rec stmt_s = function

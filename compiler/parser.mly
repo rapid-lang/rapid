@@ -86,15 +86,10 @@ formal_list:
     | formal_list COMMA primtype ID { $4 :: $1 }
 
 
-vdecl_list:
-    | /* nothing */    { [] }
-    | vdecl_list var_decl { $2 :: $1 }
-
-
 /* a tuple here of (primtype, ID) */
 var_decl:
-    | primtype ID { ($1 , Id($2)) }
-    | primtype ID ASSIGN lit { ($1 , Assign($2 , $4)) }
+    | primtype ID             { ($1 , $2, None) }
+    | primtype ID ASSIGN expr { ($1 , $2, Some($4)) }
 
 
 stmt_list:
@@ -113,14 +108,14 @@ func_stmt:
 
 
 stmt:
-    | expr  { Expr($1) }
-    | print { Output($1) }
+    | expr     { Expr($1) }
+    | print    { Output($1) }
+    | var_decl { VarDecl($1) }
     | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
     | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
     | FOR LPAREN expr_opt SEMI expr_opt SEMI expr_opt RPAREN stmt
         { For($3, $5, $7, $9) }
     | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
-    | var_decl {VarDecl($1)}
 
 
 print:
