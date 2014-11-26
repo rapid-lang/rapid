@@ -36,21 +36,24 @@ type print =
 type stmt =
     | Block of stmt list
     | Expr of expr
-    | Return of expr
     | If of expr * stmt * stmt
     | For of expr * expr * expr * stmt
     | While of expr * stmt
     | Output of print
     | VarDecl of vdecl
 
+type func_stmt =
+    | FStmt of stmt
+    | Return of expr
+
 type func_decl = {
     fname : string;
     formals : string list;
     return : var_type list;
-    body : stmt list;
+    body : func_stmt list;
 }
 
-type program = vdecl list * func_decl list
+type program = stmt list * func_decl list
 
 (* alias print functions for cleaner code *)
 let sprintf = Format.sprintf
@@ -145,8 +148,6 @@ let rec stmt_s = function
         (concat ",\n" (List.map (fun s -> sprintf "(%s)" (stmt_s s)) ss))
     | Expr(e) -> sprintf "Expr (%s)"
         (expr_s e)
-    | Return(e) -> sprintf "Return (%s)"
-        (expr_s e)
     | If(e, s1, s2) -> sprintf "If (%s) (%s) (%s)"
         (expr_s e)
         (stmt_s s1)
@@ -162,14 +163,18 @@ let rec stmt_s = function
     | Output(o) -> output_s o
     | VarDecl(vd) -> string_of_vdecl vd
 
-let func_decl_s f = sprintf "{\nfname = \"%s\"\nformats = [%s]\n\tbody = [%s]\n}"
+let fstmt_s = function
+    | Return(e) -> sprintf "Return (%s)"
+        (expr_s e)
+    | FStmt(s) -> stmt_s s
+
+let func_decl_s f = sprintf "{\nfname = \"%s\"\nformals = [%s]\n\tbody = [%s]\n}"
     f.fname
     (concat ", " f.formals)
-    (*(concat ", " f.locals)*)
-    (concat ",\n" (List.map stmt_s f.body))
+    (concat ",\n" (List.map fstmt_s f.body))
 
-let program_s (vars, funcs) = sprintf "([%s],\n%s)"
-    (concat ", " (List.map string_of_vdecl vars))
+let program_s (stmts, funcs) = sprintf "([%s],\n%s)"
+    (concat ", " (List.map stmt_s stmts))
     (concat "\n" (List.map func_decl_s funcs))
 
 let bin_op = function
@@ -204,8 +209,6 @@ let rec string_of_stmt = function
         (str_concat (List.map string_of_stmt stmts))
     | Expr(expr) -> sprintf "%s\n"
         (string_of_expr expr)
-    | Return(expr) -> sprintf "return %s\n"
-        (string_of_expr expr)
     | If(e, s, Block([])) -> sprintf "if (%s)\n%s"
         (string_of_expr e)
         (string_of_stmt s)
@@ -224,16 +227,21 @@ let rec string_of_stmt = function
     | Output(o) -> output_s o
     | VarDecl(vd) -> string_of_vdecl vd
 
+let string_of_fstmt = function
+    | Return(e) -> sprintf "Return (%s)"
+        (expr_s e)
+    | FStmt(s) -> string_of_stmt s
+
 let string_of_fdecl fdecl =
     sprintf "func %s(%s)(%s)\n{\n%s}\n"
         (fdecl.fname)
         (concat ", " fdecl.formals)
         (concat ", " (List.map string_of_t fdecl.return))
         (*(str_concat (List.map string_of_vdecl fdecl.locals))*)
-        (str_concat (List.map string_of_stmt fdecl.body))
+        (str_concat (List.map string_of_fstmt fdecl.body))
 
-let string_of_program (vars, funcs) =
+let string_of_program (stmts, funcs) =
     sprintf "%s\n%s"
-        (str_concat (List.map string_of_vdecl vars))
+        (str_concat (List.map string_of_stmt stmts))
         (concat "\n" (List.map string_of_fdecl funcs))
 

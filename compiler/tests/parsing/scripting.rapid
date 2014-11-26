@@ -1,0 +1,3 @@
+string name = "hunter42";
+printf("%s, what's your password", name);
+println("*******");
