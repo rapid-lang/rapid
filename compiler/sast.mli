@@ -4,6 +4,8 @@ open Ast
  * This file declares all the types for the semantic AST
  *)
 
+type null
+
 
 (* Will need to figure out how we want to do nested scopes *)
 type scope =
@@ -11,12 +13,12 @@ type scope =
     | Local
 
 
-type IntExpr =
-    | SIntExprLit of scope * SValIntLit
+type int_expr =
+    | SIntExprLit of int
 
 
 type sexpr =
-    | SExprInt of IntExpr
+    | SExprInt of int_expr
 
 
 type soutput =
@@ -24,16 +26,16 @@ type soutput =
     | SPrintln of expr list
 
 
-type svar_decl =
-    | IntDecl of scope * Int * string * int_expr option
+type 'svar_int_decl (string * int_expr option) =
+    | IntDecl of (string * int_expr option)
 
 
-type svar_assign
-    | IntAssign of scope * string * int_expr
+type svar_assign =
+    | IntAssignDecl of string * int_expr option
+    | IntAssign of string * int_expr
 
 
 type semantic_stmt =
-    | SDecl of svar_decl
     | SAssign of svar_assign
     (* TODO:  | SOutput of print *)
 
