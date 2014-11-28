@@ -18,7 +18,7 @@ type var_type =
     | String
     | Bool
     | Float
-    | User_def
+    | UserDef of string
 
 type vdecl = var_type * string * expr option
 

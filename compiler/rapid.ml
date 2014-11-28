@@ -14,7 +14,7 @@ let _ =
     let program = Parser.program Scanner.token lexbuf in
         match action with
             | Raw -> print_string (Ast_helper.program_s program)
-            | Ast -> let listing = Ast_helper.string_of_program program in
+            | Ast -> let listing = Ast_helper.program_s program in
                 print_string listing
             | Compile -> let code = (Compile.translate program) in
                 print_string code

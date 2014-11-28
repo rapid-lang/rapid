@@ -1,51 +1,17 @@
 open Ast
 
-exception Error of string
-
 (* alias print functions for cleaner code *)
 let sprintf = Format.sprintf
 let concat = String.concat
 let str_concat l = concat "" l
 
-(* Converts a string to a datatype *)
-let string_to_t = function
-    | "boolean" -> Bool
-    | "int" -> Int
-    | "float" -> Float
-    | "string" -> String
-    | "" -> raise(Error "No type")
-    | _ -> User_def
 
-(* Prettyprint expressions *)
-let bin_op_s = function
-    | Add -> "Add"
-    | Sub -> "Sub"
-    | Mult -> "Mult"
-    | Div -> "Div"
-    | Equal -> "Equal"
-    | Neq -> "Neq"
-    | Less -> "Less"
-    | Leq -> "Leq"
-    | Greater -> "Greater"
-    | Geq -> "Geq"
-
-(* Prettyprint expressions *)
-let rec expr_s = function
-    | IntLit(l) -> sprintf "(Int Literal (%d))" l
-    | Id(s) -> sprintf "(Id %s)" s
-    | Binop(e1, o, e2) -> sprintf "(Binop (%s) %s (%s))"
-        (expr_s e1)
-        (bin_op_s o)
-        (expr_s e2)
-    | Assign(v, e) -> sprintf "(Assign %s (%s))"
-        v
-        (expr_s e)
-    | Call(f, es) -> sprintf "(Call %s [%s])"
-        f
-        (concat ", " (List.map (fun e -> sprintf "(%s)" (expr_s e)) es))
-    | BoolVal(b) -> string_of_bool b
-    | StringLit(s) -> s
-    | Noexpr -> "Noexpr"
+let string_of_t = function
+    | Int -> "int"
+    | Bool -> "bool"
+    | String -> "string"
+    | Float -> "float"
+    | UserDef(s) -> sprintf "(USER_DEF %s)" s
 
 let bin_op_s = function
     | Add -> "+"
@@ -59,27 +25,24 @@ let bin_op_s = function
     | Greater -> ">"
     | Geq -> ">="
 
-let rec string_of_expr = function
-    | IntLit(l) -> string_of_int l
-    | Id(s) -> s
-    | Binop(e1, o, e2) -> sprintf "%s %s %s"
-        (string_of_expr e1)
+(* Prettyprint expressions *)
+let rec expr_s = function
+    | IntLit(l) -> sprintf "(Int Literal (%d))" l
+    | Id(s) -> sprintf "(Id %s)" s
+    | Binop(e1, o, e2) -> sprintf "(Binop (%s) %s (%s))"
+        (expr_s e1)
         (bin_op_s o)
-        (string_of_expr e2)
-    | Assign(v, e) -> sprintf "%s = %s" v
-        (string_of_expr e)
-    | Call(f, el) -> sprintf "%s(%s)" f
-        (concat ", " (List.map string_of_expr el))
-    | BoolVal(b) -> string_of_bool b
-    | StringLit(s) -> s
-    | Noexpr -> ""
+        (expr_s e2)
+    | Assign(v, e) -> sprintf "(Assign %s (%s))"
+        v
+        (expr_s e)
+    | Call(f, es) -> sprintf "(Call (%s) with (%s))"
+        f
+        (concat ", " (List.map (fun e -> sprintf "(%s)" (expr_s e)) es))
+    | BoolVal(b) -> sprintf "(Bool literal %b)" b
+    | StringLit(s) -> sprintf "(String literal %s)" s
+    | Noexpr -> "( NOEXPR )"
 
-let string_of_t = function
-    | Int -> "int"
-    | Bool -> "bool"
-    | String -> "string"
-    | Float -> "float"
-    | User_def -> "var" (*TODO: change user def to something else*)
 
 let output_s = function
     | Printf(f, el) -> sprintf "(Printf(%s, %s))"
@@ -135,3 +98,16 @@ let program_s (stmts, funcs) = sprintf "([%s],\n%s)"
     (concat "\n" (List.map stmt_s stmts))
     (concat "\n" (List.map func_decl_s funcs))
 
+
+(*
+ * Non-printing helpers
+ *)
+
+
+(* Converts a string to a datatype *)
+let string_to_t = function
+    | "boolean" -> Bool
+    | "int" -> Int
+    | "float" -> Float
+    | "string" -> String
+    | c -> UserDef(c)
