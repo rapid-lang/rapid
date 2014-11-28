@@ -13,7 +13,7 @@ let string_to_t = function
     | "int" -> Int
     | "float" -> Float
     | "string" -> String
-    | "" -> raise(Error("No type"))
+    | "" -> raise(Error "No type")
     | _ -> User_def
 
 (* Prettyprint expressions *)
