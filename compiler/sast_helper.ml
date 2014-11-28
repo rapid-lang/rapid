@@ -7,16 +7,17 @@ let id_from_assign = function
     | IntAssign(id, _) -> id
 
 let int_expr_s = function
-    | SIntExprLit i -> string_of_int i
+    | SIntExprLit i -> sprintf "(Lit %d)" i
 
 let svar_assign_s = function
     | IntAssignDecl(id, e_opt) -> (match e_opt with
-        | Some e -> sprintf "Declare %s to %s\n" id (int_expr_s e)
-        | _      -> sprintf "Declare %s\n" id)
-    | IntAssign(id, e) -> sprintf "Assign %s to %s\n" id (int_expr_s e)
+        | Some e -> sprintf "(Declare (%s) to %s)" id (int_expr_s e)
+        | _      -> sprintf "(Declare (%s))" id)
+    | IntAssign(id, e) -> sprintf "(Assign (%s) to %s)" id (int_expr_s e)
     | _ -> "Unsupported assignment"
 
+
 let semantic_stmt_s = function
-    | SAssign sv -> svar_assign_s sv
+    | SAssign sv -> svar_assign_s sv ^ "\n"
     | _ -> "Unsupported statement"
 
