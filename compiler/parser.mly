@@ -109,9 +109,9 @@ func_stmt:
 
 
 stmt:
-    | expr     { Expr($1) }
-    | print    { Output($1) }
-    | var_decl { VarDecl($1) }
+    | print          { Output($1) }
+    | var_decl       { VarDecl($1) }
+    | ID ASSIGN expr { Assign($1, $3) }
     | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
     | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
     | FOR LPAREN expr_opt SEMI expr_opt SEMI expr_opt RPAREN stmt
@@ -141,6 +141,9 @@ lit:
     | STRING_LIT       { StringLit($1)}
 
 
+fcall:
+    | ID LPAREN actuals_opt RPAREN { FCall($1, $3) }
+
 expr:
     | lit              { $1 }
     /* TODO add float handling */
@@ -155,8 +158,7 @@ expr:
     | expr LEQ    expr { Binop($1, Leq,   $3) }
     | expr GT     expr { Binop($1, Greater,  $3) }
     | expr GEQ    expr { Binop($1, Geq,   $3) }
-    | ID ASSIGN expr   { Assign($1, $3) }
-    | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
+    | fcall            { Call($1) }
     | LPAREN expr RPAREN { $2 }
 
 

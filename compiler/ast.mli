@@ -7,9 +7,10 @@ type expr =
     | BoolVal of bool
     | StringLit of string
     | Binop of expr * op * expr
-    | Assign of string * expr
-    | Call of string * expr list
+    | Call of fcall
     | Noexpr
+and fcall =
+    | FCall of string * expr list
 
 (* AST type for datatypes
  * Primative types and a placeholder for userdefined types *)
@@ -27,13 +28,14 @@ type print =
     | Println of expr list
 
 type stmt =
+    | Assign of string * expr
     | Block of stmt list
-    | Expr of expr
     | If of expr * stmt * stmt
     | For of expr * expr * expr * stmt
     | While of expr * stmt
     | Output of print
     | VarDecl of vdecl
+    | FuncCall of fcall
 
 type func_stmt =
     | FStmt of stmt

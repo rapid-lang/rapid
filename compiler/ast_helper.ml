@@ -33,16 +33,14 @@ let rec expr_s = function
         (expr_s e1)
         (bin_op_s o)
         (expr_s e2)
-    | Assign(v, e) -> sprintf "(Assign %s (%s))"
-        v
-        (expr_s e)
-    | Call(f, es) -> sprintf "(Call (%s) with (%s))"
-        f
-        (concat ", " (List.map (fun e -> sprintf "(%s)" (expr_s e)) es))
+    | Call(f) -> fcall_s f
     | BoolVal(b) -> sprintf "(Bool literal %b)" b
     | StringLit(s) -> sprintf "(String literal %s)" s
     | Noexpr -> "( NOEXPR )"
-
+and fcall_s = function
+    | FCall(f, es) -> sprintf "(Call (%s) with (%s))"
+        f
+        (concat ", " (List.map (fun e -> sprintf "(%s)" (expr_s e)) es))
 
 let output_s = function
     | Printf(f, el) -> sprintf "(Printf(%s, %s))"
@@ -60,10 +58,11 @@ let string_of_vdecl (t, nm, e) = sprintf "%s %s %s\n"
 
 (* Prettyprint statements *)
 let rec stmt_s = function
-    | Block(ss) -> sprintf "(Block {\n%s\n})"
-        (concat "\n" (List.map (fun s -> sprintf "(%s)" (stmt_s s)) ss))
-    | Expr(e) -> sprintf "(Expr (%s))"
+    | Assign(v, e) -> sprintf "(Assign %s (%s))"
+        v
         (expr_s e)
+    | Block ss -> sprintf "(Block {\n%s\n})"
+        (concat "\n" (List.map (fun s -> sprintf "(%s)" (stmt_s s)) ss))
     | If(e, s1, Ast.Block([])) -> sprintf "(If (%s) -> (%s))"
         (expr_s e)
         (stmt_s s1)
@@ -81,8 +80,9 @@ let rec stmt_s = function
         (stmt_s s)
     | Output(o) -> sprintf "(Output (%s))"
         (output_s o)
-    | VarDecl(vd) -> sprintf "(VarDecl (%s))"
+    | VarDecl vd -> sprintf "(VarDecl (%s))"
         (string_of_vdecl vd)
+    | FuncCall f -> fcall_s f
 
 let fstmt_s = function
     | Return(e) -> sprintf "(Return (%s))"
