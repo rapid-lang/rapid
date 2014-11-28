@@ -10,4 +10,5 @@ script:
     - make parser
     - make test
     - yacc -v parser.mly || true    # print the YACC output so we're aware of it
+    - ./rapid < tests/sast/int_decl.rapid
 

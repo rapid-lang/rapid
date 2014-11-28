@@ -16,6 +16,6 @@ let _ =
             | Raw -> print_string (Ast_helper.program_s program)
             | Ast -> let listing = Ast_helper.string_of_program program in
                 print_string listing
-            | Compile -> let stmts = (Compile.translate program) in
-                print_string(Generate.build_prog stmts)
+            | Compile -> let code = (Compile.translate program) in
+                print_string code
 

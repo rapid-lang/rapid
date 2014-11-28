@@ -26,10 +26,6 @@ type soutput =
     | SPrintln of expr list
 
 
-type svar_int_decl =
-    | IntDecl of string * int_expr option
-
-
 type svar_assign =
     | IntAssignDecl of string * int_expr option
     | IntAssign of string * int_expr

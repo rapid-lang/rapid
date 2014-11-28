@@ -1,6 +1,6 @@
-open Sast
-open Sast_helper
-open Format
+open Sast;;
+open Sast_helper;;
+open Format;;
 
 exception RepeatDeclarationErr of string
 exception UncaughtCompareErr of string

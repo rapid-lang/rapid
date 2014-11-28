@@ -19,6 +19,10 @@ let string_map_pairs map pairs =
     List.fold_left (fun m (i, n) -> StringMap.add n i m) map pairs
 
 (* TODO *)
-let translate (sast) =
-    "hello world"
+let translate ast =
+    let sast = Semantic_check.sast_from_ast ast in
+    let sast = List.rev sast in
+    let code = Generate.build_prog sast in
+    code
+
 
