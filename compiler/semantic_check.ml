@@ -36,20 +36,28 @@ let check_repeat_var_decl sorted_stmts =
     in check_sorted comp sorted_stmts
 
 
-(* check for variables being reassigned to different types *)
-(* TODO: refactor *)
+(* Check for variables being reassigned to different types
+ *
+ * For every assign, compare the type of the expression to the
+ * type in that variable's declaration
+ *
+ * @param sorted_decls: list of Ast.vdecl (var_type * string * expr option)
+ * @param sorted_assigns: sorted list of Sast.svar_assign
+ * *)
 let check_invalid_var_reassign sorted_decls sorted_assigns =
     let mtch name = (fun (_, nm, _) -> name = nm) in
-    List.iter (fun (id, exp) ->
+    List.iter (fun assign ->
+        let id = (id_from_assign assign) in
         let decl_opt = find (mtch id) sorted_decls in
         let decl = match decl_opt with
             | Some d -> d
             | None -> raise(UndeclaredVarErr id) in
         match decl with
-            | (Ast.Int, _, _) -> (match exp with
+            | (Ast.Int, _, _) -> (match assign with
                 | IntAssignDecl _ -> ()
-                | t -> raise(InvalidTypeReassignErr "non matching type"))
+                | _ -> raise(InvalidTypeReassignErr "non matching type"))
             | (t, _, _) -> raise(UnsupportedStatementTypeErr (Ast.string_of_t t))
+            | _ -> raise(UnsupportedStatementTypeErr "non matching type")
     ) sorted_assigns
 
 
