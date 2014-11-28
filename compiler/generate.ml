@@ -5,19 +5,26 @@ open Sast_helper;;
 
 exception UnsupportedSemanticExpressionType of string
 exception UnsupportedSemanticStatementType
-exception UnsupportedIntExprType of string
+exception UnsupportedIntExprType
+exception UnsupportedSExprType
+exception UnsupportedOutputType
 
 
 let skeleton = sprintf "%s\n%s\n%s\n%s"
     "package main"
     "import (\"fmt\")"
     "var _ = fmt.Printf"
-    "func main() {"
+    "func main() {\n"
 
 
 let int_expr_to_code = function
     | SIntExprLit i -> sprintf "(%d)" i
-    | _ -> raise(UnsupportedIntExprType "test")
+    | _ -> raise UnsupportedIntExprType
+
+
+let sexpr_to_code = function
+    | SExprInt(i) -> int_expr_to_code i
+    | _ -> raise UnsupportedSExprType
 
 
 let sassign_to_code = function
@@ -27,8 +34,15 @@ let sassign_to_code = function
     | a -> raise(UnsupportedSemanticExpressionType(sprintf "Assignment expression not yet supported -> %s" (svar_assign_s a)))
 
 
+let soutput_to_code = function
+    | SPrintln(xpr_l) ->
+        sprintf "fmt.Println(%s)" (String.concat ", " (List.map sexpr_to_code xpr_l))
+    | _ -> raise UnsupportedOutputType
+
+
 let sast_to_code = function
     | SAssign(asgn) -> sassign_to_code asgn
+    | SOutput(p) -> soutput_to_code p
     | _ -> raise(UnsupportedSemanticStatementType)
 
 
@@ -36,5 +50,5 @@ let build_prog sast =
     let code_lines = List.map sast_to_code sast in
     let gen_code = String.concat "\n" code_lines in
     (* ERROR: sprintf skeleton gen_code *)
-    skeleton ^ gen_code ^ "\n}"
+    skeleton ^ gen_code ^ "\n}\n"
 

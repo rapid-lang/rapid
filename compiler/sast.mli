@@ -31,9 +31,14 @@ type svar_assign =
     | IntAssign of string * int_expr
 
 
+type print =
+    | SPrintln of sexpr list
+    | SPrintf of string * sexpr list
+
+
 type semantic_stmt =
     | SAssign of svar_assign
-    (* TODO:  | SOutput of print *)
+    | SOutput of print
 
 
 (* TODO: Add HTTP routes or something similar in the future *)

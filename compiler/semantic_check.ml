@@ -7,7 +7,8 @@ exception UncaughtCompareErr of string
 exception UnsupportedStatementTypeErr of string
 exception UndeclaredVarErr of string
 exception InvalidTypeReassignErr of string
-exception UnsupportedExpressionType of string
+exception UnsupportedExpressionType
+exception UnsupportedOutputType of string
 
 (* Searches for a match in a list and returns a corresponding option *)
 let rec find f l = match l with
@@ -61,20 +62,27 @@ let check_invalid_var_reassign sorted_decls sorted_assigns =
     ) sorted_assigns
 
 
+let translate_expr = function
+    | Ast.IntLit i -> SExprInt(SIntExprLit i)
+    | _ -> raise UnsupportedExpressionType
+
+
 (* takes in a list of ast variable declarations and outputs sast svar_assigns *)
-let translate_statements var_decls =
-    List.map (fun vd -> match vd with
+let translate_statement = function
         (* TODO: a ton more types here, also support expressions *)
         | Ast.VarDecl(Ast.Int, id, i) -> (match i with
             | Some Ast.IntLit i -> SAssign(IntAssignDecl(id, Some(SIntExprLit i)))
             | None              -> SAssign(IntAssignDecl(id, None))
-            | _                 -> raise(UnsupportedExpressionType(sprintf "Var: %s" id)))
+            | _                 -> raise UnsupportedExpressionType)
         | Ast.VarDecl(t, _, _) -> raise(UnsupportedStatementTypeErr (Ast_helper.string_of_t t))
         | Ast.Expr(Ast.Assign(id, expr)) -> (match expr with
             | Ast.IntLit i -> SAssign(IntAssign(id, SIntExprLit i))
-            | _ -> raise(UnsupportedExpressionType(sprintf "Var: %s" id)))
+            | _ -> raise UnsupportedExpressionType)
+        | Ast.Output(o) -> SOutput(match o with
+            | Ast.Println(xpr_l) -> SPrintln(List.map translate_expr xpr_l)
+            | _ -> raise(UnsupportedOutputType("Not yet implemented"))
+        )
         | _ ->         raise(UnsupportedStatementTypeErr "type unknown")
-    ) var_decls
 
 
 let gen_semantic_stmts stmts =
@@ -94,7 +102,7 @@ let gen_semantic_stmts stmts =
             | Ast.Expr(Ast.Assign(id, xpr)) -> (match xpr with
                 | Ast.IntLit(i) -> IntAssign(id, SIntExprLit(i)) :: lst
                 (* TODO: add all other assignments *)
-                | _ -> raise(UnsupportedExpressionType(sprintf "Expression for %s not supported (%s)" id (Ast_helper.expr_s xpr))))
+                | _ -> raise UnsupportedExpressionType )
             | _ -> lst
     ) [] stmts in
     let comp_assigns = fun a1 a2 -> String.compare (id_from_assign a1) (id_from_assign a2) in
@@ -103,7 +111,8 @@ let gen_semantic_stmts stmts =
     let () = check_repeat_var_decl sorted_decls in
     let () = check_invalid_var_reassign sorted_decls sorted_assigns in
     (* TODO: check order of reference *)
-    translate_statements stmts
+    (* TODO: check valid expressions inside Output *)
+    List.map translate_statement stmts
 
 
 let sast_from_ast ast =
