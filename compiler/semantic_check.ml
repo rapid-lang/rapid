@@ -55,7 +55,7 @@ let check_invalid_var_reassign sorted_decls sorted_assigns =
                 | IntAssignDecl _ -> ()
                 | IntAssign _ -> ()
                 | _ -> raise(InvalidTypeReassignErr "non matching type"))
-            | (t, _, _) -> raise(UnsupportedStatementTypeErr (Ast.string_of_t t))
+            | (t, _, _) -> raise(UnsupportedStatementTypeErr (Ast_helper.string_of_t t))
             | _ -> raise(UnsupportedStatementTypeErr "non matching type")
     ) sorted_assigns
 
@@ -66,7 +66,7 @@ let translate_var_decls var_decls =
         | (Ast.Int, id, Some Ast.IntLit(i))  -> IntAssignDecl(id, Some(SIntExprLit i))
         | (Ast.Int, id, None)                -> IntAssignDecl(id, None)
         (* TODO: a ton more types here, also support expressions *)
-        | (t, _, _) -> raise(UnsupportedStatementTypeErr (Ast.string_of_t t))
+        | (t, _, _) -> raise(UnsupportedStatementTypeErr (Ast_helper.string_of_t t))
         | _ ->         raise(UnsupportedStatementTypeErr "type unknown")
     ) var_decls
 
@@ -88,7 +88,7 @@ let gen_var_decls stmts =
             | Ast.Expr(Ast.Assign(id, xpr)) -> (match xpr with
                 | Ast.IntLit(i) -> IntAssign(id, SIntExprLit(i)) :: lst
                 (* TODO: add all other assignments *)
-                | _ -> raise(UnsupportedExpressionType(Format.sprintf "Expression for %s not supported (%s)" id (Ast.expr_s xpr)))
+                | _ -> raise(UnsupportedExpressionType(Format.sprintf "Expression for %s not supported (%s)" id (Ast_helper.expr_s xpr)))
             )
             | _ -> lst
         ) [] stmts in
