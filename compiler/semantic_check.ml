@@ -64,10 +64,10 @@ let check_invalid_var_reassign sorted_decls sorted_assigns =
 (* takes in a list of ast variable declarations and outputs sast svar_assigns *)
 let translate_var_decls var_decls var_scp =
     List.map (fun vd -> match vd with
-        | Ast.VarDecl(Ast.Int, id, Some Ast.IntLit(i))  -> IntAssignDecl(id, Some(SIntExprLit(i)))
-        | Ast.VarDecl(Ast.Int, id, None)                -> IntAssignDecl(id, None)
+        | (Ast.Int, id, Some Ast.IntLit(i))  -> IntAssignDecl(id, Some(SIntExprLit(i)))
+        | (Ast.Int, id, None)                -> IntAssignDecl(id, None)
         (* TODO: a ton more types here, also support expressions *)
-        | Ast.VarDecl(t, _, _) ->
+        | (t, _, _) ->
             raise(UnsupportedStatementTypeErr (Ast.string_of_t t))
         | _ ->
             raise(UnsupportedStatementTypeErr "type unknown")
