@@ -16,3 +16,4 @@ sast
 tests2
 
 .tmp_err_output
+main.go

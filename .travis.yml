@@ -4,8 +4,10 @@ env:
 notifications:
     email:
         - rapidlang@googlegroups.com
-script:
+before_script:
     - bash -ex config/travis_install.sh
+    - sudo apt-get install golang
+script:
     - cd compiler && make
     - make parser
     - make test

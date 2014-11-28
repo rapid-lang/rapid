@@ -23,6 +23,7 @@ sast: $(SAST_OBJS)
 test: all parser_tests.sh sast_tests.sh
 	./parser_tests.sh
 	./sast_tests.sh
+	./compiler_tests.sh
 
 scanner.ml: scanner.mll
 	$(OCAMLLEX) scanner.mll
