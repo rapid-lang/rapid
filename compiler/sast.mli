@@ -26,8 +26,8 @@ type soutput =
     | SPrintln of expr list
 
 
-type 'svar_int_decl (string * int_expr option) =
-    | IntDecl of (string * int_expr option)
+type svar_int_decl =
+    | IntDecl of string * int_expr option
 
 
 type svar_assign =

@@ -1,4 +1,5 @@
 open Sast
+open Sast_helper
 
 exception RepeatDeclarationErr of string
 exception UncaughtCompareErr of string
@@ -54,12 +55,14 @@ let check_invalid_var_reassign sorted_decls sorted_assigns =
 
 (* takes in a list of ast variable declarations and outputs sast svar_assigns *)
 let translate_var_decls var_decls var_scp =
-    List.map (fun (vd : svar_int_decl) -> match vd with
-        | (Ast.Int, id, Some Ast.IntLit(i))  -> IntAssignDecl(id, Some(SIntExprLit(i)))
-        | (Ast.Int, id, None)               -> IntAssignDecl(id, None)
+    List.map (fun vd -> match vd with
+        | Ast.VarDecl(Ast.Int, id, Some Ast.IntLit(i))  -> IntAssignDecl(id, Some(SIntExprLit(i)))
+        | Ast.VarDecl(Ast.Int, id, None)                -> IntAssignDecl(id, None)
         (* TODO: a ton more types here, also support expressions *)
-        | (t, _, _) ->
+        | Ast.VarDecl(t, _, _) ->
             raise(UnsupportedStatementTypeErr (Ast.string_of_t t))
+        | _ ->
+            raise(UnsupportedStatementTypeErr "type unknown")
     ) var_decls
 
 
@@ -77,10 +80,12 @@ let gen_var_decls stmts =
     let assigns = List.fold_left
         (fun lst stmt -> match stmt with
             | Ast.Expr(Ast.Assign(id, Ast.IntLit(i))) -> IntAssign(id, SIntExprLit(i)) :: lst
+            (* TODO: add all other assignments *)
             | _ -> lst
         ) [] stmts in
-    let comp_asgns = fun (id1, _) (id2, _) -> String.compare id1 id2 in
-    let sorted_assigns = List.sort comp_asgns assigns in
+    let comp = fun (id1, _) (id2, _) -> String.compare id1 id2 in
+    let comp = fun a1 a2 -> String.compare (id_from_assign a1) (id_from_assign a2) in
+    let sorted_assigns = List.sort comp assigns in
 
     let () = check_repeat_var_decl sorted_decls in
     let () = check_invalid_var_reassign sorted_decls sorted_assigns in
