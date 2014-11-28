@@ -6,14 +6,13 @@ exception UncaughtCompareErr of string
 exception UnsupportedStatementTypeErr of string
 exception UndeclaredVarErr of string
 exception InvalidTypeReassignErr of string
+exception UnsupportedExpressionType of string
 
 (* Searches for a match in a list and returns a corresponding option *)
 let rec find f l = match l with
     | hd :: tl -> if f hd then Some hd
                   else find f tl
     | [] -> None
-
-
 
 
 (* Takes a sorted list of objects and calls compare on each pair.
@@ -32,7 +31,6 @@ let check_sorted compare sorted =
 let check_repeat_var_decl sorted_stmts =
     let comp = fun (_, id1, _) (_, id2, _) ->
         if id1 = id2 then raise(RepeatDeclarationErr id1)
-        else ()
     in check_sorted comp sorted_stmts
 
 
@@ -55,6 +53,7 @@ let check_invalid_var_reassign sorted_decls sorted_assigns =
         match decl with
             | (Ast.Int, _, _) -> (match assign with
                 | IntAssignDecl _ -> ()
+                | IntAssign _ -> ()
                 | _ -> raise(InvalidTypeReassignErr "non matching type"))
             | (t, _, _) -> raise(UnsupportedStatementTypeErr (Ast.string_of_t t))
             | _ -> raise(UnsupportedStatementTypeErr "non matching type")
@@ -62,15 +61,13 @@ let check_invalid_var_reassign sorted_decls sorted_assigns =
 
 
 (* takes in a list of ast variable declarations and outputs sast svar_assigns *)
-let translate_var_decls var_decls var_scp =
+let translate_var_decls var_decls =
     List.map (fun vd -> match vd with
-        | (Ast.Int, id, Some Ast.IntLit(i))  -> IntAssignDecl(id, Some(SIntExprLit(i)))
+        | (Ast.Int, id, Some Ast.IntLit(i))  -> IntAssignDecl(id, Some(SIntExprLit i))
         | (Ast.Int, id, None)                -> IntAssignDecl(id, None)
         (* TODO: a ton more types here, also support expressions *)
-        | (t, _, _) ->
-            raise(UnsupportedStatementTypeErr (Ast.string_of_t t))
-        | _ ->
-            raise(UnsupportedStatementTypeErr "type unknown")
+        | (t, _, _) -> raise(UnsupportedStatementTypeErr (Ast.string_of_t t))
+        | _ ->         raise(UnsupportedStatementTypeErr "type unknown")
     ) var_decls
 
 
@@ -88,7 +85,11 @@ let gen_var_decls stmts =
     let assigns = List.fold_left
         (fun lst stmt -> match stmt with
             | Ast.Expr(Ast.Assign(id, Ast.IntLit(i))) -> IntAssign(id, SIntExprLit(i)) :: lst
-            (* TODO: add all other assignments *)
+            | Ast.Expr(Ast.Assign(id, xpr)) -> (match xpr with
+                | Ast.IntLit(i) -> IntAssign(id, SIntExprLit(i)) :: lst
+                (* TODO: add all other assignments *)
+                | _ -> raise(UnsupportedExpressionType(Format.sprintf "Expression for %s not supported (%s)" id (Ast.expr_s xpr)))
+            )
             | _ -> lst
         ) [] stmts in
     let comp = fun (id1, _) (id2, _) -> String.compare id1 id2 in
