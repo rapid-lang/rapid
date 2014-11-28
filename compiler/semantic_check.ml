@@ -1,4 +1,5 @@
 open Sast;;
+open Sast_printer;;
 open Sast_helper;;
 open Format;;
 

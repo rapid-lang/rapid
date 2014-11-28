@@ -1,6 +1,6 @@
 open Format;;
 open Sast;;
-open Sast_helper;;
+open Sast_printer;;
 
 
 exception UnsupportedSemanticExpressionType of string
