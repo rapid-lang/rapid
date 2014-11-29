@@ -1,8 +1,12 @@
 open Sast
 
 exception UnsupportedAssignExpr
+exception UnsupportedDeclStmt
 exception ExistingSymbolErr
+exception VariatbleNotDefinedErr of string
 
+
+type var_type = Int | String (* | Bool | Float | UserDef of string *)
 
 let id_from_assign = function
     | IntAssign(id, _) -> id
@@ -39,6 +43,12 @@ let translate_if_exists tran o = match o with
     | None -> None
 
 
+let vd_to_t_id = function
+    | IntAssignDecl(id, _)  -> Int, id
+    | StringAssignDecl(id, _) -> String, id
+    | _ -> raise UnsupportedDeclStmt
+
+
 
 
 
@@ -47,12 +57,18 @@ type symbol_table = sexpr StringMap.t
 let empty_symbol_table = StringMap.empty
 
 
-
 let add_sym st vd =
-    let (t, id, _) = vd in
+    let t, id = vd_to_t_id vd in
     if StringMap.mem id st
         then raise ExistingSymbolErr
         else StringMap.add id t st
+
+
+let get_type st id =
+    if StringMap.mem id st
+        then StringMap.find id st
+        else raise(VariatbleNotDefinedErr(Format.sprintf "%s is not defined" id))
+
 
 let print_sym st =
     let print_sym = (fun id t -> print_endline(Format.sprintf "%s of %s" id (Ast_helper.string_of_t t))) in

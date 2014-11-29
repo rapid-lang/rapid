@@ -13,66 +13,27 @@ exception UnsupportedExpressionType
 
 
 
+let check_var_assign_use sym_tbl assign =
+    let id = id_from_assign assign in
+    let t = get_type sym_tbl id in
+    match (t, assign) with
+        | Int, IntAssign _ -> sym_tbl
+        | String, StringAssign _ -> sym_tbl
+        | Int, _ -> raise(InvalidTypeReassignErr("Expected Int expression"))
+        | String, _ -> raise(InvalidTypeReassignErr("Expected String expression"))
+        | _ -> raise(UnsupportedExpressionType)
+
+
 let rec get_symbols st = function
-    | Ast.VarDecl(vd) :: tl -> get_symbols (add_sym st vd) tl
-    | _ :: tl         -> get_symbols st tl
-    | []              -> st
-
-
-(* Check for variables being reassigned to different types
- *
- * For every assign, compare the type of the expression to the
- * type in that variable's declaration
- *
- * @param sorted_decls: list of Ast.vdecl (var_type * string * expr option)
- * @param sorted_assigns: sorted list of Sast.svar_assign
- * *)
-let check_invalid_var_reassign sorted_decls sorted_assigns =
-    let mtch name = (fun (_, nm, _) -> name = nm) in
-    List.iter (fun assign ->
-        let id = (id_from_assign assign) in
-        let decl_opt = find (mtch id) sorted_decls in
-        let decl = match decl_opt with
-            | Some d -> d
-            | None -> raise(UndeclaredVarErr id) in
-        match decl with
-            | (Ast.Int, _, _) -> (match assign with
-                | IntAssign _ -> ()
-                | _ -> raise(InvalidTypeReassignErr "non matching type"))
-            | (t, _, _) -> raise(UnsupportedStatementTypeErr (Ast_helper.string_of_t t))
-            | _ -> raise(UnsupportedStatementTypeErr "non matching type")
-    ) sorted_assigns
-
+    | SDecl vd :: tl -> get_symbols (add_sym st vd) tl
+    | SAssign(a) :: tl   -> get_symbols (check_var_assign_use st a) tl
+    | _ :: tl -> get_symbols st tl
+    | [] -> st
 
 
 let gen_semantic_stmts stmts =
-    let sym = get_symbols empty_symbol_table stmts in
-
-    (* reduce list to var ID's *)
-    let decls = List.fold_left
-        (fun lst st -> match st with
-            | Ast.VarDecl(vd) -> vd :: lst
-            | _ -> lst
-        ) [] stmts in
-    let comp = fun (_, id1, _) (_, id2, _) -> String.compare id1 id2 in
-    let sorted_decls = List.sort comp decls in
-
-    (* reduce list to var assigns *)
-    let assigns = List.fold_left
-        (fun lst stmt -> match stmt with
-            | Ast.Assign(id, Ast.IntLit(i)) -> IntAssign(id, SIntExprLit(i)) :: lst
-            | Ast.Assign(id, xpr) -> (match xpr with
-                | Ast.IntLit(i) -> IntAssign(id, SIntExprLit(i)) :: lst
-                (* TODO: add all other assignments *)
-                | _ -> raise UnsupportedExpressionType )
-            | _ -> lst
-    ) [] stmts in
-    let comp_assigns = fun a1 a2 -> String.compare (id_from_assign a1) (id_from_assign a2) in
-    let sorted_assigns = List.sort comp_assigns assigns in
-
-    let () = check_invalid_var_reassign sorted_decls sorted_assigns in
-    (* TODO: check order of reference *)
-    (* TODO: check valid expressions inside Output *)
+    let s_stmts = List.map translate_statement stmts in
+    let sym = get_symbols empty_symbol_table s_stmts in
     List.map translate_statement stmts
 
 
