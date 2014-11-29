@@ -1,4 +1,5 @@
 
+*.tar.gz
 *.cmi
 *.cmo
 parser.ml
@@ -10,7 +11,9 @@ rapid
 parser
 microc
 test
+sast
 
 tests2
 
 .tmp_err_output
+main.go

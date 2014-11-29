@@ -1,5 +1,6 @@
 %{
     open Ast
+    open Ast_helper
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
