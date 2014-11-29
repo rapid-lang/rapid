@@ -1,15 +1,14 @@
-
 open Sast;;
 open Sast_printer;;
 open Sast_helper;;
 
-
-exception UnsupportedOutputType of string
 exception UnsupportedStatementTypeErr of string
+exception UnsupportedOutputType of string
+exception UnsupportedExpressionType
+exception InvalidStringExprType
 exception UnsupportedDeclType
 exception InvalidIntExprType
-exception InvalidStringExprType
-exception UnsupportedExpressionType
+
 
 let translate_int_xpr = function
     | Ast.IntLit i -> SIntExprLit i
@@ -19,10 +18,10 @@ let translate_string_xpr = function
     | Ast.StringLit s -> SStringExprLit s
     | _ -> raise InvalidStringExprType
 
-
 let rec translate_expr = function
     (* TODO: a ton more types here, also support expressions *)
-    | Ast.IntLit i         -> SExprInt(SIntExprLit i)
+    | Ast.IntLit i    -> SExprInt(SIntExprLit i)
+    | Ast.StringLit s -> SExprString(SStringExprLit s)
     | _ -> raise UnsupportedExpressionType
 
 let translate_assign id xpr = match translate_expr xpr with
@@ -36,11 +35,9 @@ let translate_decl = function
     | (t, _, _) -> raise(UnsupportedStatementTypeErr (Ast_helper.string_of_t t))
     | _ -> raise UnsupportedDeclType
 
-
 let translate_output = function
     | Ast.Println(xpr_l) -> SPrintln(List.map translate_expr xpr_l)
     | _ -> raise(UnsupportedOutputType("Not yet implemented"))
-
 
 let translate_statement = function
     | Ast.VarDecl vd -> SDecl(translate_decl vd)

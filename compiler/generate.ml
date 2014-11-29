@@ -2,20 +2,13 @@ open Format;;
 open Sast;;
 open Sast_printer;;
 
-
 exception UnsupportedSemanticExpressionType of string
 exception UnsupportedSemanticStatementType
+exception UnsupportedStringExprType
 exception UnsupportedIntExprType
-exception UnsupportedSExprType
 exception UnsupportedOutputType
+exception UnsupportedSExprType
 exception UnsupportedDeclType of string
-
-
-let skeleton = sprintf "%s\n%s\n%s\n%s"
-    "package main"
-    "import (\"fmt\")"
-    "var _ = fmt.Printf"
-    "func main() {\n"
 
 
 let int_expr_to_code = function
@@ -23,8 +16,14 @@ let int_expr_to_code = function
     | _ -> raise UnsupportedIntExprType
 
 
+let string_expr_to_code = function
+    | SStringExprLit s -> sprintf "(\"%s\")" s
+    | _ -> raise UnsupportedStringExprType
+
+
 let sexpr_to_code = function
-    | SExprInt(i) -> int_expr_to_code i
+    | SExprInt i -> int_expr_to_code i
+    | SExprString s -> string_expr_to_code s
     | _ -> raise UnsupportedSExprType
 
 
@@ -50,6 +49,13 @@ let sast_to_code = function
     | SAssign a -> sassign_to_code a
     | SOutput p -> soutput_to_code p
     | _ -> raise(UnsupportedSemanticStatementType)
+
+
+let skeleton = sprintf "%s\n%s\n%s\n%s"
+    "package main"
+    "import (\"fmt\")"
+    "var _ = fmt.Printf"
+    "func main() {\n"
 
 
 let build_prog sast =
