@@ -17,14 +17,18 @@ let soutput_s = function
     | _ -> "Unsupported output"
 
 let svar_assign_s = function
+    | IntAssign(id, e) -> sprintf "(Assign (%s) to %s)" id (int_expr_s e)
+    | _ -> "UNSUPPORTED ASSIGNMENT"
+
+let svar_decl_s = function
     | IntAssignDecl(id, e_opt) -> (match e_opt with
         | Some e -> sprintf "(Declare (%s) to %s)" id (int_expr_s e)
         | _      -> sprintf "(Declare (%s))" id)
-    | IntAssign(id, e) -> sprintf "(Assign (%s) to %s)" id (int_expr_s e)
-    | _ -> "Unsupported assignment"
+    | _ -> "UNSUPPORTED ASSIGNMENT"
 
 let semantic_stmt_s = function
-    | SAssign sv -> svar_assign_s sv ^ "\n"
+    | SAssign a -> svar_assign_s a ^ "\n"
+    | SDecl d -> svar_decl_s d ^ "\n"
     | SOutput(o) -> sprintf "(Output (%s))" (soutput_s o)
     | _ -> "Unsupported statement"
 

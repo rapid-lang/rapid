@@ -49,7 +49,7 @@ let output_s = function
     | Println(el) -> sprintf "(Println(%s))"
         (String.concat ", " (List.map expr_s el))
 
-let string_of_vdecl (t, nm, e) = sprintf "%s %s %s\n"
+let string_of_vdecl (t, nm, e) = sprintf "%s %s %s"
     (string_of_t t)
     nm
     (match e with
@@ -94,7 +94,7 @@ let func_decl_s f = sprintf "{\nfname = \"%s\"\nformals = [%s]\n\tbody = [%s]\n}
     (concat ", " f.formals)
     (concat ",\n" (List.map fstmt_s f.body))
 
-let program_s (stmts, funcs) = sprintf "([%s],\n%s)"
+let program_s (stmts, funcs) = sprintf "statements:{\n%s\n}\nfunctions:\n%s"
     (concat "\n" (List.map stmt_s stmts))
     (concat "\n" (List.map func_decl_s funcs))
 
@@ -102,7 +102,6 @@ let program_s (stmts, funcs) = sprintf "([%s],\n%s)"
 (*
  * Non-printing helpers
  *)
-
 
 (* Converts a string to a datatype *)
 let string_to_t = function

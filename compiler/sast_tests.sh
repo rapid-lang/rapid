@@ -30,6 +30,7 @@ do
         echo "success: $test_name"
     else
         echo "FAIL:    $test_name"
+        echo "$output"
         had_failures="1"
     fi
 done
