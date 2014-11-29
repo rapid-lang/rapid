@@ -11,11 +11,12 @@ exception UndeclaredVarErr of string
 exception InvalidTypeReassignErr of string
 exception UnsupportedExpressionType
 
-(* checks if any variables are redeclared *)
-let check_repeat_var_decl sorted_stmts =
-    let comp = fun (_, id1, _) (_, id2, _) ->
-        if id1 = id2 then raise(RepeatDeclarationErr id1)
-    in check_sorted comp sorted_stmts
+
+
+let rec get_symbols st = function
+    | Ast.VarDecl(vd) :: tl -> get_symbols (add_sym st vd) tl
+    | _ :: tl         -> get_symbols st tl
+    | []              -> st
 
 
 (* Check for variables being reassigned to different types
@@ -43,7 +44,12 @@ let check_invalid_var_reassign sorted_decls sorted_assigns =
     ) sorted_assigns
 
 
+
 let gen_semantic_stmts stmts =
+    let sym = get_symbols empty_symbol_table stmts in
+    let () = print_sym sym in
+
+
     (* reduce list to var ID's *)
     let decls = List.fold_left
         (fun lst st -> match st with
@@ -66,7 +72,6 @@ let gen_semantic_stmts stmts =
     let comp_assigns = fun a1 a2 -> String.compare (id_from_assign a1) (id_from_assign a2) in
     let sorted_assigns = List.sort comp_assigns assigns in
 
-    let () = check_repeat_var_decl sorted_decls in
     let () = check_invalid_var_reassign sorted_decls sorted_assigns in
     (* TODO: check order of reference *)
     (* TODO: check valid expressions inside Output *)
@@ -76,6 +81,7 @@ let gen_semantic_stmts stmts =
 let sast_from_ast ast =
     (* ignore functions for now *)
     let (stmts, _) = ast in
+    let stmts = List.rev stmts in
     gen_semantic_stmts stmts
 
 

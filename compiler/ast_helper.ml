@@ -95,8 +95,8 @@ let func_decl_s f = sprintf "{\nfname = \"%s\"\nformals = [%s]\n\tbody = [%s]\n}
     (concat ",\n" (List.map fstmt_s f.body))
 
 let program_s (stmts, funcs) = sprintf "statements:{\n%s\n}\nfunctions:\n%s"
-    (concat "\n" (List.map stmt_s stmts))
-    (concat "\n" (List.map func_decl_s funcs))
+    (concat "\n" (List.rev (List.map stmt_s stmts)))
+    (concat "\n" (List.rev (List.map func_decl_s funcs)))
 
 
 (*

@@ -11,7 +11,7 @@ rapid
 parser
 microc
 test
-sast
+compiler/sast
 
 tests2
 
