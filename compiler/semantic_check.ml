@@ -47,8 +47,6 @@ let check_invalid_var_reassign sorted_decls sorted_assigns =
 
 let gen_semantic_stmts stmts =
     let sym = get_symbols empty_symbol_table stmts in
-    let () = print_sym sym in
-
 
     (* reduce list to var ID's *)
     let decls = List.fold_left

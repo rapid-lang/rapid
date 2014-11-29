@@ -27,9 +27,14 @@ do
     else
         echo "FAIL:    $test_name"
         had_failures="1"
+
         printf "Expected: {\n"
         cat "$testpath$suffix"
         printf "}\n"
+
+        printf "Generated Code: [[[\n"
+        cat "main.go"
+        printf "]]]\n"
     fi
 done
 
