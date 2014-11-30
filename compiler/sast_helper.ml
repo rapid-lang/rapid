@@ -1,22 +1,11 @@
 open Sast
+open Datatypes
 
 exception UnsupportedAssignExpr
 exception UnsupportedDeclStmt
 exception ExistingSymbolErr
 exception VariatbleNotDefinedErr of string
 
-
-type var_type = Int | String (* | Bool | Float | UserDef of string *)
-
-let id_from_assign = function
-    | IntAssign(id, _) -> id
-    | StringAssign(id, _) -> id
-    | _ -> raise UnsupportedAssignExpr
-
-
-let id_from_decl = function
-    | IntAssignDecl(id, _) -> id
-    | StringAssignDecl(id, _) -> id
 
 
 (* Searches for a match in a list and returns a corresponding option *)
@@ -38,18 +27,14 @@ let check_sorted compare sorted =
         | [] -> ()
 
 
-let translate_if_exists tran o = match o with
-    | Some o -> Some (tran o)
-    | None -> None
+let option_map func = function
+    | Some o -> Some(func o)
+    | _ -> None
 
 
-let vd_to_t_id = function
-    | IntAssignDecl(id, _)  -> Int, id
-    | StringAssignDecl(id, _) -> String, id
-    | _ -> raise UnsupportedDeclStmt
-
-
-
+let expr_option_map func = function
+    | Some o -> func o
+    | _ -> NullExpr
 
 
 module StringMap = Map.Make(String)
@@ -57,8 +42,7 @@ type symbol_table = sexpr StringMap.t
 let empty_symbol_table = StringMap.empty
 
 
-let add_sym st vd =
-    let t, id = vd_to_t_id vd in
+let add_sym st t id =
     if StringMap.mem id st
         then raise ExistingSymbolErr
         else StringMap.add id t st

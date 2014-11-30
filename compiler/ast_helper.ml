@@ -1,4 +1,5 @@
 open Ast
+open Datatypes
 
 (* alias print functions for cleaner code *)
 let sprintf = Format.sprintf

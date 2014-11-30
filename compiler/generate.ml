@@ -1,6 +1,7 @@
-open Format;;
-open Sast;;
-open Sast_printer;;
+open Format
+open Sast
+open Sast_printer
+open Datatypes
 
 exception UnsupportedSemanticExpressionType of string
 exception UnsupportedSemanticStatementType
@@ -9,6 +10,7 @@ exception UnsupportedIntExprType
 exception UnsupportedOutputType
 exception UnsupportedSExprType
 exception UnsupportedDeclType of string
+
 
 
 let int_expr_to_code = function
@@ -28,24 +30,28 @@ let sexpr_to_code = function
 
 
 let sassign_to_code = function
-    | IntAssign(id, xpr) -> sprintf "%s = %s" id (int_expr_to_code xpr)
-    | a -> raise(UnsupportedSemanticExpressionType(sprintf "Assignment expression not yet supported -> %s" (svar_assign_s a)))
+    | (id, xpr) -> sprintf "%s = %s" id (sexpr_to_code xpr)
+    | a -> raise(UnsupportedSemanticExpressionType(
+        sprintf "Assignment expression not yet supported -> %s"
+        (svar_assign_s a)))
 
 
-let sdecl_to_code = function
-    | IntAssignDecl(id, Some xpr) -> sprintf "var %s int = %s\n_ = %s" id (int_expr_to_code xpr) id
-    | IntAssignDecl(id, None) -> sprintf "var %s int\n_ = %s" id id
-    | a -> raise(UnsupportedDeclType(svar_decl_s a))
+let sdecl_to_code (id, xpr) t = match t, xpr with
+    | Int, SExprInt xpr -> sprintf "var %s int = %s\n_ = %s"
+        id (int_expr_to_code xpr) id
+    | String, SExprString xpr -> sprintf "var %s string = %s\n_ = %s"
+        id (string_expr_to_code xpr) id
+    | _ -> raise(UnsupportedDeclType(svar_decl_s t (id, xpr)))
 
 
 let soutput_to_code = function
-    | SPrintln(xpr_l) ->
-        sprintf "fmt.Println(%s)" (String.concat ", " (List.map sexpr_to_code xpr_l))
+    | SPrintln(xpr_l) -> sprintf "fmt.Println(%s)"
+        (String.concat ", " (List.map sexpr_to_code xpr_l))
     | _ -> raise UnsupportedOutputType
 
 
 let sast_to_code = function
-    | SDecl d -> sdecl_to_code d
+    | SDecl(t, (id, xpr)) -> sdecl_to_code (id, xpr) t
     | SAssign a -> sassign_to_code a
     | SOutput p -> soutput_to_code p
     | _ -> raise(UnsupportedSemanticStatementType)

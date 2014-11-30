@@ -1,3 +1,5 @@
+open Datatypes
+
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq
 
 type expr =
@@ -10,15 +12,6 @@ type expr =
     | Noexpr
 and fcall =
     | FCall of string * expr list
-
-(* AST type for datatypes
- * Primative types and a placeholder for userdefined types *)
-type var_type =
-    | Int
-    | String
-    | Bool
-    | Float
-    | UserDef of string
 
 type vdecl = var_type * string * expr option
 
