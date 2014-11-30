@@ -18,7 +18,7 @@ type sexpr =
     | NullExpr
 
 type soutput =
-    | SPrintf of string * sexpr list
+    | SPrintf of sexpr * sexpr list
     | SPrintln of sexpr list
 
 type svar_assign = string * sexpr

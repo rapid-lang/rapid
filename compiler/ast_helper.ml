@@ -45,7 +45,7 @@ and fcall_s = function
 
 let output_s = function
     | Printf(f, el) -> sprintf "(Printf(%s, %s))"
-        f
+        (expr_s f)
         (String.concat ", " (List.map expr_s el))
     | Println(el) -> sprintf "(Println(%s))"
         (String.concat ", " (List.map expr_s el))

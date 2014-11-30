@@ -121,7 +121,7 @@ stmt:
 
 print:
     | PRINTLN LPAREN expr print_list RPAREN { Println($3 :: $4) }
-    | PRINTF LPAREN STRING_LIT print_list RPAREN { Printf($3, $4) }
+    | PRINTF LPAREN expr print_list RPAREN { Printf($3, $4) }
 
 
 print_list:

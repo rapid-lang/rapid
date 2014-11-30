@@ -36,7 +36,7 @@ let check_var_assign_use sym_tbl id xpr =
 
 
 let check_s_output sym_tbl = function
-    | SPrintf(s, xpr_l) -> SPrintf(s, List.map (rewrite_sexpr sym_tbl) xpr_l)
+    | SPrintf(s, xpr_l) -> SPrintf((rewrite_sexpr sym_tbl s), List.map (rewrite_sexpr sym_tbl) xpr_l)
     | SPrintln(xpr_l) -> SPrintln(List.map (rewrite_sexpr sym_tbl) xpr_l)
 
 
@@ -60,9 +60,9 @@ let gen_semantic_stmts stmts =
     let s_stmts = List.map translate_statement stmts in
 
     (* build a basic symbol table checking and reclassifying all variable usage *)
-    let check_stmts = var_analysis [] empty_symbol_table s_stmts in
+    let checked_stmts = var_analysis [] empty_symbol_table s_stmts in
 
-    check_stmts
+    checked_stmts
 
 
 let sast_from_ast ast =

@@ -33,6 +33,11 @@ do
         printf "}\n"
         echo
 
+        printf "Recieved: {\n"
+        cat "$tmp_file"
+        printf "}\n"
+        echo
+
         printf "Generated Code: [[[\n"
         cat "main.go"
         printf "]]]\n"
