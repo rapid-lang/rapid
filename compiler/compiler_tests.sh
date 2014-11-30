@@ -31,10 +31,12 @@ do
         printf "Expected: {\n"
         cat "$testpath$suffix"
         printf "}\n"
+        echo
 
         printf "Generated Code: [[[\n"
         cat "main.go"
         printf "]]]\n"
+        echo
     fi
 done
 

@@ -19,18 +19,11 @@ let translate_string_xpr = function
     | Ast.StringLit s -> SStringExprLit s
     | _ -> raise InvalidStringExprType
 
-(* we put a placeholder with the ID in and check after *)
-(*
-let translate_id_xpr id = match get_type st id with
-    | Int -> SExprInt(SIntVar id)
-    | String -> SExprString(SStringVar id)
-    | _ -> raise UnsupportedExpressionType
-*)
-
 let rec translate_expr = function
     (* TODO: a ton more types here, also support recursive expressions *)
     | Ast.IntLit i    -> SExprInt(SIntExprLit i)
     | Ast.StringLit s -> SExprString(SStringExprLit s)
+    (* we put a placeholder with the ID in and check after and reclassify *)
     | Ast.Id id       -> SId id
     | _ -> raise UnsupportedExpressionType
 

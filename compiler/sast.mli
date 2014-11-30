@@ -1,14 +1,7 @@
 open Ast
 open Datatypes
 
-(*
- * This file declares all the types for the semantic AST
- *)
 
-(* Will need to figure out how we want to do nested scopes *)
-type scope =
-    | Global
-    | Local
 
 type int_expr =
     | SIntExprLit of int

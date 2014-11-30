@@ -57,16 +57,14 @@ let sast_to_code = function
     | _ -> raise(UnsupportedSemanticStatementType)
 
 
-let skeleton = sprintf "%s\n%s\n%s\n%s"
-    "package main"
-    "import (\"fmt\")"
-    "var _ = fmt.Printf"
+let skeleton = "package main\n" ^
+    "import (\"fmt\")\n" ^
+    "var _ = fmt.Printf\n" ^
     "func main() {\n"
 
 
 let build_prog sast =
     let code_lines = List.map sast_to_code sast in
     let gen_code = String.concat "\n" code_lines in
-    (* ERROR: sprintf skeleton gen_code *)
     skeleton ^ gen_code ^ "\n}\n"
 
