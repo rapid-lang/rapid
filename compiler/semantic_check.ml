@@ -35,6 +35,11 @@ let check_var_assign_use sym_tbl id xpr =
         | t , _ ->  raise(InvalidTypeReassignErr(Format.sprintf "Expected %s expression" (Ast_helper.string_of_t t)))
 
 
+let check_s_output sym_tbl = function
+    | SPrintf(s, xpr_l) -> SPrintf(s, List.map (rewrite_sexpr sym_tbl) xpr_l)
+    | SPrintln(xpr_l) -> SPrintln(List.map (rewrite_sexpr sym_tbl) xpr_l)
+
+
 let rec var_analysis checked st = function
     | SDecl(t, (id, xpr)) :: tl ->
         let expr = rewrite_sexpr st xpr in
@@ -44,7 +49,9 @@ let rec var_analysis checked st = function
         let expr = rewrite_sexpr st xpr in
         let st = check_var_assign_use st id expr in
             var_analysis (SAssign(id, expr) :: checked) st tl
-    | _ :: tl -> var_analysis checked st tl
+    | SOutput(so) :: tl ->
+        let so = check_s_output st so in
+            var_analysis (SOutput(so) :: checked) st tl
     | [] -> checked
 
 
