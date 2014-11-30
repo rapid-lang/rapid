@@ -1,33 +1,34 @@
 open Sast
-open Format
+
+exception UnsupportedAssignExpr
 
 
 let id_from_assign = function
-    | IntAssignDecl(id, _) -> id
     | IntAssign(id, _) -> id
-
-let int_expr_s = function
-    | SIntExprLit i -> sprintf "(Lit %d)" i
-
-let sexpr_s = function
-    | SExprInt i -> int_expr_s i
+    | StringAssign(id, _) -> id
+    | _ -> raise UnsupportedAssignExpr
 
 
-let soutput_s = function
-    | SPrintln xpr_l -> sprintf "Println(%s)" (String.concat ", " (List.map sexpr_s xpr_l))
-    | _ -> "Unsupported output"
+(* Searches for a match in a list and returns a corresponding option *)
+let rec find f l = match l with
+    | hd :: tl -> if f hd then Some hd
+                  else find f tl
+    | [] -> None
 
 
-let svar_assign_s = function
-    | IntAssignDecl(id, e_opt) -> (match e_opt with
-        | Some e -> sprintf "(Declare (%s) to %s)" id (int_expr_s e)
-        | _      -> sprintf "(Declare (%s))" id)
-    | IntAssign(id, e) -> sprintf "(Assign (%s) to %s)" id (int_expr_s e)
-    | _ -> "Unsupported assignment"
+(* Takes a sorted list of objects and calls compare on each pair.
+ * compare should throw exceptions when appropriate *)
+let check_sorted compare sorted =
+    let rec compare_last = fun last rest -> match rest with
+        (* allow for an exception to be raised *)
+        | hd :: tl -> let () = compare last hd in compare_last hd tl
+        | [] -> ()
+    in match sorted with
+        | hd :: tl -> compare_last hd tl
+        | [] -> ()
 
 
-let semantic_stmt_s = function
-    | SAssign sv -> svar_assign_s sv ^ "\n"
-    | SOutput(o) -> sprintf "(Output (%s))" (soutput_s o)
-    | _ -> "Unsupported statement"
+let translate_if_exists tran o = match o with
+    | Some o -> Some (tran o)
+    | None -> None
 
