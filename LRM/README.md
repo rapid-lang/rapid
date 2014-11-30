@@ -962,6 +962,25 @@ printf("%d", add(3,4))
 // 7
 ```
 
+#### Break Statements
+
+A `break` statement can be used to exit a loop prematurely. 
+
+```
+while (/* expression */) {
+    break
+}
+``` 
+In the case of nested loops, the `break` statement only breaks the loop in which it is stated.
+
+```
+while (/* expression */) {
+    while (/* expression */) {
+        break /* only breaks inner loop */
+    }
+}
+```
+
 ## 8. Built-in Functions
 
 ### 8.1 length()
@@ -1394,16 +1413,14 @@ if (!e?) {
 
 #### Set (dict[k] = v)
 
-After indexing, an assignment may occur, to set a value of the list.  Setting is `unsafe`, and for a `dict<S,T>` returns `T , error`..
+After indexing, an assignment may occur, to set a value of the list. 
 
 Examples:
 
 ```
 dict<string, int> d = {"a":1, "b":2}
-d["a"], error e = 5
-if (!e?) {
-    printf("%d", d["a"]) 
-}
+d["a"] = 5
+printf("%d", d["a"]) 
 // prints 5
 ```
 
