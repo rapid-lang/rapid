@@ -60,10 +60,8 @@ let rec var_analysis st = function
 let gen_semantic_stmts stmts =
     (* build an unsafe semantic AST *)
     let s_stmts = List.map translate_statement stmts in
-
     (* typecheck and reclassify all variable usage *)
     let checked_stmts = var_analysis empty_symbol_table s_stmts in
-
     checked_stmts
 
 

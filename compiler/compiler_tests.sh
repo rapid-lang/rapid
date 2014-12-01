@@ -3,6 +3,7 @@
 compiler_tests=$(find tests/compiler -name *\.rapid)
 had_failures="0"
 tmp_file=".test_output"  # stderr of parser stored here
+go_file="main.go"
 suffix=".output"
 
 reduce_path_to_test_name () {
@@ -17,9 +18,9 @@ for file in $compiler_tests
 do
     reduce_path_to_test_name "$file"
 
-    ./rapid < "$file" > "main.go"
+    ./rapid < "$file" > "$go_file"
     # boolean result
-    outcome=$(go run main.go > "$tmp_file")
+    outcome=$(go run $go_file > "$tmp_file")
 
     if [[ outcome ]] && [[ ! $(diff "$tmp_file" "$testpath$suffix") ]]
     then
@@ -39,12 +40,13 @@ do
         echo
 
         printf "Generated Code: [[[\n"
-        cat "main.go"
+        cat "$go_file"
         printf "]]]\n"
         echo
     fi
 done
 
 rm -f "$tmp_file"
+rm -f "$go_file"
 exit $had_failures
 
