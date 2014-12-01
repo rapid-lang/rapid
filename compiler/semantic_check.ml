@@ -18,7 +18,7 @@ exception UnsupportedDatatypeErr
 (* Takes a symbol table and sexpr and rewrites variable references to be typed *)
 let rec rewrite_sexpr st = function
     | SId id -> (
-        match get_type st id with
+        match get_type id st with
         | Int -> SExprInt(SIntVar id)
         | String -> SExprString(SStringVar id)
         | _ -> raise UnsupportedDatatypeErr)
@@ -28,7 +28,7 @@ let rec rewrite_sexpr st = function
 
 (* checks that an assignment has the proper types *)
 let check_var_assign_use sym_tbl id xpr =
-    let t = get_type sym_tbl id in
+    let t = get_type id sym_tbl in
     match t, xpr with
         | Int, SExprInt _ -> sym_tbl
         | String, SExprString _ -> sym_tbl
@@ -45,7 +45,7 @@ let check_s_output sym_tbl = function
 let rec var_analysis st = function
     | SDecl(t, (id, xpr)) :: tl ->
         let expr = rewrite_sexpr st xpr in
-        let st = add_sym st t id in
+        let st = add_sym t id st in
             SDecl(t, (id, expr)) :: var_analysis st tl
     | SAssign(id, xpr) :: tl ->
         let expr = rewrite_sexpr st xpr in
@@ -61,7 +61,7 @@ let gen_semantic_stmts stmts =
     (* build an unsafe semantic AST *)
     let s_stmts = List.map translate_statement stmts in
     (* typecheck and reclassify all variable usage *)
-    let checked_stmts = var_analysis empty_symbol_table s_stmts in
+    let checked_stmts = var_analysis symbol_table_list s_stmts in
     checked_stmts
 
 
