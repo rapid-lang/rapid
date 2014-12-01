@@ -11,9 +11,12 @@ rapid
 parser
 microc
 test
-sast
+compiler/sast
 
 tests2
 
 .tmp_err_output
 main.go
+
+
+!compiler/tests/compiler

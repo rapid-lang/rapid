@@ -1,8 +1,9 @@
-open Sast;;
-open Sast_printer;;
-open Sast_helper;;
-open Format;;
-open Translate;;
+open Sast
+open Sast_helper
+open Sast_printer
+open Format
+open Datatypes
+open Translate
 
 exception RepeatDeclarationErr of string
 exception UncaughtCompareErr of string
@@ -10,76 +11,64 @@ exception UnsupportedStatementTypeErr of string
 exception UndeclaredVarErr of string
 exception InvalidTypeReassignErr of string
 exception UnsupportedExpressionType
-
-(* checks if any variables are redeclared *)
-let check_repeat_var_decl sorted_stmts =
-    let comp = fun (_, id1, _) (_, id2, _) ->
-        if id1 = id2 then raise(RepeatDeclarationErr id1)
-    in check_sorted comp sorted_stmts
+exception UnsupportedSexpr
+exception UnsupportedDatatypeErr
 
 
-(* Check for variables being reassigned to different types
- *
- * For every assign, compare the type of the expression to the
- * type in that variable's declaration
- *
- * @param sorted_decls: list of Ast.vdecl (var_type * string * expr option)
- * @param sorted_assigns: sorted list of Sast.svar_assign
- * *)
-let check_invalid_var_reassign sorted_decls sorted_assigns =
-    let mtch name = (fun (_, nm, _) -> name = nm) in
-    List.iter (fun assign ->
-        let id = (id_from_assign assign) in
-        let decl_opt = find (mtch id) sorted_decls in
-        let decl = match decl_opt with
-            | Some d -> d
-            | None -> raise(UndeclaredVarErr id) in
-        match decl with
-            | (Ast.Int, _, _) -> (match assign with
-                | IntAssign _ -> ()
-                | _ -> raise(InvalidTypeReassignErr "non matching type"))
-            | (t, _, _) -> raise(UnsupportedStatementTypeErr (Ast_helper.string_of_t t))
-            | _ -> raise(UnsupportedStatementTypeErr "non matching type")
-    ) sorted_assigns
+(* Takes a symbol table and sexpr and rewrites variable references to be typed *)
+let rec rewrite_sexpr st = function
+    | SId id -> (
+        match get_type st id with
+        | Int -> SExprInt(SIntVar id)
+        | String -> SExprString(SStringVar id)
+        | _ -> raise UnsupportedDatatypeErr)
+    (* TODO: add all new expressions that can contain variable references to be simplified *)
+    | xpr -> xpr
+
+
+(* checks that an assignment has the proper types *)
+let check_var_assign_use sym_tbl id xpr =
+    let t = get_type sym_tbl id in
+    match t, xpr with
+        | Int, SExprInt _ -> sym_tbl
+        | String, SExprString _ -> sym_tbl
+        | t , _ ->  raise(InvalidTypeReassignErr(Format.sprintf "Expected %s expression" (Ast_printer.string_of_t t)))
+
+
+(* rewrites any sexprs in an SOutput statement *)
+let check_s_output sym_tbl = function
+    | SPrintf(s, xpr_l) -> SPrintf((rewrite_sexpr sym_tbl s), List.map (rewrite_sexpr sym_tbl) xpr_l)
+    | SPrintln(xpr_l) -> SPrintln(List.map (rewrite_sexpr sym_tbl) xpr_l)
+
+
+(* Processes an unsafe SAST and returns a type checked SAST *)
+let rec var_analysis st = function
+    | SDecl(t, (id, xpr)) :: tl ->
+        let expr = rewrite_sexpr st xpr in
+        let st = add_sym st t id in
+            SDecl(t, (id, expr)) :: var_analysis st tl
+    | SAssign(id, xpr) :: tl ->
+        let expr = rewrite_sexpr st xpr in
+        let st = check_var_assign_use st id expr in
+            SAssign(id, expr) :: (var_analysis st tl)
+    | SOutput(so) :: tl ->
+        let so = check_s_output st so in
+            SOutput(so) :: (var_analysis st tl)
+    | [] -> []
 
 
 let gen_semantic_stmts stmts =
-    (* reduce list to var ID's *)
-    let decls = List.fold_left
-        (fun lst st -> match st with
-            | Ast.VarDecl(vd) -> vd :: lst
-            | _ -> lst
-        ) [] stmts in
-    let comp = fun (_, id1, _) (_, id2, _) -> String.compare id1 id2 in
-    let sorted_decls = List.sort comp decls in
-
-    (* reduce list to var assigns *)
-    let assigns = List.fold_left
-        (fun lst stmt -> match stmt with
-            | Ast.Assign(id, Ast.IntLit(i)) -> IntAssign(id, SIntExprLit(i)) :: lst
-            | Ast.Assign(id, xpr) -> (match xpr with
-                | Ast.IntLit(i) -> IntAssign(id, SIntExprLit(i)) :: lst
-                (* TODO: add all other assignments *)
-                | _ -> raise UnsupportedExpressionType )
-            | _ -> lst
-    ) [] stmts in
-    let comp_assigns = fun a1 a2 -> String.compare (id_from_assign a1) (id_from_assign a2) in
-    let sorted_assigns = List.sort comp_assigns assigns in
-
-    let () = check_repeat_var_decl sorted_decls in
-    let () = check_invalid_var_reassign sorted_decls sorted_assigns in
-    (* TODO: check order of reference *)
-    (* TODO: check valid expressions inside Output *)
-    List.map translate_statement stmts
+    (* build an unsafe semantic AST *)
+    let s_stmts = List.map translate_statement stmts in
+    (* typecheck and reclassify all variable usage *)
+    let checked_stmts = var_analysis empty_symbol_table s_stmts in
+    checked_stmts
 
 
 let sast_from_ast ast =
     (* ignore functions for now *)
     let (stmts, _) = ast in
+    let stmts = List.rev stmts in
     gen_semantic_stmts stmts
 
-
-let string_of_sast sast =
-    let strs = List.map semantic_stmt_s sast in
-    String.concat "" strs
 

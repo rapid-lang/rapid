@@ -1,6 +1,5 @@
 %{
     open Ast
-    open Ast_helper
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
@@ -31,7 +30,7 @@
 
 
 primtype:
-    | TYPE { string_to_t($1) }
+    | TYPE { Ast_printer.string_to_t $1 }
     /* todo: add arrays and dicts to primtype */
 
 
@@ -52,7 +51,7 @@ datatype_list:
 
 return_type:
     /* TODO: allow user defined types */
-    | primtype                { [$1] }
+    | primtype                    { [$1] }
     | LPAREN datatype_list RPAREN { $2 }
 
 /*var declarations can now be done inline*/
@@ -109,8 +108,8 @@ func_stmt:
 
 
 stmt:
-    | print          { Output($1) }
-    | var_decl       { VarDecl($1) }
+    | print          { Output $1 }
+    | var_decl       { VarDecl $1 }
     | ID ASSIGN expr { Assign($1, $3) }
     | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
     | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
@@ -121,7 +120,7 @@ stmt:
 
 print:
     | PRINTLN LPAREN expr print_list RPAREN { Println($3 :: $4) }
-    | PRINTF LPAREN STRING_LIT print_list RPAREN { Printf($3, $4) }
+    | PRINTF LPAREN expr print_list RPAREN { Printf($3, $4) }
 
 
 print_list:
@@ -136,9 +135,9 @@ expr_opt:
 
 
 lit:
-    | INT_VAL          { IntLit($1) }
-    | BOOL_VAL         { BoolVal($1) }
-    | STRING_LIT       { StringLit($1)}
+    | INT_VAL    { IntLit $1 }
+    | BOOL_VAL   { BoolVal $1 }
+    | STRING_LIT { StringLit $1 }
 
 
 fcall:
@@ -147,7 +146,7 @@ fcall:
 expr:
     | lit              { $1 }
     /* TODO add float handling */
-    | ID               { Id($1) }
+    | ID               { Id $1 }
     | expr PLUS   expr { Binop($1, Add,   $3) }
     | expr MINUS  expr { Binop($1, Sub,   $3) }
     | expr TIMES  expr { Binop($1, Mult,  $3) }
@@ -158,7 +157,7 @@ expr:
     | expr LEQ    expr { Binop($1, Leq,   $3) }
     | expr GT     expr { Binop($1, Greater,  $3) }
     | expr GEQ    expr { Binop($1, Geq,   $3) }
-    | fcall            { Call($1) }
+    | fcall            { Call $1 }
     | LPAREN expr RPAREN { $2 }
 
 

@@ -1,21 +1,24 @@
-open Compile;;
+type action = Ast | Sast | Compile
 
-type action = Raw | Ast | Compile
+let translate ast =
+    let sast = Semantic_check.sast_from_ast ast in
+    let code = Generate.build_prog sast in
+    code
 
 let _ =
     let action = if Array.length Sys.argv > 1 then
         List.assoc Sys.argv.(1) [
-            ("-r", Raw);
             ("-a", Ast);
+            ("-s", Sast);
             ("-c", Compile);
         ]
     else Compile in (* Assume compiling *)
     let lexbuf = Lexing.from_channel stdin in
-    let program = Parser.program Scanner.token lexbuf in
-        match action with
-            | Raw -> print_string (Ast_helper.program_s program)
-            | Ast -> let listing = Ast_helper.program_s program in
-                print_string listing
-            | Compile -> let code = (Compile.translate program) in
-                print_string code
+    let ast = Parser.program Scanner.token lexbuf in
+    match action with
+        | Ast -> print_string (Ast_printer.program_s ast)
+        | Sast -> let sast = Semantic_check.sast_from_ast ast in
+            print_string (Sast_printer.string_of_sast sast)
+        | Compile -> let code = translate ast in
+            print_string code
 
