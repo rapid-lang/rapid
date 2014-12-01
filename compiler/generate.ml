@@ -47,7 +47,7 @@ let sdecl_to_code (id, xpr) t = match t, xpr with
 
 
 let soutput_to_code = function
-    | SPrintln(xpr_l) -> sprintf "fmt.Println(%s)"
+    | SPrintln xpr_l -> sprintf "fmt.Println(%s)"
         (String.concat ", " (List.map sexpr_to_code xpr_l))
     | SPrintf(s, xpr_l) -> sprintf "fmt.Printf(%s, %s)"
         (sexpr_to_code s)

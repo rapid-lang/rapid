@@ -32,35 +32,37 @@ let check_var_assign_use sym_tbl id xpr =
     match t, xpr with
         | Int, SExprInt _ -> sym_tbl
         | String, SExprString _ -> sym_tbl
-        | t , _ ->  raise(InvalidTypeReassignErr(Format.sprintf "Expected %s expression" (Ast_helper.string_of_t t)))
+        | t , _ ->  raise(InvalidTypeReassignErr(Format.sprintf "Expected %s expression" (Ast_printer.string_of_t t)))
 
 
+(* rewrites any sexprs in an SOutput statement *)
 let check_s_output sym_tbl = function
     | SPrintf(s, xpr_l) -> SPrintf((rewrite_sexpr sym_tbl s), List.map (rewrite_sexpr sym_tbl) xpr_l)
     | SPrintln(xpr_l) -> SPrintln(List.map (rewrite_sexpr sym_tbl) xpr_l)
 
 
-let rec var_analysis checked st = function
+(* Processes an unsafe SAST and returns a type checked SAST *)
+let rec var_analysis st = function
     | SDecl(t, (id, xpr)) :: tl ->
         let expr = rewrite_sexpr st xpr in
         let st = add_sym st t id in
-            var_analysis (SDecl(t, (id, expr)) :: checked) st tl
+            SDecl(t, (id, expr)) :: var_analysis st tl
     | SAssign(id, xpr) :: tl ->
         let expr = rewrite_sexpr st xpr in
         let st = check_var_assign_use st id expr in
-            var_analysis (SAssign(id, expr) :: checked) st tl
+            SAssign(id, expr) :: (var_analysis st tl)
     | SOutput(so) :: tl ->
         let so = check_s_output st so in
-            var_analysis (SOutput(so) :: checked) st tl
-    | [] -> checked
+            SOutput(so) :: (var_analysis st tl)
+    | [] -> []
 
 
 let gen_semantic_stmts stmts =
-    (* build the semantic AST with generalized variable references *)
+    (* build an unsafe semantic AST *)
     let s_stmts = List.map translate_statement stmts in
 
-    (* build a basic symbol table checking and reclassifying all variable usage *)
-    let checked_stmts = var_analysis [] empty_symbol_table s_stmts in
+    (* typecheck and reclassify all variable usage *)
+    let checked_stmts = var_analysis empty_symbol_table s_stmts in
 
     checked_stmts
 
@@ -71,8 +73,4 @@ let sast_from_ast ast =
     let stmts = List.rev stmts in
     gen_semantic_stmts stmts
 
-
-let string_of_sast sast =
-    let strs = List.map semantic_stmt_s sast in
-    String.concat "" strs
 

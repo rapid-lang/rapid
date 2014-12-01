@@ -36,7 +36,7 @@ let translate_assign id xpr = match translate_expr xpr with
 let translate_decl = function
     | Int, id, i_xpr_opt -> SDecl(Int, (id, expr_option_map translate_expr i_xpr_opt))
     | String, id, s_xpr_opt -> SDecl(String, (id, expr_option_map translate_expr s_xpr_opt))
-    | t, _, _ -> raise(UnsupportedStatementTypeErr (Ast_helper.string_of_t t))
+    | t, _, _ -> raise(UnsupportedStatementTypeErr (Ast_printer.string_of_t t))
     | _ -> raise UnsupportedDeclType
 
 let translate_output = function

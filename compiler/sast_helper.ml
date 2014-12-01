@@ -56,6 +56,7 @@ let get_type st id =
 
 
 let print_sym st =
-    let print_sym = (fun id t -> print_endline(Format.sprintf "%s of %s" id (Ast_helper.string_of_t t))) in
+    let print_sym = (fun id t ->
+        print_endline(Format.sprintf "%s of %s" id (Ast_printer.string_of_t t))) in
     StringMap.iter print_sym st
 

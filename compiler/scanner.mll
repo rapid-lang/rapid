@@ -56,8 +56,8 @@ TODO: add when working on lists
 
 (* | '?' { QUESTION } *)
 
-| "true"  | "false" as bool_val { BOOL_VAL( string_to_bool(bool_val) ) }
-| "boolean" | "int"  | "float"| "string" as prim { TYPE(prim) }
+| "true"  | "false" as bool_val { BOOL_VAL( string_to_bool bool_val ) }
+| "boolean" | "int"  | "float"| "string" as prim { TYPE prim }
 
 (*
 | "dict" { DICT }
@@ -97,11 +97,11 @@ TODO: add when working on lists
 *)
 
 (* literals *)
-| ['0'-'9']+ as lxm { INT_VAL(int_of_string(lxm) ) }
-| '"' ([^'"']* as str) '"' { STRING_LIT(str) }
+| ['0'-'9']+ as lxm { INT_VAL( int_of_string lxm ) }
+| '"' ([^'"']* as str) '"' { STRING_LIT str }
 
 (* ID's *)
-| ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
+| ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID lxm }
 
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }

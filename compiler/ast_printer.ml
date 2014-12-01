@@ -28,15 +28,15 @@ let bin_op_s = function
 
 (* Prettyprint expressions *)
 let rec expr_s = function
-    | IntLit(l) -> sprintf "(Int Literal (%d))" l
-    | Id(s) -> sprintf "(Id %s)" s
+    | IntLit l -> sprintf "(Int Literal (%d))" l
+    | Id s -> sprintf "(Id %s)" s
     | Binop(e1, o, e2) -> sprintf "(Binop (%s) %s (%s))"
         (expr_s e1)
         (bin_op_s o)
         (expr_s e2)
-    | Call(f) -> fcall_s f
-    | BoolVal(b) -> sprintf "(Bool literal %b)" b
-    | StringLit(s) -> sprintf "(String literal %s)" s
+    | Call f -> fcall_s f
+    | BoolVal b -> sprintf "(Bool literal %b)" b
+    | StringLit s -> sprintf "(String literal %s)" s
     | Noexpr -> "( NOEXPR )"
 and fcall_s = function
     | FCall(f, es) -> sprintf "(Call (%s) with (%s))"
@@ -47,7 +47,7 @@ let output_s = function
     | Printf(f, el) -> sprintf "(Printf(%s, %s))"
         (expr_s f)
         (String.concat ", " (List.map expr_s el))
-    | Println(el) -> sprintf "(Println(%s))"
+    | Println el -> sprintf "(Println(%s))"
         (String.concat ", " (List.map expr_s el))
 
 let string_of_vdecl (t, nm, e) = sprintf "%s %s %s"
@@ -79,16 +79,16 @@ let rec stmt_s = function
     | While(e, s) -> sprintf "(While (%s)\n{(%s))0"
         (expr_s e)
         (stmt_s s)
-    | Output(o) -> sprintf "(Output (%s))"
+    | Output o -> sprintf "(Output (%s))"
         (output_s o)
     | VarDecl vd -> sprintf "(VarDecl (%s))"
         (string_of_vdecl vd)
     | FuncCall f -> fcall_s f
 
 let fstmt_s = function
-    | Return(e) -> sprintf "(Return (%s))"
+    | Return e -> sprintf "(Return (%s))"
         (expr_s e)
-    | FStmt(s) -> stmt_s s
+    | FStmt s -> stmt_s s
 
 let func_decl_s f = sprintf "{\nfname = \"%s\"\nformals = [%s]\n\tbody = [%s]\n}"
     f.fname

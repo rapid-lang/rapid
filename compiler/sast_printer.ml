@@ -31,11 +31,15 @@ let svar_assign_s (id, xpr) =
     sprintf "(Assign (%s) to %s)" id (sexpr_s xpr)
 
 let svar_decl_s t (id, xpr) =
-    sprintf "(Declare %s (%s) to %s)" id (Ast_helper.string_of_t t) (sexpr_s xpr)
+    sprintf "(Declare %s (%s) to %s)" id (Ast_printer.string_of_t t) (sexpr_s xpr)
 
 let semantic_stmt_s = function
     | SAssign a -> svar_assign_s a ^ "\n"
     | SDecl(t, vd) -> svar_decl_s t vd ^ "\n"
-    | SOutput(o) -> sprintf "(Output %s)" (soutput_s o)
+    | SOutput o -> sprintf "(Output %s)" (soutput_s o)
     | _ -> "Unsupported statement"
+
+let string_of_sast sast =
+    let strs = List.map semantic_stmt_s sast in
+    String.concat "" strs
 
