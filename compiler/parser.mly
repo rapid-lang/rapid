@@ -3,6 +3,7 @@
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
+%token LBRACKET RBRACKET
 %token PLUS MINUS TIMES DIVIDE ASSIGN
 %token EQ NEQ LT LEQ GT GEQ
 %token RETURN IF ELSE FOR WHILE FUNC IN
@@ -119,14 +120,8 @@ stmt:
 
 
 print:
-    | PRINTLN LPAREN expr print_list RPAREN { Println($3 :: $4) }
-    | PRINTF LPAREN expr print_list RPAREN { Printf($3, $4) }
-
-
-print_list:
-    | /* nothing */         { [] }
-    | COMMA expr            { [$2] }
-    | print_list COMMA expr { $3 :: $1 }
+    | PRINTLN LPAREN expression_list RPAREN { Println $3 }
+    | PRINTF LPAREN expression_list RPAREN { Printf $3 }
 
 
 expr_opt:
@@ -141,7 +136,8 @@ lit:
 
 
 fcall:
-    | ID LPAREN actuals_opt RPAREN { FCall($1, $3) }
+    | ID LPAREN expression_list_opt RPAREN { FCall($1, $3) }
+
 
 expr:
     | lit              { $1 }
@@ -161,13 +157,18 @@ expr:
     | LPAREN expr RPAREN { $2 }
 
 
-actuals_opt:
-    | /* nothing */ { [] }
-    | actuals_list  { List.rev $1 }
+expression_list:
+    | expression_list_internal    { List.rev $1 }
 
 
-actuals_list:
-    | expr                    { [$1] }
-    | actuals_list COMMA expr { $3 :: $1 }
+expression_list_opt:
+    | /* nothing */    { [] }
+    | expression_list  { $1 }
+
+
+expression_list_internal:
+    | expr                               { [$1] }
+    | expression_list_internal COMMA expr { $3 :: $1 }
+
 
 %%

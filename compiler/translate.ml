@@ -41,7 +41,7 @@ let translate_decl = function
 
 let translate_output = function
     | Ast.Println xpr_l -> SPrintln(List.map translate_expr xpr_l)
-    | Ast.Printf(s, xpr_l) -> SPrintf(translate_expr s, List.map translate_expr xpr_l)
+    | Ast.Printf(format :: xpr_l) -> SPrintf(translate_expr format, List.map translate_expr xpr_l)
     | _ -> raise(UnsupportedOutputType("Not yet implemented"))
 
 let translate_statement = function
