@@ -1,0 +1,10 @@
+func too(){
+}
+
+// now w/ return type
+func foo() int {
+}
+
+// now w/ return type tuple
+func boo() (int, int, int) {
+}
