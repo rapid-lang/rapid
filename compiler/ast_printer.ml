@@ -7,11 +7,12 @@ let concat = String.concat
 let str_concat l = concat "" l
 
 
-let string_of_t = function
+let rec string_of_t = function
     | Int -> "int"
     | Bool -> "bool"
     | String -> "string"
     | Float -> "float"
+    | ListType(s) -> sprintf "list<%s>" (string_of_t s)
     | UserDef(s) -> sprintf "(USER_DEF %s)" s
 
 let bin_op_s = function
@@ -37,6 +38,8 @@ let rec expr_s = function
     | Call f -> fcall_s f
     | BoolVal b -> sprintf "(Bool literal %b)" b
     | StringLit s -> sprintf "(String literal %s)" s
+    | ListLit l -> sprintf "(List literal [%s])"
+        (String.concat ", " (List.map expr_s l))
     | Noexpr -> "( NOEXPR )"
 and fcall_s = function
     | FCall(f, es) -> sprintf "(Call (%s) with (%s))"

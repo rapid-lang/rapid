@@ -17,15 +17,16 @@ rule token = parse
 | "{" { LBRACE }
 | "}" { RBRACE }
 
-(*
-TODO: add when working on lists
 | "[" { LBRACKET }
 | "]" { RBRACKET }
-*)
 
 | ";" { SEMI }
 | "," { COMMA }
 (* | ":" { COLON }  *)
+
+(* generic type declaration *)
+| "<" { LTGEN }
+| ">" { GTGEN }
 
 (* operators *)
 | '+' { PLUS }
@@ -61,8 +62,8 @@ TODO: add when working on lists
 
 (*
 | "dict" { DICT }
-| "list" { LIST }
 *)
+| "list" { LIST }
 
 
 | "printf"  { PRINTF }

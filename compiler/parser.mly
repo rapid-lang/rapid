@@ -1,9 +1,10 @@
 %{
     open Ast
+    open Datatypes
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
-%token LBRACKET RBRACKET
+%token LBRACKET RBRACKET LTGEN GTGEN LIST
 %token PLUS MINUS TIMES DIVIDE ASSIGN
 %token EQ NEQ LT LEQ GT GEQ
 %token RETURN IF ELSE FOR WHILE FUNC IN
@@ -32,6 +33,7 @@
 
 primtype:
     | TYPE { Ast_printer.string_to_t $1 }
+    | LIST LTGEN primtype GTGEN { ListType $3 }
     /* todo: add arrays and dicts to primtype */
 
 
@@ -93,11 +95,6 @@ var_decl:
     | primtype ID ASSIGN expr { ($1 , $2, Some($4)) }
 
 
-stmt_list:
-    | /* nothing */  { [] }
-    | stmt_list stmt SEMI { $2 :: $1 }
-
-
 fstmt_list:
     | /* nothing */         { [] }
     | fstmt_list func_stmt { $2 :: $1 }
@@ -155,6 +152,7 @@ expr:
     | expr GEQ    expr { Binop($1, Geq,   $3) }
     | fcall            { Call $1 }
     | LPAREN expr RPAREN { $2 }
+    | LBRACKET expression_list_opt RBRACKET { ListLit $2 }
 
 
 expression_list:
