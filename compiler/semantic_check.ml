@@ -29,7 +29,7 @@ let rec rewrite_sexpr st = function
 
 let rewrite_string_sexpr st = function
     | SId id -> (
-        match get_type st id with
+        match get_type id st with
         | String -> SExprString(SStringVar id)
         | _ -> raise StringDatatypeRequiredErr)
     | SExprString xpr -> SExprString xpr
