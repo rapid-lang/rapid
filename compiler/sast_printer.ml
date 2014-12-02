@@ -38,7 +38,22 @@ let semantic_stmt_s = function
     | SOutput o -> sprintf "(Output %s)" (soutput_s o)
     | _ -> "Unsupported statement"
 
+let semantic_func_s f = 
+    let (id, args, rets, body) = f in
+    let args_strings = (List.map semantic_stmt_s args) in
+    let ret_strings = (List.map Ast_printer.string_of_t rets) in
+    let body_strings = (List.map semantic_stmt_s body) in
+    sprintf "(func %s(%s) (%s{\n %s \n})"
+        id
+        (String.concat "," args_strings)
+        (String.concat ", " ret_strings)
+        (String.concat " " body_strings)
+
 let string_of_sast sast =
-    let strs = List.map semantic_stmt_s sast in
-    String.concat "" strs
+    let (stmts, funcs) = sast in
+    let stmt_strings = List.map semantic_stmt_s stmts in
+    let func_strings = List.map semantic_func_s funcs in
+    String.concat " " (List.append stmt_strings func_strings)
+
+
 

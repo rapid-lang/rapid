@@ -92,7 +92,7 @@ let fstmt_s = function
 
 let func_decl_s f = sprintf "{\nfname = \"%s\"\nformals = [%s]\n\tbody = [%s]\n}"
     f.fname
-    (concat ", " f.formals)
+    (concat ", " (List.map string_of_vdecl f.formals))
     (concat ",\n" (List.map fstmt_s f.body))
 
 let program_s (stmts, funcs) = sprintf "statements:{\n%s\n}\nfunctions:\n%s"

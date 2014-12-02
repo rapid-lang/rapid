@@ -37,7 +37,7 @@ type func_stmt =
 
 type func_decl = {
     fname : string;
-    formals : string list;
+    formals : vdecl list;
     return : var_type list;
     body : func_stmt list;
 }

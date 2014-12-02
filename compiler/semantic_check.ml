@@ -57,18 +57,18 @@ let rec var_analysis st = function
     | [] -> []
 
 
-let gen_semantic_stmts stmts =
+let gen_semantic_program stmts funcs =
     (* build an unsafe semantic AST *)
     let s_stmts = List.map translate_statement stmts in
     (* typecheck and reclassify all variable usage *)
     let checked_stmts = var_analysis symbol_table_list s_stmts in
-    checked_stmts
+    (checked_stmts, (List.map translate_function funcs))
 
 
 let sast_from_ast ast =
     (* ignore functions for now *)
-    let (stmts, _) = ast in
+    let (stmts, funcs) = ast in
     let stmts = List.rev stmts in
-    gen_semantic_stmts stmts
+    gen_semantic_program stmts funcs
 
 

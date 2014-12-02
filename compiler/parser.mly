@@ -34,7 +34,7 @@ primtype:
     /* todo: add arrays and dicts to primtype */
 
 
-/* Base level expressions of a program:
+/* Base level expressions of a program: 
  * TODO: Classes */
 program:
     | /* nothing */     { [], [] }
@@ -82,8 +82,8 @@ arguments:
 
 formal_list:
     /* TODO: allow user defined types */
-    | primtype ID                   { [$2] }
-    | formal_list COMMA primtype ID { $4 :: $1 }
+    | primtype ID                   { [($1, $2, None)] }
+    | formal_list COMMA primtype ID { ($3, $4, None) :: $1 }
 
 
 /* a tuple here of (primtype, ID) */

@@ -26,8 +26,10 @@ type semantic_stmt =
     | SAssign of svar_assign
     | SDecl of var_type * svar_assign
     | SOutput of soutput
+    | SReturn of sexpr
 
+type semantic_function = string * semantic_stmt list * var_type list * semantic_stmt list
 (* TODO: Add HTTP routes or something similar in the future *)
 (* TODO: add functions so we allow more than just scripts *)
-type semantic_program = semantic_stmt list
+type semantic_program = semantic_stmt list * semantic_function list
 
