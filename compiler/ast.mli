@@ -18,7 +18,7 @@ and fcall =
 type vdecl = var_type * string * expr option
 
 type print =
-    | Printf of expr * expr list
+    | Printf of expr list
     | Println of expr list
 
 type stmt =

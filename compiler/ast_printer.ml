@@ -26,7 +26,7 @@ let bin_op_s = function
     | Greater -> ">"
     | Geq -> ">="
 
-(* Prettyprint expressions *)
+(* Converts expressions to strings *)
 let rec expr_s = function
     | IntLit l -> sprintf "(Int Literal (%d))" l
     | Id s -> sprintf "(Id %s)" s
@@ -44,8 +44,7 @@ and fcall_s = function
         (concat ", " (List.map (fun e -> sprintf "(%s)" (expr_s e)) es))
 
 let output_s = function
-    | Printf(f, el) -> sprintf "(Printf(%s, %s))"
-        (expr_s f)
+    | Printf el -> sprintf "(Printf(%s))"
         (String.concat ", " (List.map expr_s el))
     | Println el -> sprintf "(Println(%s))"
         (String.concat ", " (List.map expr_s el))
