@@ -93,11 +93,6 @@ var_decl:
     | primtype ID ASSIGN expr { ($1 , $2, Some($4)) }
 
 
-stmt_list:
-    | /* nothing */  { [] }
-    | stmt_list stmt SEMI { $2 :: $1 }
-
-
 fstmt_list:
     | /* nothing */         { [] }
     | fstmt_list func_stmt { $2 :: $1 }
@@ -155,6 +150,7 @@ expr:
     | expr GEQ    expr { Binop($1, Geq,   $3) }
     | fcall            { Call $1 }
     | LPAREN expr RPAREN { $2 }
+    | LBRACKET expression_list_opt RBRACKET { ListLit $2 }
 
 
 expression_list:

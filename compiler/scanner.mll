@@ -17,11 +17,8 @@ rule token = parse
 | "{" { LBRACE }
 | "}" { RBRACE }
 
-(*
-TODO: add when working on lists
 | "[" { LBRACKET }
 | "]" { RBRACKET }
-*)
 
 | ";" { SEMI }
 | "," { COMMA }

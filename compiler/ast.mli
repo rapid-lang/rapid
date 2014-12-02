@@ -11,6 +11,7 @@ type expr =
     | StringLit of string
     | Binop of expr * op * expr
     | Call of fcall
+    | ListLit of expr list
     | Noexpr
 and fcall =
     | FCall of string * expr list
