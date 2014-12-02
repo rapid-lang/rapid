@@ -21,6 +21,7 @@ let rec rewrite_sexpr st = function
         match get_type id st with
         | Int -> SExprInt(SIntVar id)
         | String -> SExprString(SStringVar id)
+        | Bool -> SExprBool(SBoolVar id)
         | _ -> raise UnsupportedDatatypeErr)
     (* TODO: add all new expressions that can contain variable references to be simplified *)
     | xpr -> xpr
@@ -32,7 +33,9 @@ let check_var_assign_use sym_tbl id xpr =
     match t, xpr with
         | Int, SExprInt _ -> sym_tbl
         | String, SExprString _ -> sym_tbl
-        | t , _ ->  raise(InvalidTypeReassignErr(Format.sprintf "Expected %s expression" (Ast_printer.string_of_t t)))
+        | Bool, SExprBool _ -> sym_tbl
+        | t , _ ->  raise(InvalidTypeReassignErr(
+            Format.sprintf "Expected %s expression" (Ast_printer.string_of_t t)))
 
 
 (* rewrites any sexprs in an SOutput statement *)
