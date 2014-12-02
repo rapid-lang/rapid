@@ -3,7 +3,7 @@
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
-%token PLUS MINUS TIMES DIVIDE ASSIGN
+%token PLUS MINUS TIMES DIVIDE ASSIGN CASTBOOL      
 %token EQ NEQ LT LEQ GT GEQ
 %token RETURN IF ELSE FOR WHILE FUNC IN
 %token PRINTLN PRINTF // LOG
@@ -16,6 +16,7 @@
 
 %nonassoc NOELSE
 %nonassoc ELSE
+%nonassoc CASTBOOL                                 
 %right ASSIGN
 %left EQ NEQ
 %left LT GT LEQ GEQ
@@ -157,6 +158,7 @@ expr:
     | expr LEQ    expr { Binop($1, Leq,   $3) }
     | expr GT     expr { Binop($1, Greater,  $3) }
     | expr GEQ    expr { Binop($1, Geq,   $3) }
+    | expr CASTBOOL expr { CastBool($1, Qmark) }  
     | fcall            { Call $1 }
     | LPAREN expr RPAREN { $2 }
 

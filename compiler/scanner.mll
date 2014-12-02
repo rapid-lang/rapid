@@ -54,7 +54,8 @@ TODO: add when working on lists
 (* primatives *)
 | '=' { ASSIGN }
 
-(* | '?' { QUESTION } *)
+(* Casting operators *)
+| '?' { CASTBOOL }                             
 
 | "true"  | "false" as bool_val { BOOL_VAL( string_to_bool bool_val ) }
 | "boolean" | "int"  | "float"| "string" as prim { TYPE prim }

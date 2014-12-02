@@ -2,7 +2,7 @@ open Datatypes
 
 
 
-type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq
+type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | Qmark  
 
 type expr =
     | Id of string
@@ -11,6 +11,7 @@ type expr =
     | StringLit of string
     | Binop of expr * op * expr
     | Call of fcall
+    | CastBool of expr * op                         
     | Noexpr
 and fcall =
     | FCall of string * expr list
