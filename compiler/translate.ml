@@ -23,6 +23,7 @@ let rec translate_expr = function
     (* TODO: a ton more types here, also support recursive expressions *)
     | Ast.IntLit i    -> SExprInt(SIntExprLit i)
     | Ast.StringLit s -> SExprString(SStringExprLit s)
+    | Ast.BoolLit b   -> SExprBool(SBoolExprLit b)
     (* we put a placeholder with the ID in and check after and reclassify *)
     | Ast.Id id       -> SId id
     | _ -> raise UnsupportedExpressionType
