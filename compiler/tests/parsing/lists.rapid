@@ -1,1 +1,3 @@
-int x = [];
+list<string> x;
+list<int> y = [];
+list<int> z = [1, 2, 3];

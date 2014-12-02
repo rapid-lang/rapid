@@ -1,9 +1,10 @@
 %{
     open Ast
+    open Datatypes
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
-%token LBRACKET RBRACKET
+%token LBRACKET RBRACKET LTGEN GTGEN LIST
 %token PLUS MINUS TIMES DIVIDE ASSIGN
 %token EQ NEQ LT LEQ GT GEQ
 %token RETURN IF ELSE FOR WHILE FUNC IN
@@ -32,6 +33,7 @@
 
 primtype:
     | TYPE { Ast_printer.string_to_t $1 }
+    | LIST LTGEN primtype GTGEN { ListType $3 }
     /* todo: add arrays and dicts to primtype */
 
 

@@ -24,6 +24,10 @@ rule token = parse
 | "," { COMMA }
 (* | ":" { COLON }  *)
 
+(* generic type declaration *)
+| "<" { LTGEN }
+| ">" { GTGEN }
+
 (* operators *)
 | '+' { PLUS }
 | '-' { MINUS }
@@ -58,8 +62,8 @@ rule token = parse
 
 (*
 | "dict" { DICT }
-| "list" { LIST }
 *)
+| "list" { LIST }
 
 
 | "printf"  { PRINTF }
