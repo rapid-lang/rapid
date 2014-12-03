@@ -36,7 +36,7 @@ let rec expr_s = function
         (bin_op_s o)
         (expr_s e2)
     | Call f -> fcall_s f
-    | BoolVal b -> sprintf "(Bool literal %b)" b
+    | BoolLit b -> sprintf "(Bool literal %b)" b
     | StringLit s -> sprintf "(String literal %s)" s
     | FloatLit f -> sprintf "(Float literal %f)" f
     | ListLit l -> sprintf "(List literal [%s])"

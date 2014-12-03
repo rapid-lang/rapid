@@ -1,0 +1,7 @@
+
+boolean b = true;
+b = false;
+
+printf("%t\n", b);
+
+

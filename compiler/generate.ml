@@ -10,6 +10,7 @@ exception UnsupportedIntExprType
 exception UnsupportedFloatExprType
 exception UnsupportedOutputType
 exception UnsupportedSExprType
+exception UnsupportedBoolExprType
 exception UnsupportedDeclType of string
 
 
@@ -31,11 +32,16 @@ let string_expr_to_code = function
     | SStringVar id -> sprintf "(%s)" id
     | _ -> raise UnsupportedStringExprType
 
+let bool_expr_to_code = function
+    | SBoolExprLit b -> sprintf "(%b)" b
+    | SBoolVar id -> sprintf "(%s)" id
+    | _ -> raise UnsupportedBoolExprType
 
 let sexpr_to_code = function
     | SExprInt i -> int_expr_to_code i
     | SExprString s -> string_expr_to_code s
     | SExprFloat f -> float_expr_to_code f
+    | SExprBool b -> bool_expr_to_code b
     | _ -> raise UnsupportedSExprType
 
 
@@ -53,6 +59,8 @@ let sdecl_to_code (id, xpr) t = match t, xpr with
         id (float_expr_to_code xpr) id
     | String, SExprString xpr -> sprintf "var %s string = %s\n_ = %s"
         id (string_expr_to_code xpr) id
+    | Bool, SExprBool xpr -> sprintf "var %s bool = %s\n_ = %s"
+        id (bool_expr_to_code xpr) id
     | _ -> raise(UnsupportedDeclType(svar_decl_s t (id, xpr)))
 
 

@@ -66,7 +66,7 @@ rule token = parse
 
 (* | '?' { QUESTION } *)
 
-| "true"  | "false" as bool_val { BOOL_VAL( string_to_bool bool_val ) }
+| "true"  | "false" as bool_val { BOOL_LIT( string_to_bool bool_val ) }
 | "boolean" | "int"  | "float"| "string" as prim { TYPE prim }
 
 (*

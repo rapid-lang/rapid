@@ -26,6 +26,7 @@ let rec rewrite_sexpr st = function
         | Int -> SExprInt(SIntVar id)
         | String -> SExprString(SStringVar id)
         | Float -> SExprFloat(SFloatVar id)
+        | Bool -> SExprBool(SBoolVar id)
         | _ -> raise UnsupportedDatatypeErr)
     (* TODO: add all new expressions that can contain variable references to be simplified *)
     | xpr -> xpr

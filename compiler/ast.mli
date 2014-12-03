@@ -7,7 +7,7 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq
 type expr =
     | Id of string
     | IntLit of int
-    | BoolVal of bool
+    | BoolLit of bool
     | StringLit of string
     | FloatLit of float
     | Binop of expr * op * expr

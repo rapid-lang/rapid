@@ -57,6 +57,7 @@ let pop_scope = function
 let sexpr_to_t = function
     | SExprInt _ -> Int
     | SExprFloat _ -> Float
+    | SExprBool _ -> Bool
     | SExprString _ -> String
     | SId _ | _ -> raise UnsupportedSexprTypeClassification
 
