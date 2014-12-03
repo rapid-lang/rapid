@@ -1,0 +1,9 @@
+
+float pi = 3.14;
+
+
+float pi2 = pi;
+
+pi = pi2;
+
+

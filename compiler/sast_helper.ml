@@ -1,6 +1,7 @@
 open Sast
 open Datatypes
 
+exception UnsupportedSexprTypeClassification
 exception UnsupportedAssignExpr
 exception UnsupportedDeclStmt
 exception ExistingSymbolErr
@@ -8,6 +9,8 @@ exception MissingSymbolTablesErr
 exception VariatbleNotDefinedErr of string
 
 
+
+(* Maps a function to a expr option if it is defined, otherwise return NullExpr *)
 let expr_option_map func = function
     | Some o -> func o
     | _ -> NullExpr
@@ -15,7 +18,9 @@ let expr_option_map func = function
 
 module StringMap = Map.Make(String)
 
+
 let empty_symbol_table = StringMap.empty
+
 
 let symbol_table_list = StringMap.empty :: []
 
@@ -46,4 +51,13 @@ let new_scope sym_tbl = empty_symbol_table :: sym_tbl
 let pop_scope = function
     | current_scope :: scope_list -> scope_list
     | [] -> raise MissingSymbolTablesErr
+
+
+(* returns the type of a typed sexpr *)
+let sexpr_to_t = function
+    | SExprInt _ -> Int
+    | SExprFloat _ -> Float
+    | SExprBool _ -> Bool
+    | SExprString _ -> String
+    | SId _ | _ -> raise UnsupportedSexprTypeClassification
 

@@ -7,6 +7,7 @@ exception UnsupportedSemanticExpressionType of string
 exception UnsupportedSemanticStatementType
 exception UnsupportedStringExprType
 exception UnsupportedIntExprType
+exception UnsupportedFloatExprType
 exception UnsupportedOutputType
 exception UnsupportedSExprType
 exception UnsupportedBoolExprType
@@ -18,6 +19,12 @@ let int_expr_to_code = function
     | SIntExprLit i -> sprintf "(%d)" i
     | SIntVar id -> sprintf "(%s)" id
     | _ -> raise UnsupportedIntExprType
+
+
+let float_expr_to_code = function
+    | SFloatExprLit f -> sprintf "(%f)" f
+    | SFloatVar id -> sprintf "(%s)" id
+    | _ -> raise UnsupportedFloatExprType
 
 
 let string_expr_to_code = function
@@ -33,6 +40,7 @@ let bool_expr_to_code = function
 let sexpr_to_code = function
     | SExprInt i -> int_expr_to_code i
     | SExprString s -> string_expr_to_code s
+    | SExprFloat f -> float_expr_to_code f
     | SExprBool b -> bool_expr_to_code b
     | _ -> raise UnsupportedSExprType
 
@@ -47,6 +55,8 @@ let sassign_to_code = function
 let sdecl_to_code (id, xpr) t = match t, xpr with
     | Int, SExprInt xpr -> sprintf "var %s int = %s\n_ = %s"
         id (int_expr_to_code xpr) id
+    | Float, SExprFloat xpr -> sprintf "var %s float64 = %s\n_ = %s"
+        id (float_expr_to_code xpr) id
     | String, SExprString xpr -> sprintf "var %s string = %s\n_ = %s"
         id (string_expr_to_code xpr) id
     | Bool, SExprBool xpr -> sprintf "var %s bool = %s\n_ = %s"

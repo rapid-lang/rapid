@@ -38,6 +38,7 @@ let rec expr_s = function
     | Call f -> fcall_s f
     | BoolLit b -> sprintf "(Bool literal %b)" b
     | StringLit s -> sprintf "(String literal %s)" s
+    | FloatLit f -> sprintf "(Float literal %f)" f
     | ListLit l -> sprintf "(List literal [%s])"
         (String.concat ", " (List.map expr_s l))
     | Noexpr -> "( NOEXPR )"

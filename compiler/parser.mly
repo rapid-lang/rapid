@@ -11,7 +11,9 @@
 %token PRINTLN PRINTF // LOG
 // %token INT BOOL FLOAT STRING
 
+%token <string> ID TYPE STRING_LIT
 %token <int> INT_VAL
+%token <float> FLOAT_LIT
 %token <bool> BOOL_LIT
 %token <string> ID TYPE STRING_LIT
 %token EOF
@@ -130,6 +132,7 @@ lit:
     | INT_VAL    { IntLit $1 }
     | BOOL_LIT   { BoolLit $1 }
     | STRING_LIT { StringLit $1 }
+    | FLOAT_LIT  { FloatLit $1 }
 
 
 fcall:

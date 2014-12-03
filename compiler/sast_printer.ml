@@ -18,9 +18,14 @@ let int_expr_s = function
     | SIntExprLit i -> sprintf "(Int Lit: %d)" i
     | SIntVar id -> sprintf "(Int Var: %s)" id
 
+let float_expr_s = function
+    | SFloatExprLit f -> sprintf "(Lit %f)" f
+    | SFloatVar id -> sprintf "(Float Var %s)" id
+
 let sexpr_s = function
     | SExprInt i -> int_expr_s i
     | SExprString s -> string_expr_s s
+    | SExprFloat s -> float_expr_s s
     | SExprBool b -> bool_expr_s b
     | _ -> raise UnsupportedSexpr
 
