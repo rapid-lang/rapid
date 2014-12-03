@@ -1,6 +1,7 @@
 open Sast
 open Datatypes
 
+exception UnsupportedSexprTypeClassification
 exception UnsupportedAssignExpr
 exception UnsupportedDeclStmt
 exception ExistingSymbolErr
@@ -46,4 +47,11 @@ let new_scope sym_tbl = empty_symbol_table :: sym_tbl
 let pop_scope = function
     | current_scope :: scope_list -> scope_list
     | [] -> raise MissingSymbolTablesErr
+
+
+let sexpr_to_t = function
+    | SExprInt _ -> Int
+    | SExprFloat _ -> Float
+    | SExprString _ -> String
+    | SId _ | _ -> raise UnsupportedSexprTypeClassification
 

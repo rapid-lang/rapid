@@ -6,6 +6,7 @@ open Datatypes
 open Translate
 
 exception RepeatDeclarationErr of string
+exception InvalidTypeDeclarationErr of string
 exception UncaughtCompareErr of string
 exception UnsupportedStatementTypeErr of string
 exception UndeclaredVarErr of string
@@ -15,6 +16,15 @@ exception UnsupportedSexpr
 exception UnsupportedDatatypeErr
 exception StringDatatypeRequiredErr
 
+(* Takes a type and a typed sexpr and confirms it is the proper type *)
+let check_t_sexpr expected_t xpr =
+    let found_t = sexpr_to_t xpr in
+    if found_t = expected_t
+        then ()
+        else raise(InvalidTypeDeclarationErr(Format.sprintf "Expected %s, found %s"
+            (Ast_printer.string_of_t expected_t)
+            (Ast_printer.string_of_t found_t)))
+
 
 (* Takes a symbol table and sexpr and rewrites variable references to be typed *)
 let rec rewrite_sexpr st = function
@@ -22,6 +32,7 @@ let rec rewrite_sexpr st = function
         match get_type id st with
         | Int -> SExprInt(SIntVar id)
         | String -> SExprString(SStringVar id)
+        | Float -> SExprFloat(SFloatVar id)
         | _ -> raise UnsupportedDatatypeErr)
     (* TODO: add all new expressions that can contain variable references to be simplified *)
     | xpr -> xpr
@@ -42,6 +53,7 @@ let check_var_assign_use sym_tbl id xpr =
     match t, xpr with
         | Int, SExprInt _ -> sym_tbl
         | String, SExprString _ -> sym_tbl
+        | Float, SExprFloat _ -> sym_tbl
         | t , _ ->  raise(InvalidTypeReassignErr(Format.sprintf "Expected %s expression" (Ast_printer.string_of_t t)))
 
 
@@ -56,6 +68,7 @@ let rec var_analysis st = function
     | SDecl(t, (id, xpr)) :: tl ->
         let expr = rewrite_sexpr st xpr in
         let st = add_sym t id st in
+        let () = check_t_sexpr t expr in
             SDecl(t, (id, expr)) :: var_analysis st tl
     | SAssign(id, xpr) :: tl ->
         let expr = rewrite_sexpr st xpr in

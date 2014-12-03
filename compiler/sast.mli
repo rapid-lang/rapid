@@ -6,6 +6,10 @@ type int_expr =
     | SIntExprLit of int
     | SIntVar of string
 
+type float_expr =
+    | SFloatExprLit of float
+    | SFloatVar of string
+
 type string_expr =
     | SStringExprLit of string
     | SStringVar of string
@@ -13,6 +17,7 @@ type string_expr =
 type sexpr =
     | SExprInt of int_expr
     | SExprString of string_expr
+    | SExprFloat of float_expr
     | SId of string
     | NullExpr
 
