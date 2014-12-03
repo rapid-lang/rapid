@@ -7,7 +7,7 @@ exception UnsupportedStatementTypeErr of string
 exception UnsupportedOutputType of string
 exception UnsupportedExpressionType
 exception InvalidStringExprType
-exception InvalidStringExprType
+exception InvalidBoolExprType
 exception UnsupportedDeclType
 exception InvalidIntExprType
 
@@ -22,7 +22,7 @@ let translate_string_xpr = function
 
 let translate_bool_xpr = function
     | Ast.BoolLit b -> SBoolExprLit b
-    | _ -> raise InvalidStringExprType
+    | _ -> raise InvalidBoolExprType
 
 let rec translate_expr = function
     (* TODO: a ton more types here, also support recursive expressions *)
