@@ -13,6 +13,7 @@ exception InvalidTypeReassignErr of string
 exception UnsupportedExpressionType
 exception UnsupportedSexpr
 exception UnsupportedDatatypeErr
+exception StringDatatypeRequiredErr
 
 
 (* Takes a symbol table and sexpr and rewrites variable references to be typed *)
@@ -25,6 +26,15 @@ let rec rewrite_sexpr st = function
         | _ -> raise UnsupportedDatatypeErr)
     (* TODO: add all new expressions that can contain variable references to be simplified *)
     | xpr -> xpr
+
+
+let rewrite_string_sexpr st = function
+    | SId id -> (
+        match get_type id st with
+        | String -> SExprString(SStringVar id)
+        | _ -> raise StringDatatypeRequiredErr)
+    | SExprString xpr -> SExprString xpr
+    | _ -> raise UnsupportedSexpr
 
 
 (* checks that an assignment has the proper types *)
@@ -40,7 +50,7 @@ let check_var_assign_use sym_tbl id xpr =
 
 (* rewrites any sexprs in an SOutput statement *)
 let check_s_output sym_tbl = function
-    | SPrintf(s, xpr_l) -> SPrintf((rewrite_sexpr sym_tbl s), List.map (rewrite_sexpr sym_tbl) xpr_l)
+    | SPrintf(s, xpr_l) -> SPrintf((rewrite_string_sexpr sym_tbl s), List.map (rewrite_sexpr sym_tbl) xpr_l)
     | SPrintln(xpr_l) -> SPrintln(List.map (rewrite_sexpr sym_tbl) xpr_l)
 
 

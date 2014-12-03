@@ -11,6 +11,7 @@ type expr =
     | StringLit of string
     | Binop of expr * op * expr
     | Call of fcall
+    | ListLit of expr list
     | Noexpr
 and fcall =
     | FCall of string * expr list
@@ -18,7 +19,7 @@ and fcall =
 type vdecl = var_type * string * expr option
 
 type print =
-    | Printf of expr * expr list
+    | Printf of expr list
     | Println of expr list
 
 type stmt =
