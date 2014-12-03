@@ -9,6 +9,8 @@ exception MissingSymbolTablesErr
 exception VariatbleNotDefinedErr of string
 
 
+
+(* Maps a function to a expr option if it is defined, otherwise return NullExpr *)
 let expr_option_map func = function
     | Some o -> func o
     | _ -> NullExpr
@@ -16,7 +18,9 @@ let expr_option_map func = function
 
 module StringMap = Map.Make(String)
 
+
 let empty_symbol_table = StringMap.empty
+
 
 let symbol_table_list = StringMap.empty :: []
 
@@ -49,6 +53,7 @@ let pop_scope = function
     | [] -> raise MissingSymbolTablesErr
 
 
+(* returns the type of a typed sexpr *)
 let sexpr_to_t = function
     | SExprInt _ -> Int
     | SExprFloat _ -> Float
