@@ -6,6 +6,15 @@
         | _ -> false
 }
 
+let decdigit = ['0'-'9']
+
+let floating = '.' decdigit+
+    | decdigit+ '.' decdigit*
+    | decdigit+ ('.' decdigit*)? 'e' '-'? decdigit+
+    | '.' decdigit+ 'e' '-'? decdigit+
+
+
+
 rule token = parse
 | [' ' '\t' '\r' '\n'] { token lexbuf }              (* Whitespace *)
 | "/*" { comment lexbuf } | "//" { comment2 lexbuf } (* Comments *)
@@ -98,8 +107,11 @@ rule token = parse
 *)
 
 (* literals *)
-| ['0'-'9']+ as lxm { INT_VAL( int_of_string lxm ) }
-| '"' ([^'"']* as str) '"' { STRING_LIT str }
+| ['0'-'9']+ as lxm         { INT_VAL( int_of_string lxm ) }
+| '"' ([^'"']* as str) '"'  { STRING_LIT str }
+| floating as lit           { FLOAT_LIT(float_of_string lit) }
+
+
 
 (* ID's *)
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID lxm }
