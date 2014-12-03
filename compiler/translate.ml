@@ -7,6 +7,7 @@ exception UnsupportedStatementTypeErr of string
 exception UnsupportedOutputType of string
 exception UnsupportedExpressionType
 exception InvalidStringExprType
+exception InvalidBoolExprType
 exception UnsupportedDeclType
 exception InvalidIntExprType
 
@@ -19,10 +20,15 @@ let translate_string_xpr = function
     | Ast.StringLit s -> SStringExprLit s
     | _ -> raise InvalidStringExprType
 
+let translate_bool_xpr = function
+    | Ast.BoolLit b -> SBoolExprLit b
+    | _ -> raise InvalidBoolExprType
+
 let rec translate_expr = function
     (* TODO: a ton more types here, also support recursive expressions *)
     | Ast.IntLit i    -> SExprInt(SIntExprLit i)
     | Ast.StringLit s -> SExprString(SStringExprLit s)
+    | Ast.BoolLit b   -> SExprBool(SBoolExprLit b)
     (* we put a placeholder with the ID in and check after and reclassify *)
     | Ast.Id id       -> SId id
     | _ -> raise UnsupportedExpressionType
@@ -36,6 +42,7 @@ let translate_assign id xpr = match translate_expr xpr with
 let translate_decl = function
     | Int, id, i_xpr_opt -> SDecl(Int, (id, expr_option_map translate_expr i_xpr_opt))
     | String, id, s_xpr_opt -> SDecl(String, (id, expr_option_map translate_expr s_xpr_opt))
+    | Bool, id, b_xpr_opt -> SDecl(Bool, (id, expr_option_map translate_expr b_xpr_opt))
     | t, _, _ -> raise(UnsupportedStatementTypeErr (Ast_printer.string_of_t t))
     | _ -> raise UnsupportedDeclType
 

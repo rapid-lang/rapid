@@ -12,7 +12,7 @@
 // %token INT BOOL FLOAT STRING
 
 %token <int> INT_VAL
-%token <bool> BOOL_VAL
+%token <bool> BOOL_LIT
 %token <string> ID TYPE STRING_LIT
 %token EOF
 
@@ -128,7 +128,7 @@ expr_opt:
 
 lit:
     | INT_VAL    { IntLit $1 }
-    | BOOL_VAL   { BoolVal $1 }
+    | BOOL_LIT   { BoolLit $1 }
     | STRING_LIT { StringLit $1 }
 
 
