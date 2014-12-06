@@ -1,0 +1,9 @@
+
+float pi = 3.14;
+
+float x = pi;
+
+println(pi);
+println(x);
+
+
