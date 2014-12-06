@@ -7,11 +7,13 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | Qm
 type expr =
     | Id of string
     | IntLit of int
-    | BoolVal of bool
+    | BoolLit of bool
     | StringLit of string
+    | FloatLit of float
     | Binop of expr * op * expr
     | Call of fcall
     | CastBool of expr * op                         
+    | ListLit of expr list
     | Noexpr
 and fcall =
     | FCall of string * expr list
@@ -19,7 +21,7 @@ and fcall =
 type vdecl = var_type * string * expr option
 
 type print =
-    | Printf of expr * expr list
+    | Printf of expr list
     | Println of expr list
 
 type stmt =

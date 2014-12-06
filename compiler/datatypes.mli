@@ -7,5 +7,6 @@ type var_type =
     | Bool
     | Float
     | UserDef of string
+    | ListType of var_type
     | Var
 

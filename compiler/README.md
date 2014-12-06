@@ -48,6 +48,12 @@ Any SAST approved by the semantic checker (`semantic_check.ml`) should always ge
 make test
 ```
 
+NOTE: all `fail` tests should be brief as they should only cover one small aspect that induces failure.
+If you have 3 invalid lines in a test file, we can only validate that the first one is broken.
+You should have a test for every type of invalid parsing or error that the semantic checker can catch.
+This is how we can catch any regressions while refactoring.
+
+
 ### AST / Scanner
 
 Parsing and AST features are tested by adding `.rapid` files to `tests/parsing/`.
@@ -69,6 +75,47 @@ All files will be tested by running the script, `sast_tests.sh`.
 Code generation is tested by compiling `.rapid` files and running the resulting Golang programs.
 Add `.rapid` files to `tests/compiler/` and accompany them with a `.output` file for the expected output.
 All programs will be tested by running the script, `sast_tests.sh`.
+
+
+
+
+
+
+
+
+## Debugging
+
+#### Tools
+
+Please install [merlin](http://the-lambda-church.github.io/merlin/), it will make getting used to OCaml much easier ([sublime text plugin](https://github.com/Cynddl/sublime-text-merlin)).
+
+If you need to update the Makfile, follow the comment instructions to regenerate the dependencies between OCaml modules.
+
+You will need Golang installed to run the compiler tests.
+If you want to easily mess around with the generated code, copy it into [the playground](http://play.golang.org/) which format it among other things.
+
+
+
+#### Parser / Scanner / AST
+
+Make sure to read the output of the tests closely.
+If YACC fails to compile the parser, it will fail before reaching the tests, if any tests run, then the parse is building.
+When a parsing test fails, the output of YACC is included in the message.
+NOTE: The error may not be YACC related, make sure to carefully read the output.
+
+If your error is YACC related, you can generate the referenced table with `yacc -v parser.mly`.
+This is necessary to step through the shifting and reducing performed to figure out why the parser is not working as you intended.
+
+If your error is AST related, it should only be because you are missing relevant print methods in `ast_printer.ml`.
+If you are unsure that the `ast.mli` file is valid, compile it (`ocalmc -c ast.mli`) to confirm there are no errors in the syntax.
+
+
+
+#### SAST / Semantic Checking
+
+Examine the AST being passed and confirm that it is formed as you expect it to be.
+Trace through the code and make sure that untyped expressions are being rewritten.
+Confirm that there are no lists that should be reversed.
 
 
 

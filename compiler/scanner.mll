@@ -6,6 +6,15 @@
         | _ -> false
 }
 
+let decdigit = ['0'-'9']
+
+let floating = '.' decdigit+
+    | decdigit+ '.' decdigit*
+    | decdigit+ ('.' decdigit*)? 'e' '-'? decdigit+
+    | '.' decdigit+ 'e' '-'? decdigit+
+
+
+
 rule token = parse
 | [' ' '\t' '\r' '\n'] { token lexbuf }              (* Whitespace *)
 | "/*" { comment lexbuf } | "//" { comment2 lexbuf } (* Comments *)
@@ -17,15 +26,16 @@ rule token = parse
 | "{" { LBRACE }
 | "}" { RBRACE }
 
-(*
-TODO: add when working on lists
 | "[" { LBRACKET }
 | "]" { RBRACKET }
-*)
 
 | ";" { SEMI }
 | "," { COMMA }
 (* | ":" { COLON }  *)
+
+(* generic type declaration *)
+| "<" { LTGEN }
+| ">" { GTGEN }
 
 (* operators *)
 | '+' { PLUS }
@@ -57,13 +67,13 @@ TODO: add when working on lists
 (* Casting operators *)
 | '?' { CASTBOOL }                             
 
-| "true"  | "false" as bool_val { BOOL_VAL( string_to_bool bool_val ) }
+| "true"  | "false" as bool_val { BOOL_LIT( string_to_bool bool_val ) }
 | "boolean" | "int"  | "float"| "string" as prim { TYPE prim }
 
 (*
 | "dict" { DICT }
-| "list" { LIST }
 *)
+| "list" { LIST }
 
 
 | "printf"  { PRINTF }
@@ -98,8 +108,11 @@ TODO: add when working on lists
 *)
 
 (* literals *)
-| ['0'-'9']+ as lxm { INT_VAL( int_of_string lxm ) }
-| '"' ([^'"']* as str) '"' { STRING_LIT str }
+| ['0'-'9']+ as lxm         { INT_VAL( int_of_string lxm ) }
+| '"' ([^'"']* as str) '"'  { STRING_LIT str }
+| floating as lit           { FLOAT_LIT(float_of_string lit) }
+
+
 
 (* ID's *)
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID lxm }

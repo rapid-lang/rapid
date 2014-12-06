@@ -1,16 +1,20 @@
 %{
     open Ast
+    open Datatypes
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
-%token PLUS MINUS TIMES DIVIDE ASSIGN CASTBOOL      
+%token LBRACKET RBRACKET LTGEN GTGEN LIST
+%token PLUS MINUS TIMES DIVIDE ASSIGN CASTBOOL
 %token EQ NEQ LT LEQ GT GEQ
 %token RETURN IF ELSE FOR WHILE FUNC IN
 %token PRINTLN PRINTF // LOG
 // %token INT BOOL FLOAT STRING
 
+%token <string> ID TYPE STRING_LIT
 %token <int> INT_VAL
-%token <bool> BOOL_VAL
+%token <float> FLOAT_LIT
+%token <bool> BOOL_LIT
 %token <string> ID TYPE STRING_LIT
 %token EOF
 
@@ -32,6 +36,7 @@
 
 primtype:
     | TYPE { Ast_printer.string_to_t $1 }
+    | LIST LTGEN primtype GTGEN { ListType $3 }
     /* todo: add arrays and dicts to primtype */
 
 
@@ -93,11 +98,6 @@ var_decl:
     | primtype ID ASSIGN expr { ($1 , $2, Some($4)) }
 
 
-stmt_list:
-    | /* nothing */  { [] }
-    | stmt_list stmt SEMI { $2 :: $1 }
-
-
 fstmt_list:
     | /* nothing */         { [] }
     | fstmt_list func_stmt { $2 :: $1 }
@@ -120,14 +120,8 @@ stmt:
 
 
 print:
-    | PRINTLN LPAREN expr print_list RPAREN { Println($3 :: $4) }
-    | PRINTF LPAREN expr print_list RPAREN { Printf($3, $4) }
-
-
-print_list:
-    | /* nothing */         { [] }
-    | COMMA expr            { [$2] }
-    | print_list COMMA expr { $3 :: $1 }
+    | PRINTLN LPAREN expression_list RPAREN { Println $3 }
+    | PRINTF LPAREN expression_list RPAREN { Printf $3 }
 
 
 expr_opt:
@@ -137,12 +131,14 @@ expr_opt:
 
 lit:
     | INT_VAL    { IntLit $1 }
-    | BOOL_VAL   { BoolVal $1 }
+    | BOOL_LIT   { BoolLit $1 }
     | STRING_LIT { StringLit $1 }
+    | FLOAT_LIT  { FloatLit $1 }
 
 
 fcall:
-    | ID LPAREN actuals_opt RPAREN { FCall($1, $3) }
+    | ID LPAREN expression_list_opt RPAREN { FCall($1, $3) }
+
 
 expr:
     | lit              { $1 }
@@ -161,15 +157,21 @@ expr:
     | expr CASTBOOL expr { CastBool($1, Qmark) }  
     | fcall            { Call $1 }
     | LPAREN expr RPAREN { $2 }
+    | LBRACKET expression_list_opt RBRACKET { ListLit $2 }
 
 
-actuals_opt:
-    | /* nothing */ { [] }
-    | actuals_list  { List.rev $1 }
+expression_list:
+    | expression_list_internal    { List.rev $1 }
 
 
-actuals_list:
-    | expr                    { [$1] }
-    | actuals_list COMMA expr { $3 :: $1 }
+expression_list_opt:
+    | /* nothing */    { [] }
+    | expression_list  { $1 }
+
+
+expression_list_internal:
+    | expr                               { [$1] }
+    | expression_list_internal COMMA expr { $3 :: $1 }
+
 
 %%

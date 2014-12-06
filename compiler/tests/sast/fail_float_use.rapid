@@ -1,0 +1,6 @@
+
+float pi = 3.14;
+
+int pi2 = pi;
+
+
