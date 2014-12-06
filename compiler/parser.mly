@@ -42,9 +42,14 @@ primtype:
 /* Base level expressions of a program:
  * TODO: Classes */
 program:
-    | /* nothing */     { [], [] }
-    | program stmt SEMI { ($2 :: fst $1), snd $1 }
-    | program func_decl { fst $1, ($2 :: snd $1) }
+    | /* nothing */ { [], [] }
+    | program stmt SEMI {
+        let (statements, functions) = $1 in
+            ($2 :: statements), functions }
+    | program func_decl {
+        let (statements, functions) = $1 in
+            statements, ($2 :: functions) }
+    /* | program class_decl { fst $1, ($2 :: snd $1) } */
 
 
 /* TODO: allow user defined types */
