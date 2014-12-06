@@ -98,7 +98,32 @@ let func_decl_s f = sprintf "{\nfname = \"%s\"\nformals = [%s]\n\tbody = [%s]\n}
     (concat ", " f.formals)
     (concat ",\n" (List.map fstmt_s f.body))
 
-let program_s (stmts, funcs) = sprintf "statements:{\n%s\n}\nfunctions:\n%s"
+
+
+let attr_s = function
+    | NonOption(t, id, Some(xpr)) -> sprintf "(ATTR: %s of %s = %s)"
+        (string_of_t t)
+        id
+        (expr_s xpr)
+    | NonOption(t, id, None) -> sprintf "(ATTR: %s of %s)"
+        (string_of_t t)
+        id
+    | Optional(id, t) -> sprintf "(ATTR: OPTIONAL %s of %s)"
+        (string_of_t t)
+        id
+
+
+let class_s (name, attrs) =
+    sprintf "(CLASS %s:\n%s)"
+        name
+        (concat "\n" (List.map (fun a -> "\t" ^ a)
+            (List.map attr_s attrs)))
+
+
+
+let program_s (stmts, funcs, classes) = sprintf
+    "classes:{\n%s\n}\nstatements:{\n%s\n}\nfunctions:\n%s"
+    (concat "\n" (List.rev (List.map class_s classes)))
     (concat "\n" (List.rev (List.map stmt_s stmts)))
     (concat "\n" (List.rev (List.map func_decl_s funcs)))
 

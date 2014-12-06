@@ -44,5 +44,18 @@ type func_decl = {
     body : func_stmt list;
 }
 
-type program = stmt list * func_decl list
+type attr =
+    | NonOption of var_type * string * expr option
+    | Optional of string * var_type
+
+type class_decl = string * attr list
+
+(*
+type class_decl = string * var_type * func_decl list * route_decl list
+*)
+
+type program = stmt list * func_decl list * class_decl list
+(*
+type program = stmt list * func_decl list * class_decl list * route_decl list
+*)
 

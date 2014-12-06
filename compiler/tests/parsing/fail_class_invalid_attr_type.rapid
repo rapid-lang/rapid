@@ -2,5 +2,5 @@
 // Integer is not a primitive type
 class User {
     Integer hi;
-};
+}
 

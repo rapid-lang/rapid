@@ -9,6 +9,7 @@
 %token EQ NEQ LT LEQ GT GEQ
 %token RETURN IF ELSE FOR WHILE FUNC IN
 %token PRINTLN PRINTF // LOG
+%token CLASS
 // %token INT BOOL FLOAT STRING
 
 %token <string> ID TYPE STRING_LIT
@@ -42,14 +43,16 @@ primtype:
 /* Base level expressions of a program:
  * TODO: Classes */
 program:
-    | /* nothing */ { [], [] }
+    | /* nothing */ { [], [], [] }
     | program stmt SEMI {
-        let (statements, functions) = $1 in
-            ($2 :: statements), functions }
+        let (statements, functions, classes) = $1 in
+            ($2 :: statements), functions, classes }
     | program func_decl {
-        let (statements, functions) = $1 in
-            statements, ($2 :: functions) }
-    /* | program class_decl { fst $1, ($2 :: snd $1) } */
+        let (statements, functions, classes) = $1 in
+            statements, ($2 :: functions), classes }
+    | program class_decl {
+        let (statements, functions, classes) = $1 in
+            statements, functions, ($2 :: classes) }
 
 
 /* TODO: allow user defined types */
@@ -176,5 +179,20 @@ expression_list_internal:
     | expr                               { [$1] }
     | expression_list_internal COMMA expr { $3 :: $1 }
 
+
+attr_decl:
+    | primtype ID             { NonOption($1 , $2, None) }
+    /* we limit the default values to literals */
+    | primtype ID ASSIGN lit { NonOption($1 , $2, Some($4)) }
+    /* TODO: add optional attributes here */
+
+
+attribute_list:
+    | /* nothing */                 { [] }
+    | attribute_list attr_decl SEMI { $2 :: $1 }
+
+
+class_decl:
+    | CLASS ID LBRACE attribute_list RBRACE { $2, $4 }
 
 %%

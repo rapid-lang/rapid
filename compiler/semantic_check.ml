@@ -91,7 +91,7 @@ let gen_semantic_stmts stmts =
 
 let sast_from_ast ast =
     (* ignore functions for now *)
-    let (stmts, _) = ast in
+    let (stmts, _, classes) = ast in
     let stmts = List.rev stmts in
     gen_semantic_stmts stmts
 

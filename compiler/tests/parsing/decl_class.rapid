@@ -2,6 +2,9 @@
 // all valid
 class Hello {
     string username;
-};
+}
 
+
+class Empty {
+}
 
