@@ -6,10 +6,6 @@ exception UnsupportedSexpr
 exception UnsupportedSOutput
 
 
-let bool_expr_s = function
-    | SBoolExprLit b -> sprintf "(Bool lit: %b)" b
-    | SBoolVar id -> sprintf "(Bool Var: %s)" id
-
 let string_expr_s = function
     | SStringExprLit s -> sprintf "(String Lit: %s)" s
     | SStringVar id -> sprintf "(String Var: %s)" id
@@ -22,7 +18,12 @@ let float_expr_s = function
     | SFloatExprLit f -> sprintf "(Lit %f)" f
     | SFloatVar id -> sprintf "(Float Var %s)" id
 
-let sexpr_s = function
+
+let rec bool_expr_s = function
+    | SBoolExprLit b -> sprintf "(Bool lit: %b)" b
+    | SBoolVar id -> sprintf "(Bool Var: %s)" id
+    | SBoolCast e -> sprintf "(Cast (%s) to boolean)" (sexpr_s e)
+and sexpr_s = function
     | SExprInt i -> int_expr_s i
     | SExprString s -> string_expr_s s
     | SExprFloat s -> float_expr_s s

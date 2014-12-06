@@ -2,10 +2,6 @@ open Ast
 open Datatypes
 
 
-type bool_expr =
-    | SBoolExprLit of bool
-    | SBoolVar of string
-
 type int_expr =
     | SIntExprLit of int
     | SIntVar of string
@@ -18,7 +14,11 @@ type string_expr =
     | SStringExprLit of string
     | SStringVar of string
 
-type sexpr =
+type bool_expr =
+    | SBoolExprLit of bool
+    | SBoolVar of string
+    | SBoolCast of sexpr
+and sexpr =
     | SExprInt of int_expr
     | SExprString of string_expr
     | SExprFloat of float_expr
