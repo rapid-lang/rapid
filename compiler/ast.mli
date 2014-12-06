@@ -12,7 +12,7 @@ type expr =
     | FloatLit of float
     | Binop of expr * op * expr
     | Call of fcall
-    | CastBool of expr * op                         
+    | CastBool of expr                       
     | ListLit of expr list
     | Noexpr
 and fcall =

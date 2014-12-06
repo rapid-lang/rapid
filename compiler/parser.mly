@@ -15,7 +15,6 @@
 %token <int> INT_VAL
 %token <float> FLOAT_LIT
 %token <bool> BOOL_LIT
-%token <string> ID TYPE STRING_LIT
 %token EOF
 
 %nonassoc NOELSE
@@ -154,7 +153,7 @@ expr:
     | expr LEQ    expr { Binop($1, Leq,   $3) }
     | expr GT     expr { Binop($1, Greater,  $3) }
     | expr GEQ    expr { Binop($1, Geq,   $3) }
-    | expr CASTBOOL expr { CastBool($1, Qmark) }  
+    | expr CASTBOOL expr { CastBool $1 }  
     | fcall            { Call $1 }
     | LPAREN expr RPAREN { $2 }
     | LBRACKET expression_list_opt RBRACKET { ListLit $2 }
