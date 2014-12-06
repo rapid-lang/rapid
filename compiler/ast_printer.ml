@@ -93,9 +93,9 @@ let fstmt_s = function
         (expr_s e)
     | FStmt s -> stmt_s s
 
-let func_decl_s f = sprintf "{\nfname = \"%s\"\nformals = [%s]\n\tbody = [%s]\n}"
+let func_decl_s f = sprintf "{\nfname = \"%s\"\nargs = [%s]\n\tbody = [%s]\n}"
     f.fname
-    (concat ", " (List.map string_of_vdecl f.formals))
+    (concat ", " (List.map string_of_vdecl f.args))
     (concat ",\n" (List.map fstmt_s f.body))
 
 let program_s (stmts, funcs) = sprintf "statements:{\n%s\n}\nfunctions:\n%s"

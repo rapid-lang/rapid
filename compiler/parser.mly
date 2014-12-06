@@ -65,7 +65,7 @@ func_decl:
     | FUNC ID LPAREN arguments RPAREN return_type LBRACE fstmt_list RBRACE
     {{
         fname = $2;
-        formals = $4;
+        args = $4;
         return = $6;
         body = List.rev $8
     }}
@@ -73,7 +73,7 @@ func_decl:
     | FUNC ID LPAREN arguments RPAREN LBRACE fstmt_list RBRACE
     {{
         fname = $2;
-        formals = $4;
+        args = $4;
         return = [];
         body = List.rev $7
     }}

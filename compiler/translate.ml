@@ -71,7 +71,7 @@ let translate_fstatement = function
 let translate_function (f : Ast.func_decl) = 
     (
         f.fname, 
-        (List.map translate_decl f.formals), 
+        (List.map translate_decl f.args), 
         f.return, 
         (List.map translate_fstatement f.body)
     )

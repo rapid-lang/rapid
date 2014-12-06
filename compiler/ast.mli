@@ -39,7 +39,7 @@ type func_stmt =
 
 type func_decl = {
     fname : string;
-    formals : vdecl list;
+    args : vdecl list;
     return : var_type list;
     body : func_stmt list;
 }
