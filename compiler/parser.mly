@@ -87,7 +87,8 @@ arguments:
 
 formal_list:
     /* TODO: allow user defined types */
-    | primtype ID                   { [($1, $2, None)] }
+    | primtype ID { [($1, $2, None)] }
+    | primtype ID ASSIGN lit {[($1, $2, Some($4))]}                 
     | formal_list COMMA primtype ID { ($3, $4, None) :: $1 }
 
 
