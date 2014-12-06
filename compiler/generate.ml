@@ -73,11 +73,22 @@ let soutput_to_code = function
     | _ -> raise UnsupportedOutputType
 
 
-let sast_to_code = function
+let stmts_to_code = function
     | SDecl(t, (id, xpr)) -> sdecl_to_code (id, xpr) t
     | SAssign a -> sassign_to_code a
     | SOutput p -> soutput_to_code p
     | _ -> raise(UnsupportedSemanticStatementType)
+
+
+let sattr_to_code = function
+    | SOptional(t, id) | SNonOption(t, id, _) -> sprintf "%s %s"
+        id
+        (Ast_printer.string_of_t t)
+
+let class_to_code (name, sattrs) =
+    sprintf "type %s struct {\n%s\n}\n"
+        name
+        (String.concat "\n" (List.map sattr_to_code sattrs))
 
 
 let skeleton = "package main\n" ^
@@ -86,8 +97,10 @@ let skeleton = "package main\n" ^
     "func main() {\n"
 
 
-let build_prog sast =
-    let code_lines = List.map sast_to_code sast in
-    let gen_code = String.concat "\n" code_lines in
-    skeleton ^ gen_code ^ "\n}\n"
+let build_prog (stmts, classes) =
+    let stmt_lines = List.map stmts_to_code stmts in
+    let class_lines = List.map class_to_code classes in
+    let gen_code_stmts = String.concat "\n" stmt_lines in
+    let gen_code_classes = String.concat "\n" class_lines in
+    skeleton ^ gen_code_classes ^ gen_code_stmts ^ "\n}\n"
 

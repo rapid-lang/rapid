@@ -46,12 +46,12 @@ type func_decl = {
 
 type attr =
     | NonOption of var_type * string * expr option
-    | Optional of string * var_type
+    | Optional of var_type * string
 
 type class_decl = string * attr list
 
 (*
-type class_decl = string * var_type * func_decl list * route_decl list
+type class_decl = string * attr list * func_decl list * route_decl list
 *)
 
 type program = stmt list * func_decl list * class_decl list

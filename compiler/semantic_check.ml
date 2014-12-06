@@ -89,9 +89,16 @@ let gen_semantic_stmts stmts =
     checked_stmts
 
 
+let gen_class_stmts stmts =
+    let sclasses = List.map translate_class stmts in
+    sclasses
+
+
 let sast_from_ast ast =
     (* ignore functions for now *)
     let (stmts, _, classes) = ast in
     let stmts = List.rev stmts in
-    gen_semantic_stmts stmts
+    let typechecked_statements = gen_semantic_stmts stmts in
+    let typechecked_classes = gen_class_stmts classes in
+    typechecked_statements, typechecked_classes
 
