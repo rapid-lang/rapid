@@ -1,0 +1,6 @@
+
+// missing class keyword
+User {
+    string hi;
+};
+

@@ -1,0 +1,7 @@
+
+// all valid
+class Hello {
+    string username;
+};
+
+
