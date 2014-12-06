@@ -1,5 +1,3 @@
-//cast bool test
-
 boolean b = true?;
 
 

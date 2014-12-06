@@ -18,8 +18,7 @@
 %token EOF
 
 %nonassoc NOELSE
-%nonassoc ELSE
-%nonassoc CASTBOOL                                 
+%nonassoc ELSE                                
 %right ASSIGN
 %left EQ NEQ
 %left LT GT LEQ GEQ
@@ -153,7 +152,7 @@ expr:
     | expr LEQ    expr { Binop($1, Leq,   $3) }
     | expr GT     expr { Binop($1, Greater,  $3) }
     | expr GEQ    expr { Binop($1, Geq,   $3) }
-    | expr CASTBOOL expr { CastBool $1 }  
+    | expr CASTBOOL    { CastBool $1 }  
     | fcall            { Call $1 }
     | LPAREN expr RPAREN { $2 }
     | LBRACKET expression_list_opt RBRACKET { ListLit $2 }
