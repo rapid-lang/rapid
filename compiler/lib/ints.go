@@ -6,6 +6,20 @@ type IntOpt struct {
 }
 
 /*
+ * Equality
+ */
+func (a IntOpt) EqualInt(b IntOpt) BoolOpt {
+	if a.null || b.null {
+		return BoolOpt{
+			null: true,
+		}
+	}
+	return BoolOpt{
+		val: a.val == b.val,
+	}
+}
+
+/*
  * ADDING
  */
 func (a IntOpt) AddFloat(b FloatOpt) FloatOpt {
