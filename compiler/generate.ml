@@ -13,8 +13,15 @@ exception UnsupportedOutputType
 exception UnsupportedSExprType
 exception UnsupportedBoolExprType
 exception UnsupportedDeclType of string
+exception UnsupportedDatatypeErr
 exception StringExpressionsRequired
 
+let null_reference = function
+    | Int -> "(IntOpt{null:true})"
+    | Float -> "(FloatOpt{null:true})"
+    | Bool -> "(BoolOpt{null:true})"
+    | String -> "(StringOpt{null:true})"
+    | _ -> raise UnsupportedDatatypeErr
 
 let get_string_literal_from_sexpr = function
     | SExprString s -> (match s with
@@ -22,7 +29,6 @@ let get_string_literal_from_sexpr = function
         | SStringVar id -> sprintf "(%s.val)" id
         | SStringNull -> "NULL")
     | _ -> raise StringExpressionsRequired
-
 
 let int_expr_to_code = function
     | SIntExprLit i -> sprintf "(IntOpt{val:%d})" i
@@ -66,6 +72,8 @@ let sdecl_to_code (id, xpr) t = match t, xpr with
         id (string_expr_to_code xpr) id
     | Bool, SExprBool xpr -> sprintf "%s := %s\n_ = %s"
         id (bool_expr_to_code xpr) id
+    | (Int | Float | String | Bool ) as t, NullExpr ->
+        sprintf "%s := %s\n_ = %s" id (null_reference t) id
     | _ -> raise(UnsupportedDeclType(svar_decl_s t (id, xpr)))
 
 let soutput_to_code = function
