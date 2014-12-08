@@ -1,12 +1,21 @@
 package main
 
+import "fmt"
+
 type IntOpt struct {
 	val  int
 	null bool
 }
 
+func (i IntOpt) String() string {
+	if i.null {
+		return "NULL"
+	}
+	return fmt.Sprintf("%d", i.val)
+}
+
 /*
- * Equality
+ * EQUALITY
  */
 func (a IntOpt) EqualInt(b IntOpt) BoolOpt {
 	if a.null || b.null {

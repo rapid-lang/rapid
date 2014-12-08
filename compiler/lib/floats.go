@@ -1,12 +1,21 @@
 package main
 
+import "fmt"
+
 type FloatOpt struct {
 	val  float64
 	null bool
 }
 
+func (f FloatOpt) String() string {
+	if f.null {
+		return "NULL"
+	}
+	return fmt.Sprintf("%f", f.val)
+}
+
 /*
- * Equality
+ * EQUALITY
  */
 func (a FloatOpt) EqualFloat(b FloatOpt) BoolOpt {
 	if a.null || b.null {

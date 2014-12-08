@@ -1,7 +1,16 @@
 package main
 
+import "fmt"
+
 type BoolOpt struct {
 	val, null bool
+}
+
+func (b BoolOpt) String() string {
+	if b.null {
+		return "NULL"
+	}
+	return fmt.Sprintf("%t", b.val)
 }
 
 /*
