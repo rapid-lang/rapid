@@ -155,6 +155,15 @@ boolean eq = (x == y) and (s != x) and (x == null) and (s == null)
 x = s  // not valid RAPID
 ```
 
+Null values of any type may be used in operations with each other, but result in `null` values. Accessing lists or dictionaries at `null` indexes or keys will result in a runtime error.
+
+```
+int x         // null
+int y = x + 2 // null
+list<int> a = [1, 2, 3, 4]
+a[y]          // null, Error
+```
+
 #### Booleans
 
 Boolean values are defined by the `true` and `false` keywords.  Because they are their own type, non-boolean values must be cast to `boolean` in order to be used in logical expressions. 
