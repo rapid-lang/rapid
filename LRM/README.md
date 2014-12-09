@@ -382,6 +382,13 @@ float f = float(i) // f == 3.0
 int i = int(f)     // i == 7
 ```
 
+When an int and a float are involved in a binary operator, the integer will be cast to a float implicitly.
+
+```
+float f = 7.5 + 10    // 17.5
+boolean eq = 4.0 == 4 // true
+```
+
 #### Booleans
 
 Any value may be cast to boolean using the `?` operator. 
@@ -970,7 +977,8 @@ A `break` statement can be used to exit a loop prematurely.
 while (/* expression */) {
     break
 }
-``` 
+```
+
 In the case of nested loops, the `break` statement only breaks the loop in which it is stated.
 
 ```
