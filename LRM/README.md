@@ -585,7 +585,7 @@ Tweet t, error e = Tweet.get(ID="123abc")
 
 Functions in RAPID are first-class objects, but may not be declared anonymously.  Functions are declared using the `func` keyword.  The arguments (within parenthesis), return type (after the parenthesis, but before the braces), and the body of the function (within the braces) must be declared explicitly.  Return types may include multiple types separated by commas, or may be omitted for void functions.
 
-Return values are specified using the `return` keyword, which must be followed by an expression to be returned for functions that have declared return types.  If the return type is omitted, the function is void, an the result of calling it may not be assigned to a value.  Void functions may use the `return` keyword by itself to exit prematurely from the function.
+Return values are specified using the `return` keyword, which must be followed by an expression to be returned for functions that have declared return types.  If the return type is omitted, the function is void, and the result of calling it may not be assigned to a value.  Void functions may use the `return` keyword by itself to exit prematurely from the function.
 
 Unsafe functions may not be void, because they must return errors.
 
@@ -593,10 +593,10 @@ Unsafe functions may not be void, because they must return errors.
 return /* expression */
 ```
 
-The arguments must be in order `namespace` arguments, then formal arguments.
+The arguments must be in order `namespace` arguments, then formal arguments.  Arguments may be given a literal default value, using an equal sign, but all arguments with default values must follow arguments without default values.
 
 ```
-[unsafe] func /* id */ ( /* namespace args */ /* formal args */ ) {
+[unsafe] func /* id */ ( /* namespace args */ /* formal args */ ) /* return type*/ {
 	// statements
 }
 ```
@@ -604,9 +604,10 @@ The arguments must be in order `namespace` arguments, then formal arguments.
 For example:
 
 ```
-func sum(int a, int b) int {
+func sum(int a, int b=1) int {
     return a + b
 }
+sum(5) //
 ```
 
 Or:
@@ -782,7 +783,7 @@ For example, in the following example, the variable `a` changes value three time
 
 ```
 class a {} // `a` is a class
-func a() void {} // `a` is a function, the class no longer exists.
+func a() {} // `a` is a function, the class no longer exists.
 int a = 5 // `a` is an int, the function no longer exists.
 ```
 
@@ -859,11 +860,15 @@ The declaration of a namespace or parameter is a valid statement (see Path Conte
 
 #### Function call
 
-A function call is an identifier of a declared function and a set of parenthesis containing the comma-separated arguments.  There may not be a space between the identifier and the open parenthesis.
+A function call is an identifier of a declared function and a set of parenthesis containing the comma-separated arguments.  There may not be a space between the identifier and the open parenthesis.  Function arguments may be referenced by name, independent of whether or not the argument has a default value.  When arguments are referenced in the function call by name, they may be rearranged, but may not be placed before arguments that are not referenced by name.  
 
 ```
-my_func(4,5)
-int x = add(2, 6, 7)
+func sub(int a=2, int b=1) int { return a - b }
+int x = sub()         // 1
+int y = sub(4, 2)     // 2
+int z = sub(b=5, a=2) // 3
+int w = sub(7, b=3)   // 4
+int f = sub(a=3, 2)   // Not valid RAPID
 ```
 
 #### Control flow
