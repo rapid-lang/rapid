@@ -36,7 +36,7 @@ Identifiers must start with a letter or an underscore, followed by any combinati
 
 The following identifiers are keywords in RAPID, and are reserved. They can not be used for any other purpose.
 
-`if`, `else`, `for`, `in`, `while`, `switch`, `case`, `default`, `fallthrough`, `http`, `func`, `json`, `class`, `namespace`, `param`, `true`, `false`, `new`, `optional`, `unsafe`, `instance`
+`if`, `else`, `for`, `in`, `while`, `switch`, `case`, `default`, `fallthrough`, `http`, `func`, `json`, `class`, `namespace`, `param`, `true`, `false`, `new`, `optional`, `unsafe`, `instance`, `and`, `or`
 
 ### 2.3 Literals
 
@@ -132,7 +132,8 @@ Operator | Use | Associativity
 `<` | Less than | non-associative
 `>=` | Greater than or equal to | non-associative
 `<=` | Less than or equal to | non-associative
-
+`and` | Logical And | non-associative
+`or` | Logical Or | non-associative
 
 ## 3. Types
 
@@ -144,7 +145,15 @@ RAPID is a statically typed language; variables must be explicitly typed upon de
 
 #### null
 
-In RAPID, the `null` keyword represents an uninitialized value.  Any type in rapid may take on `null` if it hasn't been initialized, or otherwise doesn't exist.
+In RAPID, the `null` keyword represents an uninitialized value.  Any type in rapid may take on `null` if it hasn't been initialized, or otherwise doesn't exist.  The `null` keyword represents a value, but null values are still typed.  Null variables of different types may not be assigned to each other, and are not equal.  Null variables of the same type are equal.  All variables will `null` value are equal to the keyword `null`.
+
+```
+int x
+int y = null
+string s
+boolean eq = (x == y) and (s != x) and (x == null) and (s == null)
+x = s  // not valid RAPID
+```
 
 #### Booleans
 
