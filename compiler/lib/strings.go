@@ -12,10 +12,12 @@ func (s StringOpt) String() string {
 	return s.val
 }
 
-/*
- * Equality
- */
-func (a StringOpt) EqualInt(b StringOpt) BoolOpt {
+func (a StringOpt) Equal(b StringOpt) BoolOpt {
+	if a.null && b.null {
+		return BoolOpt{
+			val: true,
+		}
+	}
 	if a.null || b.null {
 		return BoolOpt{
 			null: true,
@@ -26,10 +28,7 @@ func (a StringOpt) EqualInt(b StringOpt) BoolOpt {
 	}
 }
 
-/*
- * Concatenating
- */
-func (a StringOpt) AddFloat(b StringOpt) StringOpt {
+func (a StringOpt) Concat(b StringOpt) StringOpt {
 	if a.null || b.null {
 		return StringOpt{
 			null: true,

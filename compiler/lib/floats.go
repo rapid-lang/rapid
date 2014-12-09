@@ -14,10 +14,23 @@ func (f FloatOpt) String() string {
 	return fmt.Sprintf("%f", f.val)
 }
 
-/*
- * EQUALITY
- */
-func (a FloatOpt) EqualFloat(b FloatOpt) BoolOpt {
+func Float(i IntOpt) FloatOpt {
+	if i.null {
+		return FloatOpt{
+			null: true,
+		}
+	}
+	return FloatOpt{
+		val: float64(i.val),
+	}
+}
+
+func (a FloatOpt) Equal(b FloatOpt) BoolOpt {
+	if a.null && b.null {
+		return BoolOpt{
+			val: true,
+		}
+	}
 	if a.null || b.null {
 		return BoolOpt{
 			null: true,
@@ -28,10 +41,7 @@ func (a FloatOpt) EqualFloat(b FloatOpt) BoolOpt {
 	}
 }
 
-/*
- * ADDING
- */
-func (a FloatOpt) AddFloat(b FloatOpt) FloatOpt {
+func (a FloatOpt) Add(b FloatOpt) FloatOpt {
 	if a.null || b.null {
 		return FloatOpt{
 			null: true,
@@ -41,21 +51,8 @@ func (a FloatOpt) AddFloat(b FloatOpt) FloatOpt {
 		val: a.val + b.val,
 	}
 }
-func (a FloatOpt) AddInt(b IntOpt) FloatOpt {
-	if a.null || b.null {
-		return FloatOpt{
-			null: true,
-		}
-	}
-	return FloatOpt{
-		val: a.val + float64(b.val),
-	}
-}
 
-/*
- * Subtracting
- */
-func (a FloatOpt) SubtractFloat(b FloatOpt) FloatOpt {
+func (a FloatOpt) Subtract(b FloatOpt) FloatOpt {
 	if a.null || b.null {
 		return FloatOpt{
 			null: true,
@@ -65,21 +62,8 @@ func (a FloatOpt) SubtractFloat(b FloatOpt) FloatOpt {
 		val: a.val - b.val,
 	}
 }
-func (a FloatOpt) SubtractInt(b IntOpt) FloatOpt {
-	if a.null || b.null {
-		return FloatOpt{
-			null: true,
-		}
-	}
-	return FloatOpt{
-		val: a.val - float64(b.val),
-	}
-}
 
-/*
- * Division
- */
-func (a FloatOpt) DivisionFloat(b FloatOpt) FloatOpt {
+func (a FloatOpt) Divide(b FloatOpt) FloatOpt {
 	if a.null || b.null {
 		return FloatOpt{
 			null: true,
@@ -89,21 +73,8 @@ func (a FloatOpt) DivisionFloat(b FloatOpt) FloatOpt {
 		val: a.val / b.val,
 	}
 }
-func (a FloatOpt) DivisionInt(b IntOpt) FloatOpt {
-	if a.null || b.null {
-		return FloatOpt{
-			null: true,
-		}
-	}
-	return FloatOpt{
-		val: a.val / float64(b.val),
-	}
-}
 
-/*
- * Division
- */
-func (a FloatOpt) MultiplyFloat(b FloatOpt) FloatOpt {
+func (a FloatOpt) Multiply(b FloatOpt) FloatOpt {
 	if a.null || b.null {
 		return FloatOpt{
 			null: true,
@@ -111,15 +82,5 @@ func (a FloatOpt) MultiplyFloat(b FloatOpt) FloatOpt {
 	}
 	return FloatOpt{
 		val: a.val * b.val,
-	}
-}
-func (a FloatOpt) MultiplyInt(b IntOpt) FloatOpt {
-	if a.null || b.null {
-		return FloatOpt{
-			null: true,
-		}
-	}
-	return FloatOpt{
-		val: a.val * float64(b.val),
 	}
 }

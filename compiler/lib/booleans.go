@@ -16,7 +16,7 @@ func (b BoolOpt) String() string {
 /*
  * Evaluation
  */
-func (a BoolOpt) Equality(b BoolOpt) BoolOpt {
+func (a BoolOpt) Equal(b BoolOpt) BoolOpt {
 	if a.null || b.null {
 		return BoolOpt{
 			null: true,
