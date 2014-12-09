@@ -835,7 +835,7 @@ A declaration may be the declaration of a variable, an assignment, or the declar
 
 ##### Variable Declaration
 
-A variable declaration consists of a type and an id.
+A variable declaration consists of a type and an id.  A variable declared in a scope block is accessible at every line following the line of its declaration.
 
 ```
 /* type */ /* id */
@@ -843,19 +843,19 @@ A variable declaration consists of a type and an id.
 
 ##### Function Declaration
 
-The declaration of a function is a valid statement (see Functions).
+The declaration of a function is a valid statement (see Functions).  Functions defined in a scope are accessible from anywhere in that scope.  Functions may call each other mutually independant of definition order.
 
 ##### Route Declaration
 
-The declaration of a class is a valid statement (see Routing).
+The declaration of a class is a valid statement (see Routing).  Like functions, routes declared in a scope are accessible from anywhere in that scope.
 
 ##### Class Declaration
 
-The declaration of a class is a valid statement (see Classes).
+The declaration of a class is a valid statement (see Classes).  Like functions, classes declared in a scope are accessible from anywhere in that scope.
 
 ##### Namespace or Parameter Declaration
 
-The declaration of a namespace or parameter is a valid statement (see Path Context).
+The declaration of a namespace or parameter is a valid statement (see Path Context).  Like functions, namespces or parameters declared in a scope are accessible from anywhere in that scope.
 
 #### Function call
 
