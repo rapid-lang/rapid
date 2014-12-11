@@ -1,0 +1,7 @@
+func foo(int a){
+    int x = a;
+}
+
+func boo(int a, int b, string c) {
+   a = b;
+}

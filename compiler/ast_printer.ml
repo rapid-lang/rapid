@@ -42,6 +42,8 @@ let rec expr_s = function
     | ListLit l -> sprintf "(List literal [%s])"
         (String.concat ", " (List.map expr_s l))
     | Noexpr -> "( NOEXPR )"
+    | Nullxpr -> "(Null)"
+
 and fcall_s = function
     | FCall(f, es) -> sprintf "(Call (%s) with (%s))"
         f
@@ -90,12 +92,12 @@ let rec stmt_s = function
 
 let fstmt_s = function
     | Return e -> sprintf "(Return (%s))"
-        (expr_s e)
+        (concat ", " (List.map expr_s e))
     | FStmt s -> stmt_s s
 
-let func_decl_s f = sprintf "{\nfname = \"%s\"\nformals = [%s]\n\tbody = [%s]\n}"
+let func_decl_s f = sprintf "{\nfname = \"%s\"\nargs = [%s]\n\tbody = [%s]\n}"
     f.fname
-    (concat ", " f.formals)
+    (concat ", " (List.map string_of_vdecl f.args))
     (concat ",\n" (List.map fstmt_s f.body))
 
 let program_s (stmts, funcs) = sprintf "statements:{\n%s\n}\nfunctions:\n%s"

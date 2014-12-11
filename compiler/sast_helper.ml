@@ -7,6 +7,7 @@ exception UnsupportedDeclStmt
 exception ExistingSymbolErr
 exception MissingSymbolTablesErr
 exception VariatbleNotDefinedErr of string
+exception ExistingFuncErr
 
 
 
@@ -19,7 +20,18 @@ let expr_option_map func = function
 module StringMap = Map.Make(String)
 
 
+let empty_function_table = StringMap.empty
+
+(*add a (id -> typelist*typelist into the funciton table*)
+let add_func ft id arg_ts ret_ts = 
+    if StringMap.mem id ft
+        then raise ExistingFuncErr
+    else 
+        let v = (arg_ts, ret_ts) in 
+        StringMap.add id v ft
+
 let empty_symbol_table = StringMap.empty
+
 
 
 let symbol_table_list = StringMap.empty :: []
@@ -60,5 +72,6 @@ let sexpr_to_t expected_t = function
     | SExprBool _ -> Bool
     | SExprString _ -> String
     | NullExpr -> expected_t
+    | UntypedNullExpr -> expected_t
     | SId _ | _ -> raise UnsupportedSexprTypeClassification
 

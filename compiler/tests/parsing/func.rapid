@@ -6,5 +6,5 @@ func foo() int {
 }
 
 // now w/ return type tuple
-func foo() (int, int, int) {
+func foo() int, int, int {
 }
