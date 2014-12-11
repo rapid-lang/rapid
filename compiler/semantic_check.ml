@@ -113,13 +113,13 @@ let rec add_to_scope st = function
     | _ :: tl -> add_to_scope st tl
     | [] -> st
 
-let is_null_xpr = function
+let is_not_default = function
     | NullExpr -> true
     | _ -> false
 
 (*Called when we see an arg with default val, all the rest must have defaults*)
 let rec check_default_args = function
-    | SDecl(t, (id, xpr)) :: tl -> if is_null_xpr xpr
+    | SDecl(t, (id, xpr)) :: tl -> if is_not_default xpr
             then raise InvalidArgOrder
         else
             SDecl(t, (id, xpr)) :: check_default_args tl
@@ -128,7 +128,7 @@ let rec check_default_args = function
 
 (*Checks to make sure args with default vals come at the end fo the arg list*)
 let rec check_arg_order = function
-    | SDecl(t, (id, xpr)) :: tl -> if is_null_xpr xpr
+    | SDecl(t, (id, xpr)) :: tl -> if is_not_default xpr
             then SDecl(t, (id, xpr)) :: check_arg_order tl
         else
             SDecl(t, (id, xpr))  :: check_default_args tl
