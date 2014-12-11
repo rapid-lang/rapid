@@ -1,5 +1,0 @@
-
-boolean b = true;
-b = false;
-
-

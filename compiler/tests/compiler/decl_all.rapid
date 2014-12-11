@@ -1,0 +1,17 @@
+
+int a = 2;
+float b = 3.14;
+boolean c = true;
+string d = "hello world";
+
+int w = a;
+float x = b;
+boolean y = c;
+string z = d;
+
+println(w);
+println(x);
+println(y);
+println(z);
+
+

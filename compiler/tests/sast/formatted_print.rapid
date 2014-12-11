@@ -1,8 +1,0 @@
-
-string phrase = "I like %s\n";
-string name = "STRFKR";
-printf(phrase, name);
-
-name = "Flume";
-printf(phrase, name);
-
