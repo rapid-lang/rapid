@@ -51,6 +51,7 @@ let semantic_stmt_s = function
     | SAssign a -> svar_assign_s a ^ "\n"
     | SDecl(t, vd) -> svar_decl_s t vd ^ "\n"
     | SOutput o -> sprintf "(Output %s)" (soutput_s o)
+    | SReturn s -> sprintf("return")
     | _ -> "Unsupported statement"
 
 let semantic_func_s f = 

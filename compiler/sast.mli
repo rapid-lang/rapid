@@ -42,6 +42,7 @@ type semantic_stmt =
     | SOutput of soutput
     | SReturn of sexpr list
 
+(*this is the id, args, return types, body*)
 type semantic_function = string * semantic_stmt list * var_type list * semantic_stmt list
 (* TODO: Add HTTP routes or something similar in the future *)
 (* TODO: add functions so we allow more than just scripts *)

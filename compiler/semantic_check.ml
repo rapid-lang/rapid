@@ -18,7 +18,7 @@ exception UnsupportedDatatypeErr
 exception StringDatatypeRequiredErr
 exception InvalidArgErr
 exception InvalidArgOrder
-
+exception InvalidReturnTypeErr
 
 
 (* Takes a symbol table and sexpr and rewrites variable references to be typed *)
@@ -65,6 +65,22 @@ let check_s_output sym_tbl = function
         SPrintf(format_str, List.map (rewrite_sexpr sym_tbl) xpr_l)
     | SPrintln(xpr_l) -> SPrintln(List.map (rewrite_sexpr sym_tbl) xpr_l)
 
+(*Check that the return statement has expressions with the right types*)
+let rec check_return_types = function 
+    | ((xpr :: s),(t :: types)) -> let () = (check_t_sexpr t xpr) in
+        check_return_types (s, types)
+    (*To few vals returned*)
+    | (([]),(t::types)) -> raise InvalidReturnTypeErr
+    (*to many vals returned*)
+    | ((xpr :: s),([])) -> raise InvalidReturnTypeErr
+    | [],[] -> ()
+
+(*Scan all stmts in a function for returns then check the types*)
+let rec check_returns r = function 
+    | SReturn(s) :: tl-> let _ = check_return_types (s, r) in
+         SReturn(s) :: check_returns r tl
+    | hd :: tl -> hd :: check_returns r tl
+    | [] -> []
 
 (* Processes an unsafe SAST and returns a type checked SAST *)
 let rec var_analysis st = function
@@ -80,24 +96,31 @@ let rec var_analysis st = function
     | SOutput(so) :: tl ->
         let so = check_s_output st so in
             SOutput(so) :: (var_analysis st tl)
-    | SReturn(s) :: tl -> SReturn(s) :: (var_analysis st tl)
+    (*Return stmts are xpr lists, tranlslate all the expressions here*)
+    | SReturn(s) :: tl -> let xprs = List.map (rewrite_sexpr st) s in
+         SReturn(xprs) :: (var_analysis st tl)
     | [] -> []
 
+(*
+Adds all var decls in a stmt list to the scope and returns the new scope
+This does not do any type checking, and ignores the optional expression
+*)
 let rec add_to_scope st = function
     | SDecl(t, (id, xpr)) :: tl ->
        let st = add_sym t id st in
-       let st = add_to_scope st tl in
-       st
-    | _ :: _ -> raise InvalidArgErr
+           add_to_scope st tl
+    | _ :: tl -> add_to_scope st tl
     | [] -> st
 
 let args_to_type = function
     | SDecl(t, (id, xpr)) -> t
     | _ -> raise InvalidArgErr
+
 let is_null_xpr = function
     | NullExpr -> true
     | _ -> false
 
+(*Called when we see an arg with default val, all the rest must have defaults*)
 let rec check_default_args = function
     | SDecl(t, (id, xpr)) :: tl -> if is_null_xpr xpr
             then raise InvalidArgOrder
@@ -106,6 +129,7 @@ let rec check_default_args = function
     | _ :: _ -> raise InvalidArgErr
     | [] -> []
 
+(*Checks to make sure args with default vals come at the end fo the arg list*)
 let rec check_arg_order = function
     | SDecl(t, (id, xpr)) :: tl -> if is_null_xpr xpr
             then SDecl(t, (id, xpr)) :: check_arg_order tl
@@ -114,6 +138,7 @@ let rec check_arg_order = function
     | _ :: _ -> raise InvalidArgErr
     | [] -> []
 
+(**)
 let rec check_funcs st ft = function
     | (fname, args, rets, body) :: tl ->
         let _ = check_arg_order args in
@@ -121,20 +146,29 @@ let rec check_funcs st ft = function
         let ft = add_func ft fname arg_ts rets in
         let scoped_st = new_scope st in
         let targs = var_analysis scoped_st args in
+        (*args are added to function scope*)
         let scoped_st = add_to_scope scoped_st args in
+        (*typecheck the body and rewrite vars to have type*)
         let tbody = var_analysis scoped_st body in
-        (*TODO: check the return type matches the return statement*)
+        (*check the return type matches the return statement*)
+        (*Once we add control flow I'm not sure how to make sure 
+          all paths return something so ignoring for now.*)
+        let _  = check_returns rets tbody in
         (fname, targs, rets, tbody) :: check_funcs st ft tl
     | [] -> []
 
-
+(*The order of the checking and building of symbol tables may need to change
+    to allow functions to be Hoisted*)
 let gen_semantic_program stmts funcs =
     (* build an unsafe semantic AST *)
     let s_stmts = List.map translate_statement stmts in
     let s_funcs = List.map translate_function funcs in
-    let checked_funcs = check_funcs symbol_table_list empty_function_table s_funcs in
     (* typecheck and reclassify all variable usage *)
     let checked_stmts = var_analysis symbol_table_list s_stmts in
+    (*Add all the var decls to the global scope*)
+    let st = add_to_scope symbol_table_list s_stmts in
+    (*typecheck all the functions (including args and returns)*)
+    let checked_funcs = check_funcs st empty_function_table s_funcs in
     (checked_stmts, checked_funcs)
 
 

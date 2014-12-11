@@ -1,3 +1,4 @@
 func foo(string s, int a, int x = 2 ) {
 	a = 3;
+	int i = x;
 }

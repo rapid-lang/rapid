@@ -3,8 +3,12 @@ func too(){
 
 // now w/ return type
 func foo() int {
+	return 5;
 }
 
 // now w/ return type tuple
 func boo() int, int, int {
+	int a = 2;
+	int b = 3;
+	return a, b, 4;
 }
