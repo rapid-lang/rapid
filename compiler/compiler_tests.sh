@@ -1,10 +1,12 @@
 #!/bin/bash
 
+stdlib_loc="lib/"
 compiler_tests=$(find tests/compiler -name *\.rapid)
 had_failures="0"
-tmp_file=".test_output"  # stderr of parser stored here
-go_file="main.go"
+tmp_file="$(pwd)/.test_output"  # stderr of parser stored here
+go_file="${stdlib_loc}main.go"
 suffix=".output"
+executable="binary"
 
 reduce_path_to_test_name () {
     local fullpath=$1
@@ -19,8 +21,11 @@ do
     reduce_path_to_test_name "$file"
 
     ./rapid < "$file" > "$go_file"
-    # boolean result
-    outcome=$(go run $go_file > "$tmp_file")
+    pushd "$stdlib_loc" &> /dev/null
+    go build -o "$executable"
+    outcome=$("./$executable" > "$tmp_file")
+    rm -f "$executable"
+    popd &> /dev/null
 
     if [[ outcome ]] && [[ ! $(diff "$tmp_file" "$testpath$suffix") ]]
     then
