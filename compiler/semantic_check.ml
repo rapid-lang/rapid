@@ -135,10 +135,11 @@ let rec check_arg_order = function
     | _ :: _ -> raise InvalidArgErr
     | [] -> []
 
-let rec check_for_return = function
-    | SReturn(s) :: tl -> ()
-    | _ :: tl -> check_for_return tl
-    | [] -> raise NoRetrunErr
+let check_for_return body =
+    let last_stmt = List.hd (List.rev body) in
+    match last_stmt with
+        | SReturn(s) -> ()
+        | _ -> raise NoRetrunErr
 
 let rec check_funcs st ft = function
     | (fname, args, rets, body) :: tl ->
