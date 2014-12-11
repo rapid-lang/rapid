@@ -35,7 +35,7 @@ type stmt =
 
 type func_stmt =
     | FStmt of stmt
-    | Return of expr
+    | Return of expr list
 
 type func_decl = {
     fname : string;

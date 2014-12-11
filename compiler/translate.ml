@@ -66,7 +66,7 @@ let translate_statement = function
 
 let translate_fstatement = function
     | Ast.FStmt stmt -> translate_statement stmt
-    | Ast.Return expr -> SReturn(translate_expr expr)
+    | Ast.Return expr -> SReturn(List.map translate_expr expr)
 
 let translate_function (f : Ast.func_decl) = 
     (

@@ -58,7 +58,7 @@ let semantic_func_s f =
     let args_strings = (List.map semantic_stmt_s args) in
     let ret_strings = (List.map Ast_printer.string_of_t rets) in
     let body_strings = (List.map semantic_stmt_s body) in
-    sprintf "(func %s(%s) (%s{\n %s \n})"
+    sprintf "(func %s(%s) %s{\n %s \n})"
         id
         (String.concat "," args_strings)
         (String.concat ", " ret_strings)

@@ -28,7 +28,7 @@ let add_func ft id arg_ts ret_ts =
         then raise ExistingFuncErr
     else 
         let v = (arg_ts, ret_ts) in 
-        StringMap.add id arg_ts ft
+        StringMap.add id v ft
 
 let empty_symbol_table = StringMap.empty
 

@@ -40,7 +40,7 @@ type semantic_stmt =
     | SAssign of svar_assign
     | SDecl of var_type * svar_assign
     | SOutput of soutput
-    | SReturn of sexpr
+    | SReturn of sexpr list
 
 type semantic_function = string * semantic_stmt list * var_type list * semantic_stmt list
 (* TODO: Add HTTP routes or something similar in the future *)
