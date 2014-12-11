@@ -4,6 +4,7 @@ open Format
 
 exception UnsupportedSexpr
 exception UnsupportedSOutput
+exception UntypedVariableReference of string
 
 
 let string_expr_s = function
@@ -32,6 +33,8 @@ and sexpr_s = function
     | SExprFloat s -> float_expr_s s
     | SExprBool b -> bool_expr_s b
     | NullExpr -> "(NULL EXPR)"
+    | SId _ -> raise(UntypedVariableReference(
+        "Variable references must be rewritten with type information"))
     | _ -> raise UnsupportedSexpr
 
 let soutput_s = function
