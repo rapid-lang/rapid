@@ -6,17 +6,21 @@ exception UnsupportedSexpr
 exception UnsupportedSOutput
 
 
+
 let string_expr_s = function
     | SStringExprLit s -> sprintf "(String Lit: %s)" s
     | SStringVar id -> sprintf "(String Var: %s)" id
+    | SStringNull -> "(String NULL)"
 
 let int_expr_s = function
     | SIntExprLit i -> sprintf "(Int Lit: %d)" i
     | SIntVar id -> sprintf "(Int Var: %s)" id
+    | SIntNull -> "(Int NULL)"
 
 let float_expr_s = function
     | SFloatExprLit f -> sprintf "(Lit %f)" f
     | SFloatVar id -> sprintf "(Float Var %s)" id
+    | SFloatNull -> "(Float NULL)"
 
 
 let rec bool_expr_s = function
@@ -28,6 +32,7 @@ and sexpr_s = function
     | SExprString s -> string_expr_s s
     | SExprFloat s -> float_expr_s s
     | SExprBool b -> bool_expr_s b
+    | NullExpr -> "(NULL EXPR)"
     | _ -> raise UnsupportedSexpr
 
 let soutput_s = function

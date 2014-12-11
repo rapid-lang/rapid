@@ -2,17 +2,28 @@ open Ast
 open Datatypes
 
 
+<<<<<<< HEAD
+=======
+type bool_expr =
+    | SBoolExprLit of bool
+    | SBoolVar of string
+    | SBoolNull
+
+>>>>>>> 20ab06d3f76189d1f44e1dceace0de4ff1fb8f43
 type int_expr =
     | SIntExprLit of int
     | SIntVar of string
+    | SIntNull
 
 type float_expr =
     | SFloatExprLit of float
     | SFloatVar of string
+    | SFloatNull
 
 type string_expr =
     | SStringExprLit of string
     | SStringVar of string
+    | SStringNull
 
 type bool_expr =
     | SBoolExprLit of bool

@@ -54,10 +54,11 @@ let pop_scope = function
 
 
 (* returns the type of a typed sexpr *)
-let sexpr_to_t = function
+let sexpr_to_t expected_t = function
     | SExprInt _ -> Int
     | SExprFloat _ -> Float
     | SExprBool _ -> Bool
     | SExprString _ -> String
+    | NullExpr -> expected_t
     | SId _ | _ -> raise UnsupportedSexprTypeClassification
 

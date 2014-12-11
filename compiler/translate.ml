@@ -27,6 +27,7 @@ let translate_string_xpr = function
 
 let translate_bool_xpr = function
     | Ast.BoolLit b -> SBoolExprLit b
+    | Ast.CastBool b  -> ///////////////////////
     | _ -> raise InvalidBoolExprType
 
 let rec translate_expr = function

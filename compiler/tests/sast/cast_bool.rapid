@@ -1,4 +1,3 @@
 int i = 4;
 boolean b = i?;
 
-printf("%t\n", b);
