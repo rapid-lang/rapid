@@ -19,7 +19,7 @@ exception StringDatatypeRequiredErr
 exception InvalidArgErr
 exception InvalidArgOrder
 exception InvalidReturnTypeErr
-exception NoRetrunErr
+exception NoReturnErr
 
 
 (* Takes a symbol table and sexpr and rewrites variable references to be typed *)
