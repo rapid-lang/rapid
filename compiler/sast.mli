@@ -29,7 +29,7 @@ type sexpr =
     | SExprBool of bool_expr
     | SId of string
     | NullExpr (*this is for implied  Null expr*)
-    | HardNullExpr (*This is for when you type out null in rapid code.*)
+    | UntypedNullExpr (*This is for when you type out null in rapid code.*)
 
 type soutput =
     | SPrintf of sexpr * sexpr list

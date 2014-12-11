@@ -32,7 +32,7 @@ let sexpr_s = function
     | SExprFloat s -> float_expr_s s
     | SExprBool b -> bool_expr_s b
     | NullExpr -> "(NULL EXPR)"
-    | HardNullExpr -> "(HARD NULL EXPR)"
+    | UntypedNullExpr -> "(HARD NULL EXPR)"
     | _ -> raise UnsupportedSexpr
 
 let soutput_s = function
