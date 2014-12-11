@@ -46,7 +46,7 @@ let translate_assign id xpr = match translate_expr xpr with
     | SExprFloat _ ->  (id, xpr)
     | SId _         -> (id, xpr)
     | _ -> raise UnsupportedExpressionType
-    
+
 let translate_decl = function
     | (Int | String | Float | Bool) as t, id, i_xpr_opt ->
             SDecl(t, (id, expr_option_map translate_expr i_xpr_opt))

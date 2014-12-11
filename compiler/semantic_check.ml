@@ -16,6 +16,7 @@ exception UnsupportedExpressionType
 exception UnsupportedSexpr
 exception UnsupportedDatatypeErr
 exception StringDatatypeRequiredErr
+exception InvalidArgErr
 
 
 
@@ -80,13 +81,35 @@ let rec var_analysis st = function
             SOutput(so) :: (var_analysis st tl)
     | [] -> []
 
+let rec add_to_scope st = function
+    | SDecl(t, (id, xpr)) :: tl ->
+       let st = add_sym t id st in
+       let st = add_to_scope st tl in
+       st
+    | _ :: _ -> raise InvalidArgErr
+    | [] -> st
+
+
+let rec check_funcs st ft = function
+    | (fname, args, rets, body) :: tl ->
+        let ft = add_func fname in
+        let scoped_st = new_scope st in
+        let targs = var_analysis scoped_st args in
+        let scoped_st = add_to_scope scoped_st args in
+        let tbody = var_analysis new_scope body in
+        (*TODO: check the return type matches the return statement*)
+        (fname, targs, rets, tbody) :: check_funcs st ft tl
+    | [] -> []
+
 
 let gen_semantic_program stmts funcs =
     (* build an unsafe semantic AST *)
     let s_stmts = List.map translate_statement stmts in
+    let s_funcs = List.map translate_function funcs in
+    let checked_funcs = check_funcs symbol_table_list empty_function_table s_funcs in
     (* typecheck and reclassify all variable usage *)
     let checked_stmts = var_analysis symbol_table_list s_stmts in
-    (checked_stmts, (List.map translate_function funcs))
+    (checked_stmts, checked_funcs)
 
 
 let sast_from_ast ast =

@@ -62,7 +62,7 @@ let semantic_func_s f =
         id
         (String.concat "," args_strings)
         (String.concat ", " ret_strings)
-        (String.concat " " body_strings)
+        (String.concat "\n" body_strings)
 
 let string_of_sast sast =
     let (stmts, funcs) = sast in
