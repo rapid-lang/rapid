@@ -79,6 +79,7 @@ let rec var_analysis st = function
     | SOutput(so) :: tl ->
         let so = check_s_output st so in
             SOutput(so) :: (var_analysis st tl)
+    | SReturn(s) :: tl -> SReturn(s) :: (var_analysis st tl)
     | [] -> []
 
 let rec add_to_scope st = function
@@ -89,14 +90,18 @@ let rec add_to_scope st = function
     | _ :: _ -> raise InvalidArgErr
     | [] -> st
 
+let args_to_type = function
+    | SDecl(t, (id, xpr)) -> t
+    | _ -> raise InvalidArgErr
 
 let rec check_funcs st ft = function
     | (fname, args, rets, body) :: tl ->
-        let ft = add_func fname in
+        let arg_ts = List.map args_to_type args in
+        let ft = add_func ft fname arg_ts rets in
         let scoped_st = new_scope st in
         let targs = var_analysis scoped_st args in
         let scoped_st = add_to_scope scoped_st args in
-        let tbody = var_analysis new_scope body in
+        let tbody = var_analysis scoped_st body in
         (*TODO: check the return type matches the return statement*)
         (fname, targs, rets, tbody) :: check_funcs st ft tl
     | [] -> []

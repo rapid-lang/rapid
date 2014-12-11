@@ -90,6 +90,7 @@ formal_list:
     | primtype ID { [($1, $2, None)] }
     | primtype ID ASSIGN lit {[($1, $2, Some($4))]}                 
     | formal_list COMMA primtype ID { ($3, $4, None) :: $1 }
+    | formal_list COMMA primtype ID ASSIGN lit {($3, $4, Some($6)) :: $1}
 
 
 /* a tuple here of (primtype, ID) */
