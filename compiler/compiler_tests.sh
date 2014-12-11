@@ -20,14 +20,25 @@ for file in $compiler_tests
 do
     reduce_path_to_test_name "$file"
 
+    # true if test expected to fail
+    fail_test=$(echo "$file" |  grep "fail_")
+    # write generated code to file
     ./rapid < "$file" > "$go_file"
+
+    # go to build dir w/ std lib
     pushd "$stdlib_loc" &> /dev/null
     go build -o "$executable"
-    outcome=$("./$executable" > "$tmp_file")
+    outcome=$("./$executable" &> "$tmp_file")
     rm -f "$executable"
     popd &> /dev/null
 
-    if [[ outcome ]] && [[ ! $(diff "$tmp_file" "$testpath$suffix") ]]
+    # true if test expected to fail
+    fail_test=$(echo "$file" |  grep "fail_")
+
+    if [[ $fail_test && !$outcome  ]]
+    then
+        echo "success: $test_name"
+    elif [[ outcome ]] && [[ ! $(diff "$tmp_file" "$testpath$suffix") ]]
     then
         echo "success: $test_name"
     else
