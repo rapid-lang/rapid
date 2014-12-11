@@ -1,5 +1,1 @@
-
-boolean b = true;
-b = false;
-
-
+../compiler/decl_bool.rapid
