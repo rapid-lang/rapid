@@ -27,7 +27,7 @@ let translate_string_xpr = function
 
 let translate_bool_xpr = function
     | Ast.BoolLit b -> SBoolExprLit b
-    | Ast.CastBool b  -> ///////////////////////
+    | Ast.CastBool c  -> SBoolCast c
     | _ -> raise InvalidBoolExprType
 
 let rec translate_expr = function
@@ -36,6 +36,7 @@ let rec translate_expr = function
     | Ast.StringLit s -> SExprString(SStringExprLit s)
     | Ast.FloatLit f  -> SExprFloat(SFloatExprLit f)
     | Ast.BoolLit b   -> SExprBool(SBoolExprLit b)
+    | Ast.CastBool c  -> SExprBool(SBoolCast c)
     (* we put a placeholder with the ID in and check after and reclassify *)
     | Ast.Id id       -> SId id
     | _ -> raise UnsupportedExpressionType
