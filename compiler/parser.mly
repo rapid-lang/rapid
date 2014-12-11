@@ -15,7 +15,6 @@
 %token <int> INT_VAL
 %token <float> FLOAT_LIT
 %token <bool> BOOL_LIT
-%token <string> ID TYPE STRING_LIT
 %token EOF
 
 %nonassoc NOELSE
