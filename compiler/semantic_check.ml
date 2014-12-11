@@ -139,7 +139,7 @@ let check_for_return body =
     let last_stmt = List.hd (List.rev body) in
     match last_stmt with
         | SReturn(s) -> ()
-        | _ -> raise NoRetrunErr
+        | _ -> raise NoReturnErr
 
 let rec check_funcs st ft = function
     | (fname, args, rets, body) :: tl ->
