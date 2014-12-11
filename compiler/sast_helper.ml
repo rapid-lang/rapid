@@ -72,5 +72,6 @@ let sexpr_to_t expected_t = function
     | SExprBool _ -> Bool
     | SExprString _ -> String
     | NullExpr -> expected_t
+    | HardNullExpr -> expected_t
     | SId _ | _ -> raise UnsupportedSexprTypeClassification
 

@@ -16,6 +16,7 @@
 %token <float> FLOAT_LIT
 %token <bool> BOOL_LIT
 %token <string> ID TYPE STRING_LIT
+%token NULL
 %token EOF
 
 %nonassoc NOELSE
@@ -68,14 +69,6 @@ func_decl:
         args = $4;
         return = $6;
         body = List.rev $8
-    }}
-    // func w/o return types
-    | FUNC ID LPAREN arguments RPAREN LBRACE fstmt_list RBRACE
-    {{
-        fname = $2;
-        args = $4;
-        return = [];
-        body = List.rev $7
     }}
     /* TODO: unsafe functions */
 
@@ -138,6 +131,7 @@ lit:
     | BOOL_LIT   { BoolLit $1 }
     | STRING_LIT { StringLit $1 }
     | FLOAT_LIT  { FloatLit $1 }
+    | NULL       { Nullxpr }
 
 
 fcall:

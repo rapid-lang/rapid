@@ -1,0 +1,3 @@
+func foo(int x, int a = 0, int n = null) {
+	x = a;
+}

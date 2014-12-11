@@ -1,7 +1,5 @@
 open Datatypes
 
-
-
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq
 
 type expr =
@@ -14,6 +12,7 @@ type expr =
     | Call of fcall
     | ListLit of expr list
     | Noexpr
+    | Nullxpr
 and fcall =
     | FCall of string * expr list
 

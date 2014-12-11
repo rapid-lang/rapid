@@ -28,7 +28,8 @@ type sexpr =
     | SExprFloat of float_expr
     | SExprBool of bool_expr
     | SId of string
-    | NullExpr
+    | NullExpr (*this is for implied  Null expr*)
+    | HardNullExpr (*This is for when you type out null in rapid code.*)
 
 type soutput =
     | SPrintf of sexpr * sexpr list

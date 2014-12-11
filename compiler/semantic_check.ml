@@ -19,6 +19,7 @@ exception StringDatatypeRequiredErr
 exception InvalidArgErr
 exception InvalidArgOrder
 exception InvalidReturnTypeErr
+exception NoRetrunErr
 
 
 (* Takes a symbol table and sexpr and rewrites variable references to be typed *)
@@ -112,10 +113,6 @@ let rec add_to_scope st = function
     | _ :: tl -> add_to_scope st tl
     | [] -> st
 
-let args_to_type = function
-    | SDecl(t, (id, xpr)) -> t
-    | _ -> raise InvalidArgErr
-
 let is_null_xpr = function
     | NullExpr -> true
     | _ -> false
@@ -138,10 +135,18 @@ let rec check_arg_order = function
     | _ :: _ -> raise InvalidArgErr
     | [] -> []
 
-(**)
+let rec check_for_return = function
+    | SReturn(s) :: tl -> ()
+    | _ :: tl -> check_for_return tl
+    | [] -> raise NoRetrunErr
+
 let rec check_funcs st ft = function
     | (fname, args, rets, body) :: tl ->
         let _ = check_arg_order args in
+        let args_to_type = function
+            | SDecl(t, (id, xpr)) -> t
+            | _ -> raise InvalidArgErr
+        in
         let arg_ts = List.map args_to_type args in
         let ft = add_func ft fname arg_ts rets in
         let scoped_st = new_scope st in
@@ -154,7 +159,12 @@ let rec check_funcs st ft = function
         (*Once we add control flow I'm not sure how to make sure 
           all paths return something so ignoring for now.*)
         let _  = check_returns rets tbody in
-        (fname, targs, rets, tbody) :: check_funcs st ft tl
+        (*if no return types then don't worry, else find a return stmnt*)
+        if rets = [] then 
+            (fname, targs, rets, tbody) :: check_funcs st ft tl
+        else
+            let () = check_for_return tbody in
+            (fname, targs, rets, tbody) :: check_funcs st ft tl
     | [] -> []
 
 (*The order of the checking and building of symbol tables may need to change

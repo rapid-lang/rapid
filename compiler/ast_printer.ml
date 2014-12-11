@@ -42,6 +42,8 @@ let rec expr_s = function
     | ListLit l -> sprintf "(List literal [%s])"
         (String.concat ", " (List.map expr_s l))
     | Noexpr -> "( NOEXPR )"
+    | Nullxpr -> "(Null)"
+
 and fcall_s = function
     | FCall(f, es) -> sprintf "(Call (%s) with (%s))"
         f
