@@ -17,6 +17,7 @@ exception UnsupportedSexpr
 exception UnsupportedDatatypeErr
 exception StringDatatypeRequiredErr
 exception InvalidArgErr
+exception InvalidArgOrder
 
 
 
@@ -93,9 +94,29 @@ let rec add_to_scope st = function
 let args_to_type = function
     | SDecl(t, (id, xpr)) -> t
     | _ -> raise InvalidArgErr
+let is_null_xpr = function
+    | NullExpr -> true
+    | _ -> false
+
+let rec check_default_args = function
+    | SDecl(t, (id, xpr)) :: tl -> if is_null_xpr xpr
+            then raise InvalidArgOrder
+        else
+            SDecl(t, (id, xpr)) :: check_default_args tl
+    | _ :: _ -> raise InvalidArgErr
+    | [] -> []
+
+let rec check_arg_order = function
+    | SDecl(t, (id, xpr)) :: tl -> if is_null_xpr xpr
+            then SDecl(t, (id, xpr)) :: check_arg_order tl
+        else
+            SDecl(t, (id, xpr))  :: check_default_args tl
+    | _ :: _ -> raise InvalidArgErr
+    | [] -> []
 
 let rec check_funcs st ft = function
     | (fname, args, rets, body) :: tl ->
+        let _ = check_arg_order args in
         let arg_ts = List.map args_to_type args in
         let ft = add_func ft fname arg_ts rets in
         let scoped_st = new_scope st in
