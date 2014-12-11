@@ -32,7 +32,7 @@ let get_string_literal_from_sexpr = function
     | SExprString(SStringVar id) -> sprintf "*%s" id
     | _ -> raise StringExpressionsRequired
 
-(* returns a reference to a integer *)
+(* returns a reference to an integer *)
 let int_expr_to_code = function
     | SIntExprLit i ->
         let tmp_var = rand_var_gen () in
@@ -125,19 +125,18 @@ let soutput_to_code = function
     | SPrintln xpr_l ->
         let trans = List.map sexpr_to_code xpr_l in
         let setups = List.map (fun (s, _) -> s) trans in
-        let refs = List.map (fun (_, r) -> r) trans in
+        let refs = List.map (fun (_, r) -> "*"^r) trans in
             sprintf "%s\nfmt.Println(%s)"
                 (String.concat "\n" setups)
-                (String.concat "," (List.map (fun r -> "*"^r) refs))
+                (String.concat "," refs)
     | SPrintf(s, xpr_l) ->
-        let format_str = get_string_literal_from_sexpr s in
         let trans = List.map sexpr_to_code xpr_l in
         let setups = List.map (fun (s, _) -> s) trans in
-        let refs = List.map (fun (_, r) -> r) trans in
+        let refs = List.map (fun (_, r) -> "*"^r) trans in
             sprintf "%s\nfmt.Printf(%s, %s)"
                 (String.concat "\n" setups)
-                format_str
-                (String.concat "," (List.map (fun r -> "*"^r) refs))
+                (get_string_literal_from_sexpr s)
+                (String.concat "," refs)
     | _ -> raise UnsupportedOutputType
 
 let sast_to_code = function
