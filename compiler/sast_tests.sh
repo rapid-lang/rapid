@@ -27,9 +27,11 @@ run_test() {
         echo "success: $test_name"
     else
         echo "FAIL:    $test_name"
-        echo "$output"
+        cat "$output"
+        cat "$tmp_file"
         had_failures="1"
     fi
+    rm -f "$tmp_file"
 }
 
 sast_tests=$(find tests/sast -name *\.rapid)

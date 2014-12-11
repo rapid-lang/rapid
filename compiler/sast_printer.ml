@@ -21,7 +21,6 @@ let float_expr_s = function
     | SFloatVar id -> sprintf "(Float Var %s)" id
     | SFloatNull -> "(Float NULL)"
 
-
 let rec bool_expr_s = function
     | SBoolExprLit b -> sprintf "(Bool lit: %b)" b
     | SBoolVar id -> sprintf "(Bool Var: %s)" id
