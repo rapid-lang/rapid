@@ -41,7 +41,17 @@ type semantic_stmt =
     | SDecl of var_type * svar_assign
     | SOutput of soutput
 
+
+type sattr =
+    | SNonOption of var_type * string * sexpr option
+    | SOptional of var_type * string
+
+type sclass = string * sattr list
+(* TODO: Eventually it will look like this: ?
+type sclass = string * sattr list * sfunc_decl list * sroute_decl list
+*)
+
 (* TODO: Add HTTP routes or something similar in the future *)
 (* TODO: add functions so we allow more than just scripts *)
-type semantic_program = semantic_stmt list
+type semantic_program = semantic_stmt list * sclass list
 

@@ -47,13 +47,35 @@ let svar_assign_s (id, xpr) =
 
 let svar_decl_s t (id, xpr) =
     sprintf "(Declare %s (%s) to %s)" id (Ast_printer.string_of_t t) (sexpr_s xpr)
+
 let semantic_stmt_s = function
     | SAssign a -> svar_assign_s a ^ "\n"
     | SDecl(t, vd) -> svar_decl_s t vd ^ "\n"
     | SOutput o -> sprintf "(Output %s)" (soutput_s o)
     | _ -> "Unsupported statement"
 
-let string_of_sast sast =
-    let strs = List.map semantic_stmt_s sast in
-    String.concat "" strs
+let sattr_s = function
+    | SNonOption (t, name, Some(xpr)) -> sprintf "(SATTR: %s of %s = %s)"
+        name
+        (Ast_printer.string_of_t t)
+        (sexpr_s xpr)
+    | SNonOption (t, name, None) -> sprintf "(SATTR: %s of %s)"
+        name
+        (Ast_printer.string_of_t t)
+    | SOptional (t, name) -> sprintf "(OPTIONAL SATTR: %s of %s)"
+        name
+        (Ast_printer.string_of_t t)
+
+
+
+let sclass_s (name, sattrs) =
+    sprintf "(SCLASS %s:\n%s)"
+        name
+        (String.concat "\n" (List.map (fun a -> "\t" ^ a)
+            (List.map sattr_s sattrs)))
+
+let string_of_sast (semantic_stmts, sclasses) =
+    let semantic_stmts_strs = List.map semantic_stmt_s semantic_stmts in
+    let sclasses_strs = List.map sclass_s sclasses in
+    (String.concat "" sclasses_strs) ^ (String.concat "" semantic_stmts_strs)
 

@@ -64,3 +64,13 @@ let translate_statement = function
     | Ast.Output o -> SOutput(translate_output o)
     | _ -> raise(UnsupportedStatementTypeErr "type unknown")
 
+let translate_attr = function
+    | Ast.NonOption (t, name, Some(xpr)) -> SNonOption(t, name, Some(translate_expr xpr))
+    | Ast.NonOption (t, name, None) -> SNonOption(t, name, None)
+    | Ast.Optional (t, name) -> SOptional(t, name)
+
+let translate_class (name, attrs) =
+    name,
+    (List.map translate_attr attrs)
+
+

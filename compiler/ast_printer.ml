@@ -102,15 +102,15 @@ let func_decl_s f = sprintf "{\nfname = \"%s\"\nformals = [%s]\n\tbody = [%s]\n}
 
 let attr_s = function
     | NonOption(t, id, Some(xpr)) -> sprintf "(ATTR: %s of %s = %s)"
-        (string_of_t t)
         id
+        (string_of_t t)
         (expr_s xpr)
     | NonOption(t, id, None) -> sprintf "(ATTR: %s of %s)"
-        (string_of_t t)
         id
-    | Optional(id, t) -> sprintf "(ATTR: OPTIONAL %s of %s)"
         (string_of_t t)
+    | Optional(t,id) -> sprintf "(ATTR: OPTIONAL %s of %s)"
         id
+        (string_of_t t)
 
 
 let class_s (name, attrs) =
