@@ -56,7 +56,7 @@ do
         echo
 
         printf "Generated Code: [[[\n"
-        cat "$go_file"
+        gofmt "$go_file"
         printf "]]]\n"
         echo
     fi

@@ -149,22 +149,28 @@ let stmts_to_code = function
 let sattr_to_code = function
     | SOptional(t, id) | SNonOption(t, id, _) -> sprintf "%s %s"
         id
-        (Ast_printer.string_of_t t)
+        (go_type_from_type t)
 
 let class_to_code (name, sattrs) =
-    sprintf "type %s struct {\n%s\n}\n"
+    let attr_names = List.map (fun a -> match a with
+        | SOptional(_, id) | SNonOption(_, id, _) -> id) sattrs in
+    sprintf "type %s struct {\n%s\n}\nfunc new_%s(%s)%s{return %s{\n%s}\n}"
         name
         (String.concat "\n" (List.map sattr_to_code sattrs))
+        name
+        (String.concat "," (List.map sattr_to_code sattrs))
+        name
+        name
+        (String.concat "" (List.map (fun a -> sprintf "%s: %s,\n" a a) attr_names))
 
 let skeleton = "package main\n" ^
     "import (\"fmt\")\n" ^
-    "var _ = fmt.Printf\n" ^
-    "func main() {\n"
+    "var _ = fmt.Printf\n"
 
 let build_prog (stmts, classes) =
     let stmt_lines = List.map stmts_to_code stmts in
-    let class_lines = List.map class_to_code classes in
-    let gen_code_stmts = String.concat "\n" stmt_lines in
-    let gen_code_classes = String.concat "\n" class_lines in
-    skeleton ^ gen_code_classes ^ gen_code_stmts ^ "\n}\n"
+    let class_decls = List.map class_to_code classes in
+    let script_stmts = String.concat "\n" stmt_lines in
+    let gen_code_classes = String.concat "\n" class_decls in
+    skeleton ^ gen_code_classes ^ "\nfunc main() {\n" ^ script_stmts ^ "\n}\n"
 
