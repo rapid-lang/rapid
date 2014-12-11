@@ -34,7 +34,7 @@ let rec rewrite_sexpr st = function
 
 (* Takes a type and a typed sexpr and confirms it is the proper type *)
 let check_t_sexpr expected_t xpr =
-    let found_t = sexpr_to_t xpr in
+    let found_t = sexpr_to_t expected_t xpr in
     if found_t = expected_t
         then ()
         else raise(InvalidTypeErr(Format.sprintf "Expected %s expression, found %s"

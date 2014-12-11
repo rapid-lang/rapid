@@ -1,0 +1,8 @@
+
+int x;
+
+printf("res: %d", x);
+
+int y = x;
+
+
