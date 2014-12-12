@@ -1,7 +1,6 @@
 open Datatypes
 
 
-
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | Qmark  
 
 type expr =
@@ -12,9 +11,10 @@ type expr =
     | FloatLit of float
     | Binop of expr * op * expr
     | Call of fcall
-    | CastBool of expr                       
+    | CastBool of expr
     | ListLit of expr list
     | Noexpr
+    | Nullxpr
 and fcall =
     | FCall of string * expr list
 
@@ -36,11 +36,11 @@ type stmt =
 
 type func_stmt =
     | FStmt of stmt
-    | Return of expr
+    | Return of expr list
 
 type func_decl = {
     fname : string;
-    formals : string list;
+    args : vdecl list;
     return : var_type list;
     body : func_stmt list;
 }
