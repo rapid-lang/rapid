@@ -36,7 +36,7 @@ Identifiers must start with a letter or an underscore, followed by any combinati
 
 The following identifiers are keywords in RAPID, and are reserved. They can not be used for any other purpose.
 
-`if`, `else`, `for`, `in`, `while`, `switch`, `case`, `default`, `fallthrough`, `http`, `func`, `json`, `class`, `namespace`, `param`, `true`, `false`, `new`, `optional`, `unsafe`, `instance`
+`if`, `else`, `for`, `in`, `while`, `switch`, `case`, `default`, `fallthrough`, `http`, `func`, `json`, `class`, `namespace`, `param`, `true`, `false`, `new`, `optional`, `unsafe`, `instance`, `and`, `or`
 
 ### 2.3 Literals
 
@@ -132,7 +132,8 @@ Operator | Use | Associativity
 `<` | Less than | non-associative
 `>=` | Greater than or equal to | non-associative
 `<=` | Less than or equal to | non-associative
-
+`and` | Logical And | non-associative
+`or` | Logical Or | non-associative
 
 ## 3. Types
 
@@ -144,7 +145,25 @@ RAPID is a statically typed language; variables must be explicitly typed upon de
 
 #### null
 
-In RAPID, the `null` keyword represents an uninitialized value.  Any type in rapid may take on `null` if it hasn't been initialized, or otherwise doesn't exist.
+In RAPID, the `null` keyword represents an uninitialized value.  Any type in rapid may take on `null` if it hasn't been initialized, or otherwise doesn't exist.  The `null` keyword represents a value, but null values are still typed.  Null variables of different types may not be assigned to each other, and may not be compared.  Null variables of the same type are equal.  All variables will `null` value are equal to the keyword `null`.
+
+```
+int x
+int y = null
+string s
+boolean eq = (x == y) and (x == null) and (s == null)
+x == s  // not valid RAPID
+x = s   // not valid RAPID
+```
+
+Null values of any type may not be used in operations together.  If they are, the program will exit prematurely, or the HTTP server will return a 500 error.
+
+```
+int x         // null
+int y = x + 2 // not allowed, the program exits or the request returns 500.
+list<int> a = [1, 2, 3, 4]
+a[x]          // not allowed, the program exits or the request returns 500.
+```
 
 #### Booleans
 
@@ -382,6 +401,13 @@ float f = float(i) // f == 3.0
 int i = int(f)     // i == 7
 ```
 
+When an int and a float are involved in a binary operator, the integer will be cast to a float implicitly.
+
+```
+float f = 7.5 + 10    // 17.5
+boolean eq = 4.0 == 4 // true
+```
+
 #### Booleans
 
 Any value may be cast to boolean using the `?` operator. 
@@ -560,7 +586,7 @@ Tweet t, error e = Tweet.get(ID="123abc")
 
 Functions in RAPID are first-class objects, but may not be declared anonymously.  Functions are declared using the `func` keyword.  The arguments (within parenthesis), return type (after the parenthesis, but before the braces), and the body of the function (within the braces) must be declared explicitly.  Return types may include multiple types separated by commas, or may be omitted for void functions.
 
-Return values are specified using the `return` keyword, which must be followed by an expression to be returned for functions that have declared return types.  If the return type is omitted, the function is void, an the result of calling it may not be assigned to a value.  Void functions may use the `return` keyword by itself to exit prematurely from the function.
+Return values are specified using the `return` keyword, which must be followed by an expression to be returned for functions that have declared return types.  If the return type is omitted, the function is void, and the result of calling it may not be assigned to a value.  Void functions may use the `return` keyword by itself to exit prematurely from the function.
 
 Unsafe functions may not be void, because they must return errors.
 
@@ -568,10 +594,10 @@ Unsafe functions may not be void, because they must return errors.
 return /* expression */
 ```
 
-The arguments must be in order `namespace` arguments, then formal arguments.
+The arguments must be in order `namespace` arguments, then formal arguments.  Arguments may be given a literal default value, using an equal sign, but all arguments with default values must follow arguments without default values.
 
 ```
-[unsafe] func /* id */ ( /* namespace args */ /* formal args */ ) {
+[unsafe] func /* id */ ( /* namespace args */ /* formal args */ ) /* return type*/ {
 	// statements
 }
 ```
@@ -579,9 +605,10 @@ The arguments must be in order `namespace` arguments, then formal arguments.
 For example:
 
 ```
-func sum(int a, int b) int {
+func sum(int a, int b=1) int {
     return a + b
 }
+sum(5) //
 ```
 
 Or:
@@ -751,17 +778,23 @@ Literals may be of type string, integer, float, boolean, dict, or list.  See Lex
 
 #### Identifiers
 
-Identifiers could be primitive types, lists, dictionaries, objects, JSON objects, functions, classes, or errors.  Identifiers can be modified, and reused throughout a program.
+Identifiers could be primitive types, lists, dictionaries, objects, JSON objects, functions, classes, or errors.  
+
+If an identifier represents a primitive type, list, dictionary, object, JSON object, or error, it may be reused once per block.
 
 For example, in the following example, the variable `a` changes value three times.
 
 ```
-class a {} // `a` is a class
-func a() void {} // `a` is a function, the class no longer exists.
-int a = 5 // `a` is an int, the function no longer exists.
+float a = 4.5            // `a` is a float
+func add(int a, int b) { // `a` is an int 
+    return a + b         // the float `a` does not exist in this scope.
+} 
+string a = ""            // invalid RAPID, cannot rename 
+                         // variables within the same scope.
 ```
 
 Identifiers are tied to the scope that they are declared in.  The following example prints `3`, then `5`, then `3`:
+
 ```
 int a = 3
 if (true) {
@@ -810,7 +843,7 @@ A declaration may be the declaration of a variable, an assignment, or the declar
 
 ##### Variable Declaration
 
-A variable declaration consists of a type and an id.
+A variable declaration consists of a type and an id.  A variable declared in a scope block is accessible at every line following the line of its declaration.
 
 ```
 /* type */ /* id */
@@ -818,27 +851,31 @@ A variable declaration consists of a type and an id.
 
 ##### Function Declaration
 
-The declaration of a function is a valid statement (see Functions).
+The declaration of a function is a valid statement (see Functions).  Functions defined in a scope are accessible from anywhere in that scope.  Functions may call each other mutually independant of definition order.
 
 ##### Route Declaration
 
-The declaration of a class is a valid statement (see Routing).
+The declaration of a class is a valid statement (see Routing).  Like functions, routes declared in a scope are accessible from anywhere in that scope.
 
 ##### Class Declaration
 
-The declaration of a class is a valid statement (see Classes).
+The declaration of a class is a valid statement (see Classes).  Like functions, classes declared in a scope are accessible from anywhere in that scope.
 
 ##### Namespace or Parameter Declaration
 
-The declaration of a namespace or parameter is a valid statement (see Path Context).
+The declaration of a namespace or parameter is a valid statement (see Path Context).  Like functions, namespces or parameters declared in a scope are accessible from anywhere in that scope.
 
 #### Function call
 
-A function call is an identifier of a declared function and a set of parenthesis containing the comma-separated arguments.  There may not be a space between the identifier and the open parenthesis.
+A function call is an identifier of a declared function and a set of parenthesis containing the comma-separated arguments.  There may not be a space between the identifier and the open parenthesis.  Function arguments may be referenced by name, independent of whether or not the argument has a default value.  When arguments are referenced in the function call by name, they may be rearranged, but may not be placed before arguments that are not referenced by name.  
 
 ```
-my_func(4,5)
-int x = add(2, 6, 7)
+func sub(int a=2, int b=1) int { return a - b }
+int x = sub()         // 1
+int y = sub(4, 2)     // 2
+int z = sub(b=5, a=2) // 3
+int w = sub(7, b=3)   // 4
+int f = sub(a=3, 2)   // Not valid RAPID
 ```
 
 #### Control flow
@@ -970,7 +1007,8 @@ A `break` statement can be used to exit a loop prematurely.
 while (/* expression */) {
     break
 }
-``` 
+```
+
 In the case of nested loops, the `break` statement only breaks the loop in which it is stated.
 
 ```
