@@ -145,16 +145,28 @@ RAPID is a statically typed language; variables must be explicitly typed upon de
 
 #### null
 
-In RAPID, the `null` keyword represents the a type that has no value. Only objects, `json` objects, and errors may be `null`.
+In RAPID, the `null` keyword represents an uninitialized value.  Any type in rapid may take on `null` if it hasn't been initialized, or otherwise doesn't exist.  The `null` keyword represents a value, but null values are still typed.  Null variables of different types may not be assigned to each other, and are not equal.  Null variables of the same type are equal.  All variables will `null` value are equal to the keyword `null`.
 
 ```
-MyClass obj = null
-obj == null // true
+int x
+int y = null
+string s
+boolean eq = (x == y) and (s != x) and (x == null) and (s == null)
+x = s  // not valid RAPID
+```
+
+Null values of any type may not be used in operations together.  If they are, the program will exit prematurely, or the HTTP server will return a 500 error.
+
+```
+int x         // null
+int y = x + 2 // not allowed, the program exits or the request returns 500.
+list<int> a = [1, 2, 3, 4]
+a[x]          // not allowed, the program exits or the request returns 500.
 ```
 
 #### Booleans
 
-Boolean values are defined by the `true` and `false` keywords.  Because they are their own type, non-boolean values must be cast to `boolean` in order to be used in logical expressions.
+Boolean values are defined by the `true` and `false` keywords.  Because they are their own type, non-boolean values must be cast to `boolean` in order to be used in logical expressions. 
 
 For example:
 ```
@@ -165,19 +177,12 @@ For example:
 
 The `?` is a an operator on all primitive types that evaluates to the "truthiness" of that value.
 
-Uninitialized booleans take on a false value.
-
-```
-boolean b
-b == false  // true
-```
-
 #### Integers
 
-Integers are preceded by the type `int`, and represent an 8 byte, signed integer. Integers can be declared and initialized later, or initialized inline.   Uninitialized integers are 0.
+Integers are preceded by the type `int`, and represent an 8 byte, signed integer. Integers can be declared and initialized later, or initialized inline.   Uninitialized integers are null.
 
 ```
-int i     // 0
+int i     // null
 int i = 5 // 5
 ```
 
@@ -191,19 +196,19 @@ printf("%d, %d", a, b) // 2 1
 ```
 
 #### Floating Point Numbers
-Floating point numbers are preceded by the type `float`, and represent IEEE-754 64-bit floating-point numbers.. They can be declared and initialized later, or initialized inline. Uninitialized floats are 0.0. 
+Floating point numbers are preceded by the type `float`, and represent IEEE-754 64-bit floating-point numbers.. They can be declared and initialized later, or initialized inline. 
 
 ```
-float i        // 0.0
+float i        // null
 float j = 3.14 // 3.14
 ```
 
 #### Strings
 
-Strings in RAPID are mutable, and declared with the `string` type, and have the default value of the empty string.  String literals are declared using double quotes, and special characters may be escaped using the `\` character.  Strings may be indexed using square brackets.  Because there is no Character type in RAPID, single characters are strings of length 1. Multiline strings may be declared using triple double quotes.  Newlines are preserved and quotes do not need to be escaped, but they may not be nested. Strings are pass by value. Uninitiailized strings are the empty string.
+Strings in RAPID are mutable, and declared with the `string` type, and have the default value of the empty string.  String literals are declared using double quotes, and special characters may be escaped using the `\` character.  Strings may be indexed using square brackets.  Because there is no Character type in RAPID, single characters are strings of length 1. Multiline strings may be declared using triple double quotes.  Newlines are preserved and quotes do not need to be escaped, but they may not be nested. Strings are pass by value.
 
 ```
-string s                      // ""
+string s                      // null
 string character = "c"        // c
 string s = "He is \"Batman\"" // He called himself "Batman"
 string c = s[0]               // H
@@ -263,11 +268,11 @@ ages["Caroline"] = 7    // {"Alice":3, "Bob":4, "Caroline":7}
 
 #### Object
 
-The `object` type is a generic, non-primitive, dictionary-backed type that has attributes for instance variables and functions.  Accessing instance variables or functions can be done with dot notation.  Objects may not be declared anonymously; they must be declared as instances of classes.  Objects have immutable key sets, so variables and functions may not be added or removed, although their values may be changed.  For more on classes and instantiation, see Classes.  Uninitialized objects are `null`.
+The `object` type is a generic, non-primitive, dictionary-backed type that has attributes for instance variables and functions.  Accessing instance variables or functions can be done with dot notation.  Objects may not be declared anonymously; they must be declared as instances of classes.  Objects have immutable key sets, so variables and functions may not be added or removed, although their values may be changed.  For more on classes and instantiation, see Classes.
 
 #### json
 
-The `json` type is shares qualities of a dictionary and of an Object.  Every `json` type is directly connected to an Object class that is user-defined. They have keys and values like dictionaries, but have the strict requirements of shape like objects do.  Every property of a class is a mandatory key on the corresponding `json` object, and properties that have default values on objects have default values in `json`.  Unlike objects, however, `json` objects do not have methods associated with them, and instances do not represent rows in the database.  Each `class` declaration defines an Object type and a `json` object type, and only `json` objects that are associated with classes may be instantiated.  Uninitialized `json` objects are `null`.
+The `json` type is shares qualities of a dictionary and of an Object.  Every `json` type is directly connected to an Object class that is user-defined. They have keys and values like dictionaries, but have the strict requirements of shape like objects do.  Every property of a class is a mandatory key on the corresponding `json` object, and properties that have default values on objects have default values in `json`.  Unlike objects, however, `json` objects do not have methods associated with them, and instances do not represent rows in the database.  Each `class` declaration defines an Object type and a `json` object type, and only `json` objects that are associated with classes may be instantiated.
 
 For example, if we previously defined a `User` object with three instance variables `username`, `full_name`, and `password` (all strings), then we may declare a `json` User like so:
 
@@ -293,7 +298,7 @@ json<User> steve = json<User>(
 #### Errors
 
 Errors in RAPID are not thrown and caught, rather they are returned directly by unsafe functions (see Functions).
-Errors contain a string message, which can be dot-accessed, an integer error code that conforms with the HTTP/1.1 standard, and an optional string name.  Unitiailized errors are `null`.
+Errors contain a string message, which can be dot-accessed, an integer error code that conforms with the HTTP/1.1 standard, and an optional string name.
 
 For example, to declare a custom error:
 
@@ -327,22 +332,22 @@ if (!e?) {
 
 ##### Stacking
 
-Unsafe functions (like list and dictionary access) may exist in the same expression.  If unsafe functions return successfully, the error that is returned is consumed (ignored), and the return value is taken.  If an unsafe function returns an error, the expression evaluation short-circuits, and the value of the expression is the default value of the type that should have been returned and the error that is returned by the failed function call.
+Unsafe functions (like list and dictionary access) may exist in the same expression.  If unsafe functions return successfully, the error that is returned is consumed (ignored), and the return value is taken.  If an unsafe function returns an error, the expression evaluation short-circuits, and the value of the expression is null and the error that is returned by the failed function call.
 
 ```
 dict<string, list<int>> d = {"foo": [4,5], "bar": [1,2,3]}
 int val, error e = d["foo"][2]     // List index out of bounds...
-printf("%d", val)                  // 0
+printf("%d", val)                  // null
 printf("%s", e.name)               // IndexError
 printf("%t", e == list.IndexError) // true
 
 val, e = d["baz"][0]             // No such key, short circuit
-printf("%d", val)                // 0
+printf("%d", val)                // null
 printf("%s", e.name)             // KeyError
 printf("%t", e == dict.KeyError) // true
 ```
 
-More generally, if a subexpression of an expression is unsafe, it is presumed to be successful and the return value of the subexpression is used in the evaluation of the larger expression, unless the unsafe expression evaluates to an error, in which case evaluation of the large expression short-circuits, and the value of the large expression is `/* default value */, /* sub-expression's error */`.
+More generally, if a subexpression of an expression is unsafe, it is presumed to be successful and the return value of the subexpression is used in the evaluation of the larger expression, unless the unsafe expression evaluates to an error, in which case evaluation of the large expression short-circuits, and the value of the large expression is `null, /* sub-expression's error */`.
 
 ##### Predefined Responses
 
@@ -1030,7 +1035,10 @@ Examples:
 ```
 length("hello")                                // 5
 length([0,1,2,3])                              // 4
+length({"a":0, "b":null, "c": False, "d": ""}) // 4
 ```
+
+Taking the `length` of a `null` value will return `null`
 
 ### 8.2 range()
 
@@ -1095,7 +1103,7 @@ log.info("Hello, %s", "world")
 func is_empty() boolean
 ```
 
-Returns a boolean value of whether the string on which it is called is of length 0.
+Returns a boolean value of whether the string on which it is called is of length 0 or `null`.
 
 Examples:
 
@@ -1120,8 +1128,8 @@ Returns the substring of a string at the given indexes. The start and stop index
 string a = "catdog"
 
 string sub, error e = a.substring(1,4) 	 // "atd", null
-string sub, error e = a.substring(3,99)	 // "", error
-string sub, error e = a.substring(50,99) // "", error
+string sub, error e = a.substring(3,99)	 // null, error
+string sub, error e = a.substring(50,99) // null, error
 ```
 
 #### Get (c = string[i])
