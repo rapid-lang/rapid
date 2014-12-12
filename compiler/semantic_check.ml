@@ -20,6 +20,8 @@ exception InvalidArgErr
 exception InvalidArgOrder
 exception InvalidReturnTypeErr
 exception NoReturnErr
+exception ReturnTypeMismatchErr
+exception SfuncIdNotReWritten
 
 
 (* Takes a symbol table and sexpr and rewrites variable references to be typed *)
@@ -88,6 +90,23 @@ let rec check_returns r = function
     | hd :: tl -> hd :: check_returns r tl
     | [] -> []
 
+let rec check_lv_types = function 
+    | ((SFuncTypedId(t, _) :: tl), (expected_t :: types)) -> if t = expected_t
+            then check_lv_types  (tl, types)
+        else raise ReturnTypeMismatchErr
+    | ((SFuncDecl(t, _) :: tl), (expected_t :: types)) -> if t = expected_t
+            then check_lv_types  (tl, types)
+        else raise ReturnTypeMismatchErr
+    | ((SFuncId(i) :: tl), _) -> raise SfuncIdNotReWritten
+    | ([], (t::types)) -> raise ReturnTypeMismatchErr
+    | ((s :: tl), []) -> raise ReturnTypeMismatchErr
+    | ([],[]) -> ()
+
+let rewrite_lv st = function 
+    | SFuncId(i) -> SFuncTypedId((get_type i st), i)
+    | SFuncDecl(t, sv) -> SFuncDecl(t, sv)
+
+
 (* Processes an unsafe SAST and returns a type checked SAST *)
 let rec var_analysis st ft = function
     | SDecl(t, (id, xpr)) :: tl ->
@@ -105,9 +124,22 @@ let rec var_analysis st ft = function
     (*Return stmts are xpr lists, tranlslate all the expressions here*)
     | SReturn(s) :: tl -> let xprs = List.map (rewrite_sexpr st ft) s in
          SReturn(xprs) :: (var_analysis st ft tl)
-    | SFuncCall (lv, id, xprs) :: tl -> 
+    | SFuncCall (lv, id, xprs) :: tl ->
+        let lv = (List.map (rewrite_lv st) lv) in 
+        let check_for_lv ft id = function
+            | [] -> ()
+            | _ -> check_lv_types (lv, (get_return_type_list id ft)) in
+        let () = check_for_lv ft id lv in
+        let xprs = (List.map (rewrite_sexpr st ft) xprs) in
         SFuncCall(lv, id, xprs) :: (var_analysis st ft tl)
     | [] -> []
+
+let rec scope_lv st = function
+    | SFuncDecl(t, (id, _)) :: tl -> let st = (add_sym t id st) in
+        scope_lv st tl
+    | SFuncId(i) :: tl -> let _ = get_type i in (*might as well check here if id is declared*)
+        scope_lv st tl 
+    | [] -> st
 
 (*
 Adds all var decls in a stmt list to the scope and returns the new scope
@@ -116,7 +148,9 @@ This does not do any type checking, and ignores the optional expression
 let rec add_to_scope st = function
     | SDecl(t, (id, xpr)) :: tl ->
        let st = add_sym t id st in
-           add_to_scope st tl
+        add_to_scope st tl
+    | SFuncCall (lv, _, _) :: tl -> let st = scope_lv st lv in 
+        add_to_scope st tl
     | _ :: tl -> add_to_scope st tl
     | [] -> st
 
@@ -172,7 +206,7 @@ let rec check_funcs st ft = function
 let rec build_function_table ft = function
     | (fname, args, rets, body) :: tl -> 
         let args_to_type = function
-            | SDecl(t, (id, xpr)) -> t
+            | SDecl(t, (id, xpr)) -> (t, xpr)
             | _ -> raise InvalidArgErr
         in
         let arg_ts = List.map args_to_type args in

@@ -1,4 +1,4 @@
-too(); // one statement
+//too(); // one statement
 int n = foo(); // this is vdecl stmnt with a funcall expr.
 
 boo();
@@ -8,6 +8,7 @@ func too(){
 
 // now w/ return type
 func foo() int {
+    int x;
 	(x, int y, int z) = boo(); //Also one statement, boo not an expr.
 	return 5;
 }

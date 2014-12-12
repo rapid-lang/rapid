@@ -61,6 +61,8 @@ let get_return_type id ft =
     | t :: [] -> t
     | _ :: _ -> Multi
 
+let get_return_type_list id ft =
+    let (_, retl) = StringMap.find id ft in retl
 
 (* adds a new empty symbol table for use in the new scope *)
 let new_scope sym_tbl = empty_symbol_table :: sym_tbl

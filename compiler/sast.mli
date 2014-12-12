@@ -43,6 +43,7 @@ type svar_assign = string * sexpr
 type sfunc_lval = 
     | SFuncDecl of var_type * svar_assign (*always a vdecl*)
     | SFuncId of string
+    | SFuncTypedId of var_type * string
 
 type semantic_stmt =
     | SAssign of svar_assign
