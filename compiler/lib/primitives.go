@@ -5,18 +5,22 @@ type Float *float64
 type Bool *bool
 type String *string
 
-func IntToBool(i Int) bool {
-	return i == nil || *i == 0
+func IntToBool(i Int) Bool {
+	tmp := !(i == nil || *i == 0)
+	return Bool(&tmp)
 }
 
-func FloatToBool(f Float) bool {
-	return f == nil || *f == 0.0
+func FloatToBool(f Float) Bool {
+	tmp := !(f == nil || *f == 0.0)
+	return Bool(&tmp)
 }
 
-func BoolToBool(b Bool) bool {
-	return b == nil || *b == false
+func BoolToBool(b Bool) Bool {
+	tmp := !(b == nil || *b == false)
+	return Bool(&tmp)
 }
 
-func StringToBool(s String) bool {
-	return s == nil || *s == ""
+func StringToBool(s String) Bool {
+	tmp := !(s == nil || *s == "")
+	return Bool(&tmp)
 }

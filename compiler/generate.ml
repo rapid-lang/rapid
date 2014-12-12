@@ -85,23 +85,23 @@ let rec bool_expr_to_code = function
     | SBoolCast c -> bool_cast_to_code c
     | SBoolNull -> "", "nil"
     | _ -> raise UnsupportedBoolExprType
-and bool_cast_to_code = function 
-    | SExprInt i -> 
-        let setup, var = int_expr_to_code i in  
-            setup, 
-            sprintf "IntToBool(%s)" var 
-    | SExprString s -> 
-        let setup, var = string_expr_to_code s in  
-            setup, 
-            sprintf "StringToBool(%s)" var 
-    | SExprFloat f -> 
-        let setup, var = float_expr_to_code f in  
-            setup, 
-            sprintf "FloatToBool(%s)" var 
-    | SExprBool b -> 
-        let setup, var = bool_expr_to_code b in  
-            setup, 
-            sprintf "BoolToBool(%s)" var 
+and bool_cast_to_code = function
+    | SExprInt i ->
+        let setup, var = int_expr_to_code i in
+            setup,
+            sprintf "IntToBool(Int(%s))" var
+    | SExprString s ->
+        let setup, var = string_expr_to_code s in
+            setup,
+            sprintf "StringToBool(String(%s))" var
+    | SExprFloat f ->
+        let setup, var = float_expr_to_code f in
+            setup,
+            sprintf "FloatToBool(Float(%s))" var
+    | SExprBool b ->
+        let setup, var = bool_expr_to_code b in
+            setup,
+            sprintf "BoolToBool(Bool(%s))" var
 
 let sexpr_to_code = function
     | SExprInt i -> int_expr_to_code i
@@ -110,7 +110,6 @@ let sexpr_to_code = function
     | SExprBool b -> bool_expr_to_code b
     | _ -> raise UnsupportedSExprType
 
-
 let sassign_to_code = function
     | (id, xpr) ->
         let setup, ref = sexpr_to_code xpr in
@@ -118,7 +117,6 @@ let sassign_to_code = function
     | a -> raise(UnsupportedSemanticExpressionType(
         sprintf "Assignment expression not yet supported -> %s"
         (svar_assign_s a)))
-
 
 let sdecl_to_code (id, xpr) t = match t, xpr with
     | Int, SExprInt xpr ->
