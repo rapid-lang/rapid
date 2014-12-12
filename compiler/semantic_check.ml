@@ -81,6 +81,13 @@ let rec var_analysis st = function
     | [] -> []
 
 
+(* Prcesses unchecked classes, adding them and their attributes to tbl *)
+let class_analysis tbl (class_id, attrs) =
+    let tbl = new_class class_id tbl in
+    let tbl = List.fold_left (add_attr class_id) tbl attrs in
+    tbl
+
+
 let gen_semantic_stmts stmts =
     (* build an unsafe semantic AST *)
     let s_stmts = List.map translate_statement stmts in
@@ -91,6 +98,7 @@ let gen_semantic_stmts stmts =
 
 let gen_class_stmts stmts =
     let sclasses = List.map translate_class stmts in
+    let checked_sclasses = List.map (class_analysis class_table) sclasses in
     sclasses
 
 
