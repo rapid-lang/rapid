@@ -10,7 +10,7 @@ exception UnsupportedStringExprType
 exception UnsupportedIntExprType
 exception UnsupportedFloatExprType
 exception UnsupportedOutputType
-exception UnsupportedSExprType
+exception UnsupportedSExprType of string
 exception UnsupportedBoolExprType
 exception UnsupportedDeclType of string
 exception UnsupportedDatatypeErr
@@ -25,6 +25,12 @@ let go_type_from_type = function
     | Bool -> "Bool"
     | String -> "String"
     | _ -> raise UnsupportedDatatypeErr
+
+let go_type_from_sexpr = function
+    | SExprInt _ -> go_type_from_type Int
+    | SExprFloat _ -> go_type_from_type Float
+    | SExprBool _ -> go_type_from_type Bool
+    | SExprString _ -> go_type_from_type String
 
 (* must return a direct reference to a string *)
 let get_string_literal_from_sexpr = function
@@ -84,30 +90,18 @@ let rec bool_expr_to_code = function
     | SBoolCast c -> bool_cast_to_code c
     | SBoolNull -> "", "nil"
     | _ -> raise UnsupportedBoolExprType
-and bool_cast_to_code = function
-    | SExprInt i ->
-        let setup, var = int_expr_to_code i in
-            setup,
-            sprintf "IntToBool(Int(%s))" var
-    | SExprString s ->
-        let setup, var = string_expr_to_code s in
-            setup,
-            sprintf "StringToBool(String(%s))" var
-    | SExprFloat f ->
-        let setup, var = float_expr_to_code f in
-            setup,
-            sprintf "FloatToBool(Float(%s))" var
-    | SExprBool b ->
-        let setup, var = bool_expr_to_code b in
-            setup,
-            sprintf "BoolToBool(Bool(%s))" var
-
-let sexpr_to_code = function
+and bool_cast_to_code xpr =
+    let go_type = go_type_from_sexpr xpr in
+    let setup, var = sexpr_to_code xpr in
+    let cast = sprintf "%sToBool(%s(%s))" go_type go_type var in
+    setup, cast
+and sexpr_to_code = function
     | SExprInt i -> int_expr_to_code i
     | SExprString s -> string_expr_to_code s
     | SExprFloat f -> float_expr_to_code f
     | SExprBool b -> bool_expr_to_code b
-    | _ -> raise UnsupportedSExprType
+    | NullExpr -> "", "nil"
+    | s -> raise(UnsupportedSExprType(Sast_printer.sexpr_s s))
 
 let sassign_to_code = function
     | (id, xpr) ->
@@ -116,27 +110,6 @@ let sassign_to_code = function
     | a -> raise(UnsupportedSemanticExpressionType(
         sprintf "Assignment expression not yet supported -> %s"
         (svar_assign_s a)))
-
-let sdecl_to_code (id, xpr) t = match t, xpr with
-    | Int, SExprInt xpr ->
-        let setup, ref = int_expr_to_code xpr in
-            sprintf "var %s Int\n_=%s\n%s\n%s = %s"
-                id id setup id ref
-    | Float, SExprFloat xpr ->
-        let setup, ref = float_expr_to_code xpr in
-            sprintf "var %s Float\n_=%s\n%s\n%s = %s"
-                id id setup id ref
-    | String, SExprString xpr ->
-        let setup, ref = string_expr_to_code xpr in
-            sprintf "var %s String\n_=%s\n%s\n%s = %s"
-                id id setup id ref
-    | Bool, SExprBool xpr ->
-        let setup, ref = bool_expr_to_code xpr in
-            sprintf "var %s Bool\n_=%s\n%s\n%s = %s"
-                id id setup id ref
-    | (Int | Float | String | Bool ) as t, NullExpr ->
-        sprintf "var %s %s\n_ = %s" id (go_type_from_type t) id
-    | _ -> raise(UnsupportedDeclType(svar_decl_s t (id, xpr)))
 
 let soutput_to_code = function
     | SPrintln xpr_l ->
@@ -157,18 +130,24 @@ let soutput_to_code = function
     | _ -> raise UnsupportedOutputType
 
 let sast_to_code = function
-    | SDecl(t, (id, xpr)) -> sdecl_to_code (id, xpr) t
+    | SDecl(_, (id, xpr)) -> sassign_to_code (id, xpr)
     | SAssign a -> sassign_to_code a
     | SOutput p -> soutput_to_code p
     | _ -> raise(UnsupportedSemanticStatementType)
 
-let skeleton = "package main\n" ^
-    "import (\"fmt\")\n" ^
-    "var _ = fmt.Printf\n" ^
-    "func main() {\n"
+let rec grab_decls = function
+    | SDecl(t, (id, _)) :: tl ->
+        sprintf "var %s %s" id (go_type_from_type t) :: grab_decls tl
+    | _ :: tl -> grab_decls tl
+    | [] -> []
+
+let skeleton decls main fns = "package main\n import (\"fmt\")\n" ^
+    "var _ = fmt.Printf\n" ^ decls ^ "\nfunc main() {\n" ^
+    main ^ "\n}\n " ^ fns
 
 let build_prog sast =
+    let decls = String.concat "\n" (grab_decls sast) in
     let code_lines = List.map sast_to_code sast in
     let gen_code = String.concat "\n" code_lines in
-    skeleton ^ gen_code ^ "\n}\n"
+    skeleton decls gen_code ""
 
