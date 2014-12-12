@@ -1,7 +1,7 @@
-open Sast;;
-open Sast_printer;;
-open Sast_helper;;
-open Datatypes;;
+open Sast
+open Sast_printer
+open Sast_helper
+open Datatypes
 
 exception UnsupportedStatementTypeErr of string
 exception UnsupportedOutputType of string
@@ -87,12 +87,12 @@ let translate_fstatement = function
     | Ast.FStmt stmt -> translate_statement stmt
     | Ast.Return expr -> SReturn(List.map translate_expr expr)
 
-let translate_function (f : Ast.func_decl) = 
+let translate_function (f : Ast.func_decl) =
     (
-        f.fname, 
-        (List.map translate_decl f.args), 
-        f.return, 
+        f.fname,
+        (List.map translate_decl f.args),
+        f.return,
         (List.map translate_fstatement f.body)
     )
-    
+
 
