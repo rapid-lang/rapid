@@ -22,6 +22,7 @@ type bool_expr =
     | SBoolVar of string
     | SBoolCast of sexpr
     | SBoolNull 
+and func_call_expr = string * sexpr list
 and sexpr =
     | SExprInt of int_expr
     | SExprString of string_expr
@@ -29,9 +30,10 @@ and sexpr =
     | SExprBool of bool_expr
     | SId of string
     | SCall of func_call_expr
+    | SCallTyped of var_type * func_call_expr
     | NullExpr (*this is for implied  Null expr*)
     | UntypedNullExpr (*This is for when you type out null in rapid code.*)
-and func_call_expr = string * sexpr list
+
 
 type soutput =
     | SPrintf of sexpr * sexpr list

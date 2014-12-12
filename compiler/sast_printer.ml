@@ -32,6 +32,10 @@ and sexpr_s = function
     | SExprString s -> string_expr_s s
     | SExprFloat s -> float_expr_s s
     | SExprBool b -> bool_expr_s b
+    | SCallTyped (t, (id, args)) -> sprintf "(Call %s) args = %s returns = %s"
+        id
+        (String.concat ", " (List.map sexpr_s args))
+        (Ast_printer.string_of_t t)
     | NullExpr -> "(NULL EXPR)"
     | SId _ -> raise(UntypedVariableReference(
         "Variable references must be rewritten with type information"))
