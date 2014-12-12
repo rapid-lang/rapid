@@ -37,9 +37,6 @@ type stmt =
     | VarDecl of vdecl
     | FuncCall of vars list * fcall
 
-
-
-
 type func_stmt =
     | FStmt of stmt
     | Return of expr list
