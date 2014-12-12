@@ -15,8 +15,7 @@ type expr =
     | ListLit of expr list
     | Noexpr
     | Nullxpr
-and fcall =
-    | FCall of string * expr list
+and fcall = string * expr list
 
 type vdecl = var_type * string * expr option
 

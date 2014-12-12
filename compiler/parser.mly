@@ -110,7 +110,7 @@ id_list:
     | primtype ID {[VDecl($1, $2, None)]}
 
 fcall:
-    | ID LPAREN expression_list_opt RPAREN { FCall($1, $3) }
+    | ID LPAREN expression_list_opt RPAREN { ($1, $3) }
 
 func_call:
     | fcall                {FuncCall([], $1)}
