@@ -63,6 +63,10 @@ let string_of_vdecl (t, nm, e) = sprintf "%s %s %s"
         | None     -> "(Not assigned)")
 
 (* Prettyprint statements *)
+let func_lvalue_s = function
+    | ID(i) -> i
+    | VDecl(t, id, x) -> string_of_vdecl (t,id,x)
+
 let rec stmt_s = function
     | Assign(v, e) -> sprintf "(Assign %s (%s))"
         v
@@ -88,7 +92,9 @@ let rec stmt_s = function
         (output_s o)
     | VarDecl vd -> sprintf "(VarDecl (%s))"
         (string_of_vdecl vd)
-    | FuncCall f -> fcall_s f
+    | FuncCall(s,f) -> sprintf "(FuncCall(%s = %s))" 
+        (concat ", " (List.map func_lvalue_s s))
+        (fcall_s f)
 
 let fstmt_s = function
     | Return e -> sprintf "(Return (%s))"

@@ -22,6 +22,11 @@ type print =
     | Printf of expr list
     | Println of expr list
 
+(*Used for function calling*)
+type vars = 
+    | ID of string
+    | VDecl of vdecl
+
 type stmt =
     | Assign of string * expr
     | Block of stmt list
@@ -30,7 +35,10 @@ type stmt =
     | While of expr * stmt
     | Output of print
     | VarDecl of vdecl
-    | FuncCall of fcall
+    | FuncCall of vars list * fcall
+
+
+
 
 type func_stmt =
     | FStmt of stmt

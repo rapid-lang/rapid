@@ -103,10 +103,23 @@ func_stmt:
     | RETURN ret_expr_list SEMI { Return( List.rev $2) }
     | stmt SEMI        { FStmt($1) }
 
+id_list:
+    | id_list COMMA primtype ID { VDecl($3, $4, None) :: $1 }
+    | id_list COMMA ID          { ID($3) :: $1 }
+    | ID {[ID($1)]}
+    | primtype ID {[VDecl($1, $2, None)]}
+
+fcall:
+    | ID LPAREN expression_list_opt RPAREN { FCall($1, $3) }
+
+func_call:
+    | fcall                {FuncCall([], $1)}
+    | LPAREN id_list RPAREN ASSIGN fcall { FuncCall(List.rev $2, $5) }
 
 stmt:
     | print          { Output $1 }
     | var_decl       { VarDecl $1 }
+    | func_call      { $1 }
     | ID ASSIGN expr { Assign($1, $3) }
     | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
     | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
@@ -131,11 +144,6 @@ lit:
     | STRING_LIT { StringLit $1 }
     | FLOAT_LIT  { FloatLit $1 }
     | NULL       { Nullxpr }
-
-
-fcall:
-    | ID LPAREN expression_list_opt RPAREN { FCall($1, $3) }
-
 
 expr:
     | lit              { $1 }

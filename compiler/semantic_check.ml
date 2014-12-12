@@ -100,6 +100,8 @@ let rec var_analysis st = function
     (*Return stmts are xpr lists, tranlslate all the expressions here*)
     | SReturn(s) :: tl -> let xprs = List.map (rewrite_sexpr st) s in
          SReturn(xprs) :: (var_analysis st tl)
+    | SFuncCall (lv, id, xprs) :: tl -> 
+        SFuncCall(lv, id, xprs) :: (var_analysis st tl)
     | [] -> []
 
 (*

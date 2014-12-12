@@ -59,10 +59,23 @@ let translate_output = function
     | Ast.Printf(format :: xpr_l) -> SPrintf(translate_expr format, List.map translate_expr xpr_l)
     | _ -> raise(UnsupportedOutputType("Not yet implemented"))
 
+let translate_vars = function
+    | Ast.ID(s) -> SFuncId(s)
+    | Ast.VDecl(vd) -> let s = translate_decl vd in
+        match s with 
+            | SDecl(t, (id, xpr)) -> SFuncDecl(t,(id, xpr))(*xpr will be None*)
+
+let translate_fcall id exprs = 
+    let sxprs = (List.map translate_expr exprs) in
+    (id, sxprs)
+
 let translate_statement = function
     | Ast.VarDecl vd -> translate_decl vd
     | Ast.Assign(id, xpr) -> SAssign(id, translate_expr xpr)
     | Ast.Output o -> SOutput(translate_output o)
+    | Ast.FuncCall(vl, fcall) -> match fcall with
+        | FCall(id, xprs) -> let (id, xprs) = translate_fcall id xprs in 
+        SFuncCall((List.map translate_vars vl), id, xprs)
     | _ -> raise(UnsupportedStatementTypeErr "type unknown")
 
 let translate_fstatement = function

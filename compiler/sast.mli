@@ -37,11 +37,17 @@ type soutput =
 
 type svar_assign = string * sexpr
 
+type sfunc_lval = 
+    | SFuncDecl of var_type * svar_assign (*always a vdecl*)
+    | SFuncId of string
+
 type semantic_stmt =
     | SAssign of svar_assign
     | SDecl of var_type * svar_assign
     | SOutput of soutput
     | SReturn of sexpr list
+    | SFuncCall of sfunc_lval list * string * sexpr list (*left hand of assing, fname, args*)
+
 
 (*this is the id, args, return types, body*)
 type semantic_function = string * semantic_stmt list * var_type list * semantic_stmt list
