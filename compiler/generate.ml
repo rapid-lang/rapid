@@ -72,7 +72,6 @@ let string_expr_to_code = function
     | _ -> raise UnsupportedStringExprType
 
 (* returns a reference to a boolean *)
-
 let rec bool_expr_to_code = function
     | SBoolExprLit b ->
         let tmp_var = rand_var_gen () in

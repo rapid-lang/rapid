@@ -19,7 +19,7 @@
 %token EOF
 
 %nonassoc NOELSE
-%nonassoc ELSE                                
+%nonassoc ELSE
 %right ASSIGN
 %left EQ NEQ
 %left LT GT LEQ GEQ

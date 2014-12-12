@@ -27,7 +27,7 @@ run_test() {
         echo "success: $test_name"
     else
         echo "FAIL:    $test_name"
-        cat "$output"
+        echo "$output"
         cat "$tmp_file"
         had_failures="1"
     fi
