@@ -64,7 +64,8 @@ rule token = parse
 (* primatives *)
 | '=' { ASSIGN }
 
-(* | '?' { QUESTION } *)
+(* Casting operators *)
+| '?' { CASTBOOL }                             
 
 | "true"  | "false" as bool_val { BOOL_LIT( string_to_bool bool_val ) }
 | "boolean" | "int"  | "float"| "string" as prim { TYPE prim }

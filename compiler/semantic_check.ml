@@ -31,6 +31,9 @@ let rec rewrite_sexpr st = function
         | Float -> SExprFloat(SFloatVar id)
         | Bool -> SExprBool(SBoolVar id)
         | _ -> raise UnsupportedDatatypeErr)
+    | SExprBool(SBoolCast e) ->
+       let xpr = rewrite_sexpr st e in
+           SExprBool(SBoolCast(xpr))
     (* TODO: add all new expressions that can contain variable references to be simplified *)
     | xpr -> xpr
 

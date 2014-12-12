@@ -1,0 +1,17 @@
+
+int i = 4;
+printf("%t\n", i?);
+
+boolean b = false;
+printf("%t\n", b?);
+
+string s = "";
+printf("%t\n", s?);
+s = "hi";
+printf("%t\n", s?);
+
+float f = 3.14;
+printf("%t\n", f?);
+f = 0.0;
+printf("%t\n", f?);
+
