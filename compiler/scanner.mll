@@ -64,7 +64,8 @@ rule token = parse
 (* primatives *)
 | '=' { ASSIGN }
 
-(* | '?' { QUESTION } *)
+(* Casting operators *)
+| '?' { CASTBOOL }                             
 
 | "true"  | "false" as bool_val { BOOL_LIT( string_to_bool bool_val ) }
 | "boolean" | "int"  | "float"| "string" as prim { TYPE prim }
@@ -110,8 +111,7 @@ rule token = parse
 | ['0'-'9']+ as lxm         { INT_VAL( int_of_string lxm ) }
 | '"' ([^'"']* as str) '"'  { STRING_LIT str }
 | floating as lit           { FLOAT_LIT(float_of_string lit) }
-
-
+| "null" { NULL }
 
 (* ID's *)
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID lxm }

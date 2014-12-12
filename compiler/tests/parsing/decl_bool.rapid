@@ -2,4 +2,8 @@
 boolean b = true;
 b = false;
 
+int c = 5;
+
+b = c?;
+
 

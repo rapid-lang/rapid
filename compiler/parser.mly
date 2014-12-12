@@ -5,7 +5,7 @@
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
 %token LBRACKET RBRACKET LTGEN GTGEN LIST
-%token PLUS MINUS TIMES DIVIDE ASSIGN
+%token PLUS MINUS TIMES DIVIDE ASSIGN CASTBOOL
 %token EQ NEQ LT LEQ GT GEQ
 %token RETURN IF ELSE FOR WHILE FUNC IN
 %token PRINTLN PRINTF // LOG
@@ -15,7 +15,7 @@
 %token <int> INT_VAL
 %token <float> FLOAT_LIT
 %token <bool> BOOL_LIT
-%token <string> ID TYPE STRING_LIT
+%token NULL
 %token EOF
 
 %nonassoc NOELSE
@@ -39,7 +39,7 @@ primtype:
     /* todo: add arrays and dicts to primtype */
 
 
-/* Base level expressions of a program:
+/* Base level expressions of a program: 
  * TODO: Classes */
 program:
     | /* nothing */     { [], [] }
@@ -57,7 +57,7 @@ datatype_list:
 return_type:
     /* TODO: allow user defined types */
     | primtype                    { [$1] }
-    | LPAREN datatype_list RPAREN { $2 }
+    | datatype_list { List.rev $1 }
 
 /*var declarations can now be done inline*/
 func_decl:
@@ -65,17 +65,9 @@ func_decl:
     | FUNC ID LPAREN arguments RPAREN return_type LBRACE fstmt_list RBRACE
     {{
         fname = $2;
-        formals = $4;
+        args = $4;
         return = $6;
         body = List.rev $8
-    }}
-    // func w/o return types
-    | FUNC ID LPAREN arguments RPAREN LBRACE fstmt_list RBRACE
-    {{
-        fname = $2;
-        formals = $4;
-        return = [];
-        body = List.rev $7
     }}
     /* TODO: unsafe functions */
 
@@ -87,8 +79,10 @@ arguments:
 
 formal_list:
     /* TODO: allow user defined types */
-    | primtype ID                   { [$2] }
-    | formal_list COMMA primtype ID { $4 :: $1 }
+    | primtype ID { [($1, $2, None)] }
+    | primtype ID ASSIGN lit {[($1, $2, Some($4))]}                 
+    | formal_list COMMA primtype ID { ($3, $4, None) :: $1 }
+    | formal_list COMMA primtype ID ASSIGN lit {($3, $4, Some($6)) :: $1}
 
 
 /* a tuple here of (primtype, ID) */
@@ -101,9 +95,12 @@ fstmt_list:
     | /* nothing */         { [] }
     | fstmt_list func_stmt { $2 :: $1 }
 
+ret_expr_list:
+    | expr {[$1]}
+    | ret_expr_list COMMA expr {$3 :: $1} 
 
 func_stmt:
-    | RETURN expr SEMI { Return($2) }
+    | RETURN ret_expr_list SEMI { Return( List.rev $2) }
     | stmt SEMI        { FStmt($1) }
 
 
@@ -133,6 +130,7 @@ lit:
     | BOOL_LIT   { BoolLit $1 }
     | STRING_LIT { StringLit $1 }
     | FLOAT_LIT  { FloatLit $1 }
+    | NULL       { Nullxpr }
 
 
 fcall:
@@ -153,6 +151,7 @@ expr:
     | expr LEQ    expr { Binop($1, Leq,   $3) }
     | expr GT     expr { Binop($1, Greater,  $3) }
     | expr GEQ    expr { Binop($1, Geq,   $3) }
+    | expr CASTBOOL    { CastBool $1 }  
     | fcall            { Call $1 }
     | LPAREN expr RPAREN { $2 }
     | LBRACKET expression_list_opt RBRACKET { ListLit $2 }

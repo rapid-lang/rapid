@@ -8,6 +8,7 @@ before_script:
     - bash -ex config/travis_install.sh
     - sudo apt-get install golang
 script:
+    = go test ./...
     - cd compiler
     - wc *.ml *.mli *.mll *.mly     # perform prior to compilation
     - yacc -v parser.mly || true    # print the YACC output so we're aware of it

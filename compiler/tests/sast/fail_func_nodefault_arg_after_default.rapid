@@ -1,0 +1,3 @@
+func foo(string s, int x = 2, int a) {
+	a = 3;
+}
