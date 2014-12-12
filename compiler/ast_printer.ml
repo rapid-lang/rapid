@@ -41,11 +41,16 @@ let rec expr_s = function
     | FloatLit f -> sprintf "(Float literal %f)" f
     | ListLit l -> sprintf "(List literal [%s])"
         (String.concat ", " (List.map expr_s l))
+    | UserDefInst(id, actls) -> sprintf "(Instantiate new UserDef %s (%s))"
+        id
+        (String.concat ", " (List.map actual_s actls))
     | Noexpr -> "( NOEXPR )"
 and fcall_s = function
     | FCall(f, es) -> sprintf "(Call (%s) with (%s))"
         f
         (concat ", " (List.map (fun e -> sprintf "(%s)" (expr_s e)) es))
+and actual_s = function
+    | Actual(id, e) -> sprintf "(%s=%s)" id (expr_s e)
 
 let output_s = function
     | Printf el -> sprintf "(Printf(%s))"
@@ -57,7 +62,14 @@ let string_of_vdecl (t, nm, e) = sprintf "%s %s %s"
     (string_of_t t)
     nm
     (match e with
-        | Some exp -> sprintf "= %s" (expr_s exp)
+        | Some xpr -> sprintf "= %s" (expr_s xpr)
+        | None     -> "(Not assigned)")
+
+let string_of_udefdecl (cls, nm, e) = sprintf "%s %s %s"
+    cls
+    nm
+    (match e with
+        | Some xpr -> sprintf "= %s" (expr_s xpr)
         | None     -> "(Not assigned)")
 
 (* Prettyprint statements *)
@@ -86,6 +98,8 @@ let rec stmt_s = function
         (output_s o)
     | VarDecl vd -> sprintf "(VarDecl (%s))"
         (string_of_vdecl vd)
+    | UserDefDecl ud -> sprintf "(UserDefDecl (%s))"
+        (string_of_udefdecl ud)
     | FuncCall f -> fcall_s f
 
 let fstmt_s = function

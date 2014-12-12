@@ -86,6 +86,7 @@ rule token = parse
 
 (* classes *)
 | "class"    { CLASS }
+| "new"      { NEW }
 (*
 | "optional" { OPTIONAL }
 | "instance" { INSTANCE }

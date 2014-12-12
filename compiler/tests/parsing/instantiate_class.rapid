@@ -1,0 +1,6 @@
+User bob = new User(
+    username="burgerbob",
+    full_name="Bob Belcher",
+    password="burgersrock",
+    age=42
+);

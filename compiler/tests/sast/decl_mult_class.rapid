@@ -1,0 +1,15 @@
+
+
+class User {
+    string name;
+    int age;
+    float balance;
+}
+
+
+class OtherUser {
+    string name;
+    int age;
+    float balance;
+}
+
