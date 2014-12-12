@@ -82,10 +82,12 @@ let rec var_analysis st = function
 
 
 (* Prcesses unchecked classes, adding them and their attributes to class_tbl *)
-let class_analysis class_tbl (class_id, attrs) =
-    let class_tbl = new_class class_id class_tbl in
-    let class_tbl = List.fold_left (add_attr class_id) class_tbl attrs in
-    class_tbl
+let rec class_analysis class_tbl = function
+    | (class_id, attrs) :: tl ->
+        let attr_tbl = add_attrs empty_attribute_table attrs in
+        let class_tbl = new_class class_id attr_tbl class_tbl in
+        class_analysis class_tbl tl
+    | [] -> class_tbl
 
 
 let gen_semantic_stmts stmts =
@@ -98,7 +100,7 @@ let gen_semantic_stmts stmts =
 
 let gen_class_stmts stmts =
     let sclasses = List.map translate_class stmts in
-    let checked_sclasses = List.map (class_analysis class_table) sclasses in
+    let checked_sclasses = class_analysis class_table sclasses in
     sclasses
 
 

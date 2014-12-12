@@ -7,7 +7,7 @@ exception UnsupportedDeclStmt
 exception UnsupportedSattr
 exception ExistingSymbolErr
 exception ExistingClassErr
-exception ExistingAttributeErr
+exception ExistingAttributeErr of string
 exception MissingSymbolTablesErr
 exception VariatbleNotDefinedErr of string
 exception ClassNotDefinedErr of string
@@ -55,23 +55,19 @@ let new_scope sym_tbl = empty_symbol_table :: sym_tbl
 
 
 (* adds a new entry to the class table *)
-let new_class class_id class_tbl =
+let new_class class_id attr_tbl class_tbl =
     if StringMap.mem class_id class_tbl
         then raise ExistingClassErr
-        else (StringMap.add class_id empty_attribute_table class_tbl)
+        else (StringMap.add class_id attr_tbl class_tbl)
 
 
 (* adds a new attribute on the class called class_id *)
-let add_attr class_id class_tbl = function
-    | SNonOption(t, attr_id, _) | SOptional(t, attr_id)->
-        (* if class is known *)
-        if StringMap.mem class_id class_tbl then
-            let attr_tbl = StringMap.find class_id class_tbl in
-                if StringMap.mem attr_id attr_tbl then
-                    raise ExistingAttributeErr
-                else let attr_tbl = StringMap.add attr_id t attr_tbl in
-                    StringMap.add class_id attr_tbl, class_tbl
-            else raise(ClassNotDefinedErr(Format.sprintf "%s is not a class" class_id))
+let rec add_attrs attr_tbl = function
+    | (SNonOption(t, attr_id, _) | SOptional(t, attr_id)) :: tl ->
+        if StringMap.mem attr_id attr_tbl then
+            raise(ExistingAttributeErr(attr_id))
+        else add_attrs (StringMap.add attr_id t attr_tbl) tl
+    | [] -> attr_tbl
     | _ -> raise UnsupportedSattr
 
 
