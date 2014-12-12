@@ -81,11 +81,11 @@ let rec var_analysis st = function
     | [] -> []
 
 
-(* Prcesses unchecked classes, adding them and their attributes to tbl *)
-let class_analysis tbl (class_id, attrs) =
-    let tbl = new_class class_id tbl in
-    let tbl = List.fold_left (add_attr class_id) tbl attrs in
-    tbl
+(* Prcesses unchecked classes, adding them and their attributes to class_tbl *)
+let class_analysis class_tbl (class_id, attrs) =
+    let class_tbl = new_class class_id class_tbl in
+    let class_tbl = List.fold_left (add_attr class_id) class_tbl attrs in
+    class_tbl
 
 
 let gen_semantic_stmts stmts =

@@ -25,13 +25,9 @@ module StringMap = Map.Make(String)
 
 
 let empty_symbol_table = StringMap.empty
-
-
-let empty_attribute_table = StringMap.empty
-
-
 let symbol_table_list = StringMap.empty :: []
 
+let empty_attribute_table = StringMap.empty
 
 let class_table = StringMap.empty
 
@@ -67,15 +63,15 @@ let new_class class_id class_tbl =
 
 (* adds a new attribute on the class called class_id *)
 let add_attr class_id class_tbl = function
-    | SNonOption(t, id, _) | SOptional(t, id)->
-        if StringMap.mem class_id class_tbl
-            then let attr_tbl = StringMap.remove class_id class_tbl in
-                if StringMap.mem id attr_tbl
-                    then raise ExistingAttributeErr
-                    else let attr_tbl = StringMap.add id t attr_tbl in
-                        StringMap.add class_id attr_tbl class_tbl
-            else let message = Format.sprintf "%s is not a class" class_id in
-                raise (ClassNotDefinedErr message)
+    | SNonOption(t, attr_id, _) | SOptional(t, attr_id)->
+        (* if class is known *)
+        if StringMap.mem class_id class_tbl then
+            let attr_tbl = StringMap.find class_id class_tbl in
+                if StringMap.mem attr_id attr_tbl then
+                    raise ExistingAttributeErr
+                else let attr_tbl = StringMap.add attr_id t attr_tbl in
+                    StringMap.add class_id attr_tbl, class_tbl
+            else raise(ClassNotDefinedErr(Format.sprintf "%s is not a class" class_id))
     | _ -> raise UnsupportedSattr
 
 
@@ -85,9 +81,9 @@ let get_attr_type class_id class_tbl id =
         then let attr_tbl = StringMap.find class_id class_tbl in
             if StringMap.mem id attr_tbl
                 then StringMap.find id attr_tbl
-                else let format = "%s is not an attribute on the class %s" in
-                    let message = Format.sprintf format id class_id in
-                    raise (AttributeNotDefinedErr message)
+                else raise(AttributeNotDefinedErr(Format.sprintf
+                        "%s is not an attribute on the class %s"
+                        id class_id))
         else let message = Format.sprintf "%s is not a class" class_id in
             raise (ClassNotDefinedErr message)
 
