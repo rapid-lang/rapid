@@ -777,19 +777,23 @@ Literals may be of type string, integer, float, boolean, dict, or list.  See Lex
 
 #### Identifiers
 
-Identifiers could be primitive types, lists, dictionaries, objects, JSON objects, functions, classes, or errors.  Identifiers can be modified, and reused once per scope.
+Identifiers could be primitive types, lists, dictionaries, objects, JSON objects, functions, classes, or errors.  
+
+If an identifier represents a primitive type, list, dictionary, object, JSON object, or error, it may be reused once per block.
 
 For example, in the following example, the variable `a` changes value three times.
 
 ```
-class a {} // `a` is a class
+float a = 4.5            // `a` is a float
 func add(int a, int b) { // `a` is an int 
-    return a + b // the class `a` does not exist in this scope.
+    return a + b         // the float `a` does not exist in this scope.
 } 
-string a = "" // invalid RAPID, cannot rename variables within the same scope.
+string a = ""            // invalid RAPID, cannot rename 
+                         // variables within the same scope.
 ```
 
 Identifiers are tied to the scope that they are declared in.  The following example prints `3`, then `5`, then `3`:
+
 ```
 int a = 3
 if (true) {
