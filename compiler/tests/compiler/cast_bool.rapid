@@ -1,5 +1,5 @@
-/*int i = 4;
+int i = 4;
 boolean b = i?;
 
-printf("%t\n", b);*/
+printf("%t\n", b);
 
