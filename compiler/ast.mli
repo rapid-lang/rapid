@@ -1,6 +1,7 @@
 open Datatypes
 
-type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq
+
+type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | Qmark  
 
 type expr =
     | Id of string
@@ -10,6 +11,7 @@ type expr =
     | FloatLit of float
     | Binop of expr * op * expr
     | Call of fcall
+    | CastBool of expr
     | ListLit of expr list
     | Noexpr
     | Nullxpr

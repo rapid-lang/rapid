@@ -4,12 +4,8 @@ open Format
 
 exception UnsupportedSexpr
 exception UnsupportedSOutput
+exception UntypedVariableReference of string
 
-
-let bool_expr_s = function
-    | SBoolExprLit b -> sprintf "(Bool lit: %b)" b
-    | SBoolVar id -> sprintf "(Bool Var: %s)" id
-    | SBoolNull -> "(Bool NULL)"
 
 let string_expr_s = function
     | SStringExprLit s -> sprintf "(String Lit: %s)" s
@@ -26,12 +22,19 @@ let float_expr_s = function
     | SFloatVar id -> sprintf "(Float Var %s)" id
     | SFloatNull -> "(Float NULL)"
 
-let sexpr_s = function
+let rec bool_expr_s = function
+    | SBoolExprLit b -> sprintf "(Bool lit: %b)" b
+    | SBoolVar id -> sprintf "(Bool Var: %s)" id
+    | SBoolCast e -> sprintf "(Cast (%s) to boolean)" (sexpr_s e)
+    | SBoolNull -> "(Bool NULL)"
+and sexpr_s = function
     | SExprInt i -> int_expr_s i
     | SExprString s -> string_expr_s s
     | SExprFloat s -> float_expr_s s
     | SExprBool b -> bool_expr_s b
     | NullExpr -> "(NULL EXPR)"
+    | SId _ -> raise(UntypedVariableReference(
+        "Variable references must be rewritten with type information"))
     | UntypedNullExpr -> "(HARD NULL EXPR)"
     | _ -> raise UnsupportedSexpr
 

@@ -26,6 +26,7 @@ let bin_op_s = function
     | Leq -> "<="
     | Greater -> ">"
     | Geq -> ">="
+    | Qmark -> "?"
 
 (* Converts expressions to strings *)
 let rec expr_s = function
@@ -39,6 +40,7 @@ let rec expr_s = function
     | BoolLit b -> sprintf "(Bool literal %b)" b
     | StringLit s -> sprintf "(String literal %s)" s
     | FloatLit f -> sprintf "(Float literal %f)" f
+    | CastBool e -> sprintf "(Cast (%s) to boolean)" (expr_s e)
     | ListLit l -> sprintf "(List literal [%s])"
         (String.concat ", " (List.map expr_s l))
     | Noexpr -> "( NOEXPR )"
