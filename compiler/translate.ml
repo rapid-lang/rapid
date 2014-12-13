@@ -29,16 +29,22 @@ let translate_bool_xpr = function
     | Ast.BoolLit b -> SBoolExprLit b
     | _ -> raise InvalidBoolExprType
 
+
 let rec translate_expr = function
     (* TODO: a ton more types here, also support recursive expressions *)
-    | Ast.IntLit i        -> SExprInt(SIntExprLit i)
-    | Ast.StringLit s     -> SExprString(SStringExprLit s)
-    | Ast.FloatLit f      -> SExprFloat(SFloatExprLit f)
-    | Ast.BoolLit b       -> SExprBool(SBoolExprLit b)
-    | Ast.UserDefInst udi -> SExprUserDef(SUserDefInst udi)
+    | Ast.IntLit i               -> SExprInt(SIntExprLit i)
+    | Ast.StringLit s            -> SExprString(SStringExprLit s)
+    | Ast.FloatLit f             -> SExprFloat(SFloatExprLit f)
+    | Ast.BoolLit b              -> SExprBool(SBoolExprLit b)
+    | Ast.UserDefInst(nm, actls) -> translate_user_def_inst nm actls
     (* we put a placeholder with the ID in and check after and reclassify *)
-    | Ast.Id id           -> SId id
+    | Ast.Id id                  -> SId id
     | _ -> raise UnsupportedExpressionType
+and translate_user_def_inst class_id actls =
+    SExprUserDef (SUserDefInst (class_id, (List.map translate_actual actls)))
+and translate_actual = function
+    | Ast.Actual(nm, xpr) -> SActual(nm, (translate_expr xpr))
+
 
 let translate_assign id xpr = match translate_expr xpr with
     | SExprInt _    -> (id, xpr)
@@ -54,6 +60,9 @@ let translate_decl = function
     | t, _, _ -> raise(UnsupportedStatementTypeErr (Ast_printer.string_of_t t))
     | _ -> raise UnsupportedDeclType
 
+let translate_user_def_decl = function
+    | class_id, id, xpr -> SUserDefDecl (class_id, (id, (expr_option_map translate_expr xpr)))
+
 let translate_output = function
     | Ast.Println xpr_l -> SPrintln(List.map translate_expr xpr_l)
     | Ast.Printf(format :: xpr_l) -> SPrintf(translate_expr format, List.map translate_expr xpr_l)
@@ -63,6 +72,7 @@ let translate_statement = function
     | Ast.VarDecl vd -> translate_decl vd
     | Ast.Assign(id, xpr) -> SAssign(id, translate_expr xpr)
     | Ast.Output o -> SOutput(translate_output o)
+    | Ast.UserDefDecl udd -> translate_user_def_decl udd
     | _ -> raise(UnsupportedStatementTypeErr "type unknown")
 
 let translate_attr = function

@@ -13,7 +13,7 @@ type expr =
     | Binop of expr * op * expr
     | Call of fcall
     | ListLit of expr list
-    | UserDefInst of string * actual list option
+    | UserDefInst of string * actual list
     | Noexpr
 and fcall =
     | FCall of string * expr list
@@ -22,7 +22,7 @@ and actual =
 
 type vdecl = var_type * string * expr option
 
-type udefdecl = string * string * expr option
+type user_def_decl = string * string * expr option
 
 type print =
     | Printf of expr list
@@ -36,7 +36,7 @@ type stmt =
     | While of expr * stmt
     | Output of print
     | VarDecl of vdecl
-    | UserDefDecl of udefdecl
+    | UserDefDecl of user_def_decl
     | FuncCall of fcall
 
 type func_stmt =

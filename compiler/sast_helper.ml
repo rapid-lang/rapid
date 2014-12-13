@@ -96,6 +96,9 @@ let sexpr_to_t expected_t = function
     | SExprFloat _ -> Float
     | SExprBool _ -> Bool
     | SExprString _ -> String
+    | SExprUserDef seud -> (
+        match seud with
+        | SUserDefInst(s, _) | SUserDefVar(s) -> UserDef s)
     | NullExpr -> expected_t
     | SId _ | _ -> raise UnsupportedSexprTypeClassification
 

@@ -31,7 +31,9 @@ type sexpr =
     | SId of string
     | NullExpr
 and user_def_expr =
-    | SUserDefInst of string * sactual list option
+    | SUserDefInst of string * sactual list
+    | SUserDefVar of string
+    | SUserDefNull
 and sactual =
     | SActual of string * sexpr
 
@@ -45,6 +47,7 @@ type semantic_stmt =
     | SAssign of svar_assign
     | SDecl of var_type * svar_assign
     | SOutput of soutput
+    | SUserDefDecl of string * svar_assign
 
 
 type sattr =

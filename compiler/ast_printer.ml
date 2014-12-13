@@ -41,11 +41,9 @@ let rec expr_s = function
     | FloatLit f -> sprintf "(Float literal %f)" f
     | ListLit l -> sprintf "(List literal [%s])"
         (String.concat ", " (List.map expr_s l))
-    | UserDefInst(id, actls) -> sprintf "(Instantiate new UserDef %s (%s))"
+    | UserDefInst(id, actls) -> sprintf "(Instantiate new UserDef %s: (%s))"
         id
-        (match actls with
-            | Some actuals -> (String.concat ", " (List.map actual_s actuals))
-            | None         -> "(No Actuals)")
+        ("\n\t" ^ (String.concat ",\n\t " (List.map actual_s actls)))
 
     | Noexpr -> "( NOEXPR )"
 and fcall_s = function
@@ -53,7 +51,7 @@ and fcall_s = function
         f
         (concat ", " (List.map (fun e -> sprintf "(%s)" (expr_s e)) es))
 and actual_s = function
-    | Actual(id, e) -> sprintf "(%s=%s)" id (expr_s e)
+    | Actual(id, e) -> sprintf "(ACTUAL: %s=%s)" id (expr_s e)
 
 let output_s = function
     | Printf el -> sprintf "(Printf(%s))"
@@ -68,7 +66,7 @@ let string_of_vdecl (t, nm, e) = sprintf "%s %s %s"
         | Some xpr -> sprintf "= %s" (expr_s xpr)
         | None     -> "(Not assigned)")
 
-let string_of_udefdecl (cls, nm, e) = sprintf "%s %s %s"
+let string_of_user_def_decl (cls, nm, e) = sprintf "%s %s %s"
     cls
     nm
     (match e with
@@ -102,7 +100,7 @@ let rec stmt_s = function
     | VarDecl vd -> sprintf "(VarDecl (%s))"
         (string_of_vdecl vd)
     | UserDefDecl ud -> sprintf "(UserDefDecl (%s))"
-        (string_of_udefdecl ud)
+        (string_of_user_def_decl ud)
     | FuncCall f -> fcall_s f
 
 let fstmt_s = function

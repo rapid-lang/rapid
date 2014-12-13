@@ -65,19 +65,25 @@ let check_s_output sym_tbl = function
 
 
 (* Processes an unsafe SAST and returns a type checked SAST *)
-let rec var_analysis st = function
+let rec var_analysis st ct = function
     | SDecl(t, (id, xpr)) :: tl ->
         let expr = rewrite_sexpr st xpr in
         let st = add_sym t id st in
         let () = check_t_sexpr t expr in
-            SDecl(t, (id, expr)) :: var_analysis st tl
+            SDecl(t, (id, expr)) :: var_analysis st ct tl
     | SAssign(id, xpr) :: tl ->
         let expr = rewrite_sexpr st xpr in
         let st = check_var_assign_use st id expr in
-            SAssign(id, expr) :: (var_analysis st tl)
+            SAssign(id, expr) :: (var_analysis st ct tl)
     | SOutput(so) :: tl ->
         let so = check_s_output st so in
-            SOutput(so) :: (var_analysis st tl)
+            SOutput(so) :: (var_analysis st ct tl)
+    | SUserDefDecl(cls, (id, xpr)) :: tl ->
+        let expr = rewrite_sexpr st xpr in
+        let t = UserDef cls in
+        let st = add_sym t id st in
+        let () = check_t_sexpr t expr in
+            SUserDefDecl(cls, (id, xpr)) :: var_analysis st ct tl
     | [] -> []
 
 
@@ -94,7 +100,7 @@ let gen_semantic_stmts stmts =
     (* build an unsafe semantic AST *)
     let s_stmts = List.map translate_statement stmts in
     (* typecheck and reclassify all variable usage *)
-    let checked_stmts = var_analysis symbol_table_list s_stmts in
+    let checked_stmts = var_analysis symbol_table_list class_table s_stmts in
     checked_stmts
 
 
