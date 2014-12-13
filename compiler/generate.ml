@@ -164,8 +164,9 @@ let lv_to_code lv =
 
 let sfunccall_to_code lv id xprs = 
     let lhs = lv_to_code lv in
-    let code_pairs = List.map sexpr_to_code xprs in
-    let (tmps, refs) = gen_call ("","") code_pairs in
+    let (tmps, refs) = list_sexpr_to_code "" xprs in
+    let tmps = String.concat "\n" tmps in
+    let refs = String.concat "," refs in
     if lhs = "" then sprintf "%s\n%s( %s )" tmps id refs
         else sprintf "%s\n%s = %s( %s )" tmps lhs id refs
 
