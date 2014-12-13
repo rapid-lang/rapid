@@ -22,7 +22,30 @@ exception InvalidReturnTypeErr
 exception NoReturnErr
 exception ReturnTypeMismatchErr
 exception SfuncIdNotReWritten
+exception TooFewArgsErr
+exception TooManyArgsErr
 
+(* Takes a type and a typed sexpr and confirms it is the proper type *)
+let check_t_sexpr expected_t xpr =
+    let found_t = sexpr_to_t expected_t xpr in
+    if found_t = expected_t
+        then ()
+        else raise(InvalidTypeErr(Format.sprintf "Expected %s expression, found %s"
+            (Ast_printer.string_of_t expected_t)
+            (Ast_printer.string_of_t found_t)))
+
+let is_not_default = function
+    | NullExpr -> true
+    | _ -> false
+
+let rec check_arg_types = function
+    | (((t, _)::tl),(param :: pl)) -> let () = check_t_sexpr t param in
+        check_arg_types (tl, pl)
+    | (((_, xpr) :: tl), []) -> if (is_not_default xpr) 
+            then raise TooFewArgsErr
+        else () (*This is the case where the user didn't enter some optional args*)
+    | ([], (param :: pl)) -> raise TooManyArgsErr
+    | ([],[]) -> () 
 
 (* Takes a symbol table and sexpr and rewrites variable references to be typed *)
 let rec rewrite_sexpr st ft = function
@@ -37,20 +60,11 @@ let rec rewrite_sexpr st ft = function
         let xpr = (rewrite_sexpr st ft e) in
            SExprBool(SBoolCast(xpr))
     | SCall(id, xprs) ->
-        SCallTyped((get_return_type id ft), (id, (List.map (rewrite_sexpr st ft) xprs)))
+        let xprs = (List.map (rewrite_sexpr st ft) xprs) in
+        let () = check_arg_types ((get_arg_types id ft), xprs) in
+        SCallTyped((get_return_type id ft), (id, xprs))
     (* TODO: add all new expressions that can contain variable references to be simplified *)
     | xpr -> xpr
-
-
-(* Takes a type and a typed sexpr and confirms it is the proper type *)
-let check_t_sexpr expected_t xpr =
-    let found_t = sexpr_to_t expected_t xpr in
-    if found_t = expected_t
-        then ()
-        else raise(InvalidTypeErr(Format.sprintf "Expected %s expression, found %s"
-            (Ast_printer.string_of_t expected_t)
-            (Ast_printer.string_of_t found_t)))
-
 
 (* typechecks a sexpr *)
 let rewrite_sexpr_to_t st ft xpr t =
@@ -126,11 +140,12 @@ let rec var_analysis st ft = function
          SReturn(xprs) :: (var_analysis st ft tl)
     | SFuncCall (lv, id, xprs) :: tl ->
         let lv = (List.map (rewrite_lv st) lv) in 
-        let check_for_lv ft id = function
+        let check_lv ft id = function
             | [] -> ()
             | _ -> check_lv_types (lv, (get_return_type_list id ft)) in
-        let () = check_for_lv ft id lv in
+        let () = check_lv ft id lv in
         let xprs = (List.map (rewrite_sexpr st ft) xprs) in
+        let () = check_arg_types ((get_arg_types id ft), xprs) in
         SFuncCall(lv, id, xprs) :: (var_analysis st ft tl)
     | [] -> []
 
@@ -154,9 +169,6 @@ let rec add_to_scope st = function
     | _ :: tl -> add_to_scope st tl
     | [] -> st
 
-let is_not_default = function
-    | NullExpr -> true
-    | _ -> false
 
 (*Called when we see an arg with default val, all the rest must have defaults*)
 let rec check_default_args = function
@@ -192,8 +204,6 @@ let rec check_funcs st ft = function
         (*typecheck the body and rewrite vars to have type*)
         let tbody = var_analysis scoped_st ft body in
         (*check the return type matches the return statement*)
-        (*Once we add control flow I'm not sure how to make sure 
-          all paths return something so ignoring for now.*)
         let _  = check_returns rets tbody in
         (*if no return types then don't worry, else find a return stmnt*)
         if rets = [] then 

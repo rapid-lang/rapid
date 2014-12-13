@@ -1,0 +1,7 @@
+int i = 3;
+int b;
+b = 3;
+
+foo(foo(1, "b"), "a");
+
+func foo(int a, string b) int{ return a; }

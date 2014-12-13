@@ -10,5 +10,5 @@ type var_type =
     | ListType of var_type
     | Var
     | Void (*Used for funcions with no args or no rets*)
-    | Multi (*Used for funcs with multiple rets*)
-
+    | Multi of ret_type(*Used for funcs with multiple rets*)
+and ret_type = var_type list

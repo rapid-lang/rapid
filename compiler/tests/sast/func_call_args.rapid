@@ -1,0 +1,9 @@
+int i = 3;
+int b;
+b = 3;
+
+b = foo(i, "232");
+int x = foo(foo(1, "!"), "a");
+
+func foo(int a, string b) int{ return a; }
+

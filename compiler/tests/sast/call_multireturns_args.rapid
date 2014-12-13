@@ -1,0 +1,8 @@
+int i = 3;
+int b;
+b = 3;
+
+(int x, string s) = foo( b, "a");
+
+func foo(int a, string b) int, string{ return a, "s"; }
+func bar() int{ return 1; }
