@@ -107,7 +107,7 @@ let gen_semantic_stmts stmts =
 let gen_class_stmts stmts =
     let sclasses = List.map translate_class stmts in
     let checked_sclasses = class_analysis class_table sclasses in
-    sclasses
+    checked_sclasses
 
 
 let sast_from_ast ast =
