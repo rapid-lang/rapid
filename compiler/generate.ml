@@ -77,6 +77,13 @@ let string_expr_to_code = function
     | SStringNull -> "", "nil"
     | _ -> raise UnsupportedStringExprType
 
+let rec gen_call code = function 
+    | (tmp, rf) :: tl->  let (t, r) = code in
+       let tmps = t ^ "\n" ^ tmp in
+       if r = "" then gen_call (tmps,rf) tl
+        else gen_call (tmps, (r ^ ", " ^ rf)) tl
+    | [] -> code
+
 (* returns a reference to a boolean *)
 let rec bool_expr_to_code = function
     | SBoolExprLit b ->
@@ -100,8 +107,15 @@ and sexpr_to_code = function
     | SExprString s -> string_expr_to_code s
     | SExprFloat f -> float_expr_to_code f
     | SExprBool b -> bool_expr_to_code b
+    | SCallTyped(t, (id, args)) -> func_expr_to_code id args
     | NullExpr -> "", "nil"
     | s -> raise(UnsupportedSExprType(Sast_printer.sexpr_s s))
+and func_expr_to_code id arg_xrps = 
+    let code_pairs =  List.map sexpr_to_code arg_xrps in
+    let (tmps, refs) = gen_call ("","") code_pairs in
+    let call = sprintf "%s(%s)" id refs in
+    tmps, call
+
 
 let sassign_to_code = function
     | (id, xpr) ->
@@ -129,12 +143,6 @@ let soutput_to_code = function
                 (String.concat "," refs)
     | _ -> raise UnsupportedOutputType
 
-let rec gen_call code = function 
-    | (tmp, rf) :: tl->  let (t, r) = code in
-       let tmps = t ^ "\n" ^ tmp in
-       if r = "" then gen_call (tmps,rf) tl
-        else gen_call (tmps, (r ^ ", " ^ rf)) tl
-    | [] -> code
 
 let sreturn_to_code xprs = 
     let code_pairs = List.map sexpr_to_code xprs in

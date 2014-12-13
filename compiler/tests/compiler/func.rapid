@@ -1,4 +1,4 @@
-(int a) = foo(1, "hi");
+int a = foo(1, "hi");
 
 println(a);
 
