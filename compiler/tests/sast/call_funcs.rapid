@@ -1,7 +1,7 @@
-//too(); // one statement
+
 int n = foo(); // this is vdecl stmnt with a funcall expr.
 
-boo();
+boo(); //one statement
 
 func too(int b) string{
     return "s";
