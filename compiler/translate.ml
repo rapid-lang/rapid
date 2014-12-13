@@ -65,8 +65,8 @@ let translate_output = function
 
 let translate_vars = function
     | Ast.ID(s) -> SFuncId(s)
-    | Ast.VDecl(vd) -> let s = translate_decl vd in
-        match s with 
+    | Ast.VDecl(vd) -> 
+        match translate_decl vd with 
             | SDecl(t, (id, xpr)) -> SFuncDecl(t,(id, xpr))(*xpr will be None*)
 
 let translate_fcall id exprs = 
@@ -77,10 +77,8 @@ let translate_statement = function
     | Ast.VarDecl vd -> translate_decl vd
     | Ast.Assign(id, xpr) -> SAssign(id, translate_expr xpr)
     | Ast.Output o -> SOutput(translate_output o)
-    | Ast.FuncCall(vl, (id, exprs)) -> let(id, sexprs) = (translate_fcall id exprs) in
-        SFuncCall((List.map translate_vars vl), id, sexprs) (*match fcall with*)
-        (*| Call(id, xprs) -> let (id, xprs) = translate_fcall id xprs in
-        SFuncCall((List.map translate_vars vl), id, xprs)*)
+    | Ast.FuncCall(vl, (id, exprs)) -> let(id, sexprs) = translate_fcall id exprs in
+        SFuncCall((List.map translate_vars vl), id, sexprs)
     | _ -> raise(UnsupportedStatementTypeErr "type unknown")
 
 let translate_fstatement = function
