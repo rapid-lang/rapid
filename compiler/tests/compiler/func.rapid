@@ -1,0 +1,8 @@
+int a = foo(1, "hi");
+
+println(a);
+
+func foo(int a, string b = "hi") int {
+    println(b);
+    return a;
+}

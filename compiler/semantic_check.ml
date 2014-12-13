@@ -36,14 +36,17 @@ let check_t_sexpr expected_t xpr =
 
 let is_not_default x = (x = NullExpr)
 
+(*takes a list of args as SDecl(t, xpr) and list of params as sexprs
+  Checks the type and if there is some default args not entered, fill them with
+  NullExpr*)
 let rec check_arg_types = function
     | (((t, _)::tl),(param :: pl)) -> let () = check_t_sexpr t param in
-        check_arg_types (tl, pl)
+        param :: check_arg_types (tl, pl)
     | (((_, xpr) :: tl), []) -> if (is_not_default xpr) 
             then raise TooFewArgsErr
-        else () (*This is the case where the user didn't enter some optional args*)
+        else NullExpr :: check_arg_types (tl, []) (*This is the case where the user didn't enter some optional args*)
     | ([], (param :: pl)) -> raise TooManyArgsErr
-    | ([],[]) -> () 
+    | ([],[]) -> [] 
 
 (* Takes a symbol table and sexpr and rewrites variable references to be typed *)
 let rec rewrite_sexpr st ft = function
@@ -65,7 +68,7 @@ let rec rewrite_sexpr st ft = function
            SExprFloat(SFloatCast(xpr))
     | SCall(id, xprs) ->
         let xprs = (List.map (rewrite_sexpr st ft) xprs) in
-        let () = check_arg_types ((get_arg_types id ft), xprs) in
+        let xprs = check_arg_types ((get_arg_types id ft), xprs) in
         SCallTyped((get_return_type id ft), (id, xprs))
     (* TODO: add all new expressions that can contain variable references to be simplified *)
     | xpr -> xpr
@@ -126,6 +129,13 @@ let rewrite_lv st = function
     | SFuncId(i) -> SFuncTypedId((get_type i st), i)
     | SFuncDecl(t, sv) -> SFuncDecl(t, sv)
 
+(*adds any var decls on the left hand side of a function statement to the symbol table.*)
+let rec scope_lv st = function
+    | SFuncDecl(t, (id, _)) :: tl -> let st = (add_sym t id st) in
+        scope_lv st tl
+    | SFuncId(i) :: tl -> scope_lv st tl 
+    | SFuncTypedId(_, _) :: tl -> scope_lv st tl 
+    | [] -> st
 
 (* Processes an unsafe SAST and returns a type checked SAST *)
 let rec var_analysis st ft = function
@@ -152,16 +162,10 @@ let rec var_analysis st ft = function
             | _ -> check_lv_types (lv, (get_return_type_list id ft)) in
         let () = check_lv ft id lv in
         let xprs = (List.map (rewrite_sexpr st ft) xprs) in
-        let () = check_arg_types ((get_arg_types id ft), xprs) in
+        let xprs = check_arg_types ((get_arg_types id ft), xprs) in
+        let st = scope_lv st lv in 
         SFuncCall(lv, id, xprs) :: (var_analysis st ft tl)
     | [] -> []
-
-(*adds any var decls on the left hand side of a function statement to the symbol table.*)
-let rec scope_lv st = function
-    | SFuncDecl(t, (id, _)) :: tl -> let st = (add_sym t id st) in
-        scope_lv st tl
-    | SFuncId(i) :: tl -> scope_lv st tl 
-    | [] -> st
 
 (*
 Adds all var decls in a stmt list to the scope and returns the new scope
@@ -175,7 +179,6 @@ let rec add_to_scope st = function
         add_to_scope st tl
     | _ :: tl -> add_to_scope st tl
     | [] -> st
-
 
 (*Called when we see an arg with default val, all the rest must have defaults*)
 let rec check_default_args = function
@@ -239,6 +242,7 @@ let gen_semantic_program stmts funcs =
     let s_funcs = List.map translate_function funcs in
     let ft = build_function_table empty_function_table s_funcs in
     (* typecheck and reclassify all variable usage *)
+    
     let checked_stmts = var_analysis symbol_table_list ft s_stmts in
     (*Add all the var decls to the global scope*)
     let st = add_to_scope symbol_table_list s_stmts in

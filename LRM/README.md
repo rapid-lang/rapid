@@ -118,22 +118,22 @@ comment
 
 ### 2.5 Operators
 
-Operator | Use | Associativity
-:-------:|-----|-----------------
-`+` | Addition | left
-`*` | Multiplication | left
-`/` | Division | left
-`-` | Subtraction | left
-`%` | Modulus | left
-`=`  | Assignment | non-associative
-`==` | Equal to | non-associative
-`!=` | Not equal to | non-associative
-`>` | Greater than | non-associative
-`<` | Less than | non-associative
-`>=` | Greater than or equal to | non-associative
-`<=` | Less than or equal to | non-associative
-`and` | Logical And | non-associative
-`or` | Logical Or | non-associative
+Operator | Use | Associativity| Types
+:-------:|-----|-----------------|------
+`+` | Addition | left | int ,float
+`*` | Multiplication | left | int ,float
+`/` | Division | left | int ,float
+`-` | Subtraction | left | int ,float
+`%` | Modulus | left | int
+`=`  | Assignment | non-associative | All
+`==` | Equal to | non-associative | All
+`!=` | Not equal to | non-associative | All
+`>` | Greater than | non-associative | int, float
+`<` | Less than | non-associative | int, float
+`>=` | Greater than or equal to | non-associative | int, float
+`<=` | Less than or equal to | non-associative | int, float
+`and` | Logical And | non-associative | bool
+`or` | Logical Or | non-associative | bool
 
 ## 3. Types
 
