@@ -56,12 +56,21 @@ let svar_assign_s (id, xpr) =
 let svar_decl_s t (id, xpr) =
     sprintf "(Declare %s (%s) to %s)" id (Ast_printer.string_of_t t) (sexpr_s xpr)
 
+let lv_s = function
+    | SFuncDecl(t, (id, _)) -> sprintf "%s %s" (Ast_printer.string_of_t t) id 
+    | SFuncTypedId(_ , id) -> id
+    | _ -> raise UnsupportedSOutput
+
 let semantic_stmt_s = function
     | SAssign a -> svar_assign_s a ^ "\n"
     | SDecl(t, vd) -> svar_decl_s t vd ^ "\n"
     | SOutput o -> sprintf "(Output %s)" (soutput_s o)
     | SReturn s -> sprintf("Return(%s)")
         (String.concat ", " (List.map sexpr_s s))
+    | SFuncCall(lv, id, params) -> sprintf "Assign(%s) to Call %s(%s)"
+        (String.concat ", " (List.map lv_s lv))
+        id
+        (String.concat ", " (List.map sexpr_s params)) 
     | _ -> "Unsupported statement"
 
 let semantic_func_s f = 

@@ -1,0 +1,3 @@
+func foo(int a, int b, int i, string c = "1231", string d = null) {}
+
+foo(1 ,2);
