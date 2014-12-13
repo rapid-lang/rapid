@@ -38,32 +38,6 @@ let get_string_literal_from_sexpr = function
     | SExprString(SStringVar id) -> sprintf "*%s" id
     | _ -> raise StringExpressionsRequired
 
-(* returns a reference to an integer *)
-let int_expr_to_code = function
-    | SIntExprLit i ->
-        let tmp_var = rand_var_gen () in
-            sprintf "%s := %d" tmp_var i,
-            sprintf "&%s" tmp_var
-    | SIntVar id ->
-        let tmp_var = rand_var_gen () in
-            sprintf "%s := *%s" tmp_var id,
-            sprintf "&%s" tmp_var
-    | SIntNull -> "", "nil"
-    | _ -> raise UnsupportedIntExprType
-
-(* returns a reference to a float *)
-let float_expr_to_code = function
-    | SFloatExprLit f ->
-        let tmp_var = rand_var_gen () in
-            sprintf "%s := %f" tmp_var f,
-            sprintf "&%s" tmp_var
-    | SFloatVar id ->
-        let tmp_var = rand_var_gen () in
-            sprintf "%s := *%s" tmp_var id,
-            sprintf "&%s" tmp_var
-    | SFloatNull -> "", "nil"
-    | _ -> raise UnsupportedFloatExprType
-
 (* returns a reference to a string *)
 let string_expr_to_code = function
     | SStringExprLit s ->
@@ -77,8 +51,37 @@ let string_expr_to_code = function
     | SStringNull -> "", "nil"
     | _ -> raise UnsupportedStringExprType
 
+
+(* returns a reference to an integer *)
+let rec int_expr_to_code = function
+    | SIntExprLit i ->
+        let tmp_var = rand_var_gen () in
+            sprintf "%s := %d" tmp_var i,
+            sprintf "&%s" tmp_var
+    | SIntVar id ->
+        let tmp_var = rand_var_gen () in
+            sprintf "%s := *%s" tmp_var id,
+            sprintf "&%s" tmp_var
+    | SIntNull -> "", "nil"
+    | SIntCast c -> int_cast_to_code c
+    | _ -> raise UnsupportedIntExprType
+
+(* returns a reference to a float *)
+and float_expr_to_code = function
+    | SFloatExprLit f ->
+        let tmp_var = rand_var_gen () in
+            sprintf "%s := %f" tmp_var f,
+            sprintf "&%s" tmp_var
+    | SFloatVar id ->
+        let tmp_var = rand_var_gen () in
+            sprintf "%s := *%s" tmp_var id,
+            sprintf "&%s" tmp_var
+    | SFloatCast c -> float_cast_to_code c
+    | SFloatNull -> "", "nil"
+    | _ -> raise UnsupportedFloatExprType
+
 (* returns a reference to a boolean *)
-let rec bool_expr_to_code = function
+and bool_expr_to_code = function
     | SBoolExprLit b ->
         let tmp_var = rand_var_gen () in
             sprintf "%s := %b" tmp_var b,
@@ -95,6 +98,17 @@ and bool_cast_to_code xpr =
     let setup, var = sexpr_to_code xpr in
     let cast = sprintf "%sToBool(%s(%s))" go_type go_type var in
     setup, cast
+and float_cast_to_code xpr =
+    let go_type = go_type_from_sexpr xpr in
+    let setup, var = sexpr_to_code xpr in
+    let cast = sprintf "%sToFloat(%s(%s))" go_type go_type var in
+    setup, cast
+and int_cast_to_code xpr =
+    let go_type = go_type_from_sexpr xpr in
+    let setup, var = sexpr_to_code xpr in
+    let cast = sprintf "%sToInt(%s(%s))" go_type go_type var in
+    setup, cast
+
 and sexpr_to_code = function
     | SExprInt i -> int_expr_to_code i
     | SExprString s -> string_expr_to_code s
