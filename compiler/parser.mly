@@ -56,7 +56,6 @@ datatype_list:
 
 return_type:
     /* TODO: allow user defined types */
-    | primtype                    { [$1] }
     | datatype_list { List.rev $1 }
 
 /*var declarations can now be done inline*/
@@ -98,6 +97,7 @@ fstmt_list:
 ret_expr_list:
     | expr {[$1]}
     | ret_expr_list COMMA expr {$3 :: $1} 
+    | { [] }
 
 func_stmt:
     | RETURN ret_expr_list SEMI { Return( List.rev $2) }
