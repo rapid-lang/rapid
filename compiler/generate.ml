@@ -77,12 +77,17 @@ let string_expr_to_code = function
     | SStringNull -> "", "nil"
     | _ -> raise UnsupportedStringExprType
 
+(*Starts with two empty strings and a list of (string, string)
+  and then builds 2 strings for the temps
+  and a refs.  Temps seperated by "\n" and refs seperated by ", " *)
 let rec gen_call code = function 
     | (tmp, rf) :: tl->  let (t, r) = code in
        let tmps = t ^ "\n" ^ tmp in
        if r = "" then gen_call (tmps,rf) tl
         else gen_call (tmps, (r ^ ", " ^ rf)) tl
     | [] -> code
+
+
 
 (* returns a reference to a boolean *)
 let rec bool_expr_to_code = function
@@ -111,10 +116,14 @@ and sexpr_to_code = function
     | NullExpr -> "", "nil"
     | s -> raise(UnsupportedSExprType(Sast_printer.sexpr_s s))
 and func_expr_to_code id arg_xrps = 
-    let code_pairs =  List.map sexpr_to_code arg_xrps in
-    let (tmps, refs) = gen_call ("","") code_pairs in
-    let call = sprintf "%s(%s)" id refs in
-    tmps, call
+    let (tmps, refs) = (list_sexpr_to_code "" arg_xrps) in 
+    let call = sprintf "%s(%s)" id (String.concat ", " refs) in
+    (String.concat "\n" tmps), call
+and list_sexpr_to_code deref_string xpr_l =  
+    let trans = List.map sexpr_to_code xpr_l in
+    let setups = List.map (fun (s, _) -> s) trans in
+    let refs = List.map (fun (_, r) -> deref_string^r) trans in
+    setups, refs
 
 let sassign_to_code = function
     | (id, xpr) ->
@@ -126,16 +135,12 @@ let sassign_to_code = function
 
 let soutput_to_code = function
     | SPrintln xpr_l ->
-        let trans = List.map sexpr_to_code xpr_l in
-        let setups = List.map (fun (s, _) -> s) trans in
-        let refs = List.map (fun (_, r) -> "*"^r) trans in
+        let (setups, refs) = list_sexpr_to_code "*" xpr_l in
             sprintf "%s\nfmt.Println(%s)"
                 (String.concat "\n" setups)
                 (String.concat "," refs)
     | SPrintf(s, xpr_l) ->
-        let trans = List.map sexpr_to_code xpr_l in
-        let setups = List.map (fun (s, _) -> s) trans in
-        let refs = List.map (fun (_, r) -> "*"^r) trans in
+        let (setups, refs) = list_sexpr_to_code "*" xpr_l in
             sprintf "%s\nfmt.Printf(%s, %s)"
                 (String.concat "\n" setups)
                 (get_string_literal_from_sexpr s)
@@ -144,9 +149,8 @@ let soutput_to_code = function
 
 
 let sreturn_to_code xprs = 
-    let code_pairs = List.map sexpr_to_code xprs in
-    let (tmps, refs) = gen_call ("","") code_pairs in
-    sprintf "%s\n return %s" tmps refs
+    let (tmps, refs) = list_sexpr_to_code "" xprs in
+    sprintf "%s\n return %s" (String.concat "\n" tmps) (String.concat ", " refs)
 
 let decls_from_lv = function
     | SFuncDecl(t, (id, _)) -> sprintf "var %s %s" id (go_type_from_type t)
