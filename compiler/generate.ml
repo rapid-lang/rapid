@@ -129,23 +129,41 @@ let soutput_to_code = function
                 (String.concat "," refs)
     | _ -> raise UnsupportedOutputType
 
-let rec gen_return code = function 
+let rec gen_call code = function 
     | (tmp, rf) :: tl->  let (t, r) = code in
        let tmps = t ^ "\n" ^ tmp in
-       if r = "" then gen_return (tmps,rf) tl
-        else gen_return (tmps, (r ^ ", " ^ rf)) tl
+       if r = "" then gen_call (tmps,rf) tl
+        else gen_call (tmps, (r ^ ", " ^ rf)) tl
     | [] -> code
 
 let sreturn_to_code xprs = 
     let code_pairs = List.map sexpr_to_code xprs in
-    let (tmps, refs) = gen_return ("","") code_pairs in
+    let (tmps, refs) = gen_call ("","") code_pairs in
     sprintf "%s\n return %s" tmps refs
+
+let decls_from_lv = function
+    | SFuncDecl(t, (id, _)) -> sprintf "var %s %s" id (go_type_from_type t)
+    | _ -> ""
+let get_ids = function
+    | SFuncDecl(_, (id, _ ) ) -> id
+    | SFuncTypedId (_, id) -> id
+
+let lv_to_code lv = 
+    let decls = String.concat "\n" (List.map decls_from_lv lv) in
+    let lhs = String.concat ", " (List.map get_ids lv) in decls ^ "\n" ^ lhs
+
+let sfunccall_to_code lv id xprs = 
+    let lhs = lv_to_code lv in
+    let code_pairs = List.map sexpr_to_code xprs in
+    let (tmps, refs) = gen_call ("","") code_pairs in
+    sprintf "%s\n%s = %s( %s )" tmps lhs id refs
 
 let sast_to_code = function
     | SDecl(_, (id, xpr)) -> sassign_to_code (id, xpr)
     | SAssign a -> sassign_to_code a
     | SOutput p -> soutput_to_code p
     | SReturn xprs -> sreturn_to_code xprs
+    | SFuncCall (lv, id, xprs) -> sfunccall_to_code lv id xprs
     | _ -> raise(UnsupportedSemanticStatementType)
 
 let arg_to_code = function
