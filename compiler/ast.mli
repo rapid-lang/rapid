@@ -12,6 +12,8 @@ type expr =
     | Binop of expr * op * expr
     | Call of fcall
     | CastBool of expr
+    | CastFloat of expr
+    | CastInt of expr
     | ListLit of expr list
     | Noexpr
     | Nullxpr

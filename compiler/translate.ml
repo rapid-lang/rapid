@@ -13,19 +13,6 @@ exception InvalidIntExprType
 exception InvalidFloatExprType
 
 
-let translate_int_xpr = function
-    | Ast.IntLit i -> SIntExprLit i
-    | _ -> raise InvalidIntExprType
-
-let translate_float_xpr = function
-    | Ast.FloatLit i -> SFloatExprLit i
-    | _ -> raise InvalidIntExprType
-
-let translate_string_xpr = function
-    | Ast.StringLit s -> SStringExprLit s
-    | _ -> raise InvalidStringExprType
-
-
 let rec translate_expr = function
     (* TODO: a ton more types here, also support recursive expressions *)
     | Ast.IntLit i    -> SExprInt(SIntExprLit i)
@@ -33,6 +20,8 @@ let rec translate_expr = function
     | Ast.FloatLit f  -> SExprFloat(SFloatExprLit f)
     | Ast.BoolLit b   -> SExprBool(SBoolExprLit b)
     | Ast.CastBool c  -> SExprBool(SBoolCast (translate_expr c))
+    | Ast.CastInt i   -> SExprInt(SIntCast   (translate_expr i))
+    | Ast.CastFloat f -> SExprFloat(SFloatCast (translate_expr f))
     (* we put a placeholder with the ID in and check after and reclassify *)
     | Ast.Id id       -> SId id
     | Ast.Call(id, expr) -> SCall(id, (List.map translate_expr expr))
@@ -43,6 +32,20 @@ let translate_bool_xpr = function
     | Ast.BoolLit b -> SBoolExprLit b
     | Ast.CastBool c  -> SBoolCast (translate_expr c)
     | _ -> raise InvalidBoolExprType
+
+let translate_int_xpr = function
+    | Ast.IntLit i -> SIntExprLit i
+    | Ast.CastInt c  -> SIntCast (translate_expr c)
+    | _ -> raise InvalidIntExprType
+
+let translate_float_xpr = function
+    | Ast.FloatLit i -> SFloatExprLit i
+    | Ast.CastInt c  -> SIntCast (translate_expr c)
+    | _ -> raise InvalidIntExprType
+
+let translate_string_xpr = function
+    | Ast.StringLit s -> SStringExprLit s
+    | _ -> raise InvalidStringExprType
 
 let translate_assign id xpr = match translate_expr xpr with
     | SExprInt _    -> (id, xpr)

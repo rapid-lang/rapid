@@ -2,22 +2,22 @@ open Ast
 open Datatypes
 
 
-type int_expr =
-    | SIntExprLit of int
-    | SIntVar of string
-    | SIntNull
-
-type float_expr =
-    | SFloatExprLit of float
-    | SFloatVar of string
-    | SFloatNull
-
 type string_expr =
     | SStringExprLit of string
     | SStringVar of string
     | SStringNull
 
-type bool_expr =
+type int_expr =
+    | SIntExprLit of int
+    | SIntVar of string
+    | SIntCast of sexpr
+    | SIntNull
+and float_expr =
+    | SFloatExprLit of float
+    | SFloatVar of string
+    | SIntCast of sexpr
+    | SFloatNull
+and bool_expr =
     | SBoolExprLit of bool
     | SBoolVar of string
     | SBoolCast of sexpr
