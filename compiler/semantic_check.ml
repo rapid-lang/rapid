@@ -92,8 +92,8 @@ let rec class_analysis class_tbl = function
     | (class_id, attrs) :: tl ->
         let attr_tbl = add_attrs empty_attribute_table attrs in
         let class_tbl = new_class class_id attr_tbl class_tbl in
-        class_analysis class_tbl tl
-    | [] -> class_tbl
+        (class_id, attrs) :: class_analysis class_tbl tl
+    | [] -> []
 
 
 let gen_semantic_stmts stmts =
