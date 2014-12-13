@@ -2,9 +2,7 @@ type action = Ast | Sast | Compile
 
 let translate ast =
     let sast = Semantic_check.sast_from_ast ast in
-    (*Ignoring funcs for now when generating code.*)
-    let (s, _) = sast in
-    let code = Generate.build_prog s in
+    let code = Generate.build_prog sast in
     code
 
 let _ =
