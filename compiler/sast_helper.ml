@@ -59,7 +59,7 @@ let get_return_type id ft =
     match ret_t with
         | [] -> Void
         | t :: [] -> t
-        | t_list -> Multi(t_list)
+        | t_list -> Multi
 
 let get_return_type_list id ft =
     let (_, retl) = StringMap.find id ft in retl
