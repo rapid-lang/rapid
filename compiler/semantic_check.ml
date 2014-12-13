@@ -154,8 +154,7 @@ let rec var_analysis st ft = function
 let rec scope_lv st = function
     | SFuncDecl(t, (id, _)) :: tl -> let st = (add_sym t id st) in
         scope_lv st tl
-    | SFuncId(i) :: tl -> let _ = get_type i in (*might as well check here if id is declared*)
-        scope_lv st tl 
+    | SFuncId(i) :: tl -> scope_lv st tl 
     | [] -> st
 
 (*
