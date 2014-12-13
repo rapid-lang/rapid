@@ -36,6 +36,9 @@ let check_t_sexpr expected_t xpr =
 
 let is_not_default x = (x = NullExpr)
 
+(*takes a list of args as SDecl(t, xpr) and list of params as sexprs
+  Checks the type and if there is some default args not entered, fill them with
+  NullExpr*)
 let rec check_arg_types = function
     | (((t, _)::tl),(param :: pl)) -> let () = check_t_sexpr t param in
         param :: check_arg_types (tl, pl)
@@ -120,6 +123,7 @@ let rewrite_lv st = function
     | SFuncId(i) -> SFuncTypedId((get_type i st), i)
     | SFuncDecl(t, sv) -> SFuncDecl(t, sv)
 
+(*adds any var decls on the left hand side of a function statement to the symbol table.*)
 let rec scope_lv st = function
     | SFuncDecl(t, (id, _)) :: tl -> let st = (add_sym t id st) in
         scope_lv st tl
@@ -157,9 +161,6 @@ let rec var_analysis st ft = function
         SFuncCall(lv, id, xprs) :: (var_analysis st ft tl)
     | [] -> []
 
-(*adds any var decls on the left hand side of a function statement to the symbol table.*)
-
-
 (*
 Adds all var decls in a stmt list to the scope and returns the new scope
 This does not do any type checking, and ignores the optional expression
@@ -172,7 +173,6 @@ let rec add_to_scope st = function
         add_to_scope st tl
     | _ :: tl -> add_to_scope st tl
     | [] -> st
-
 
 (*Called when we see an arg with default val, all the rest must have defaults*)
 let rec check_default_args = function

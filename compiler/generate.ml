@@ -116,7 +116,6 @@ and func_expr_to_code id arg_xrps =
     let call = sprintf "%s(%s)" id refs in
     tmps, call
 
-
 let sassign_to_code = function
     | (id, xpr) ->
         let setup, ref = sexpr_to_code xpr in
@@ -157,8 +156,7 @@ let get_ids = function
     | SFuncTypedId (_, id) -> id
 
 let lv_to_code lv = 
-    let decls = String.concat "\n" (List.map decls_from_lv lv) in
-    let lhs = String.concat ", " (List.map get_ids lv) in decls ^ "\n" ^ lhs
+    String.concat ", " (List.map get_ids lv)
 
 let sfunccall_to_code lv id xprs = 
     let lhs = lv_to_code lv in
@@ -187,7 +185,7 @@ let defaults_to_code = function
 
 let func_to_code f = 
     let (id, args, rets, body) = f in
-    sprintf "func %s( %s ) %s {\n%s\n%s\n}" 
+    sprintf "func %s( %s ) (%s){\n%s\n%s\n}" 
         id
         (String.concat "," (List.map arg_to_code args))
         (String.concat ", " (List.map go_type_from_type rets))
@@ -197,6 +195,8 @@ let func_to_code f =
 let rec grab_decls = function
     | SDecl(t, (id, _)) :: tl ->
         sprintf "var %s %s" id (go_type_from_type t) :: grab_decls tl
+    | SFuncCall(lv, _,_) :: tl -> 
+        String.concat "\n" (List.map decls_from_lv lv) :: grab_decls tl
     | _ :: tl -> grab_decls tl
     | [] -> []
 
