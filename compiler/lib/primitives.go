@@ -1,4 +1,4 @@
-package main
+ package main
 
 type Int *int
 type Float *float64

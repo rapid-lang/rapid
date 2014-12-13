@@ -31,12 +31,13 @@ let translate_bool_xpr = function
 
 let rec translate_expr = function
     (* TODO: a ton more types here, also support recursive expressions *)
-    | Ast.IntLit i    -> SExprInt(SIntExprLit i)
-    | Ast.StringLit s -> SExprString(SStringExprLit s)
-    | Ast.FloatLit f  -> SExprFloat(SFloatExprLit f)
-    | Ast.BoolLit b   -> SExprBool(SBoolExprLit b)
+    | Ast.IntLit i        -> SExprInt(SIntExprLit i)
+    | Ast.StringLit s     -> SExprString(SStringExprLit s)
+    | Ast.FloatLit f      -> SExprFloat(SFloatExprLit f)
+    | Ast.BoolLit b       -> SExprBool(SBoolExprLit b)
+    | Ast.UserDefInst udi -> SExprUserDef(SUserDefInst udi)
     (* we put a placeholder with the ID in and check after and reclassify *)
-    | Ast.Id id       -> SId id
+    | Ast.Id id           -> SId id
     | _ -> raise UnsupportedExpressionType
 
 let translate_assign id xpr = match translate_expr xpr with

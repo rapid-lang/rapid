@@ -43,7 +43,10 @@ let rec expr_s = function
         (String.concat ", " (List.map expr_s l))
     | UserDefInst(id, actls) -> sprintf "(Instantiate new UserDef %s (%s))"
         id
-        (String.concat ", " (List.map actual_s actls))
+        (match actls with
+            | Some actuals -> (String.concat ", " (List.map actual_s actuals))
+            | None         -> "(No Actuals)")
+
     | Noexpr -> "( NOEXPR )"
 and fcall_s = function
     | FCall(f, es) -> sprintf "(Call (%s) with (%s))"

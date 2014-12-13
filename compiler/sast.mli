@@ -27,8 +27,13 @@ type sexpr =
     | SExprString of string_expr
     | SExprFloat of float_expr
     | SExprBool of bool_expr
+    | SExprUserDef of user_def_expr
     | SId of string
     | NullExpr
+and user_def_expr =
+    | SUserDefInst of string * sactual list option
+and sactual =
+    | SActual of string * sexpr
 
 type soutput =
     | SPrintf of sexpr * sexpr list

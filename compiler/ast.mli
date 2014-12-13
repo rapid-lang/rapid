@@ -13,7 +13,7 @@ type expr =
     | Binop of expr * op * expr
     | Call of fcall
     | ListLit of expr list
-    | UserDefInst of string * actual list
+    | UserDefInst of string * actual list option
     | Noexpr
 and fcall =
     | FCall of string * expr list
