@@ -129,11 +129,44 @@ let soutput_to_code = function
                 (String.concat "," refs)
     | _ -> raise UnsupportedOutputType
 
+let rec gen_return code = function 
+    | (tmp, rf) :: tl->  let (t, r) = code in
+       let tmps = t ^ "\n" ^ tmp in
+       if r = "" then gen_return (tmps,rf) tl
+        else gen_return (tmps, (r ^ ", " ^ rf)) tl
+    | [] -> code
+
+let sreturn_to_code xprs = 
+    let code_pairs = List.map sexpr_to_code xprs in
+    let (tmps, refs) = gen_return ("","") code_pairs in
+    sprintf "%s\n return %s" tmps refs
+
 let sast_to_code = function
     | SDecl(_, (id, xpr)) -> sassign_to_code (id, xpr)
     | SAssign a -> sassign_to_code a
     | SOutput p -> soutput_to_code p
+    | SReturn xprs -> sreturn_to_code xprs
     | _ -> raise(UnsupportedSemanticStatementType)
+
+let arg_to_code = function
+    | SDecl(t, (id, _) ) -> sprintf "%s %s"
+        id
+        (go_type_from_type t)
+
+let defaults_to_code = function
+    | SDecl(_, (id, xpr)) -> if xpr = NullExpr then ""
+        else sprintf "if %s == nil {\n %s\n}"
+                id
+                (sassign_to_code (id, xpr))
+
+let func_to_code f = 
+    let (id, args, rets, body) = f in
+    sprintf "func %s( %s ) %s {\n%s\n%s\n}" 
+        id
+        (String.concat "," (List.map arg_to_code args))
+        (String.concat ", " (List.map go_type_from_type rets))
+        (String.concat "\n" (List.map defaults_to_code args))
+        (String.concat "\n" (List.map sast_to_code body))
 
 let rec grab_decls = function
     | SDecl(t, (id, _)) :: tl ->
@@ -145,9 +178,14 @@ let skeleton decls main fns = "package main\n import (\"fmt\")\n" ^
     "var _ = fmt.Printf\n" ^ decls ^ "\nfunc main() {\n" ^
     main ^ "\n}\n " ^ fns
 
+
+
 let build_prog sast =
-    let decls = String.concat "\n" (grab_decls sast) in
-    let code_lines = List.map sast_to_code sast in
+    let (stmts, funcs) = sast in
+    let decls = String.concat "\n" (grab_decls stmts) in
+    let code_lines = List.map sast_to_code stmts in
     let gen_code = String.concat "\n" code_lines in
-    skeleton decls gen_code ""
+    let func_lines = List.map func_to_code funcs in
+    let func_code = String.concat "\n\n" func_lines in
+    skeleton decls gen_code func_code
 

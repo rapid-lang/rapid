@@ -1,0 +1,6 @@
+//int a = foo(1);
+
+func foo(int a, string b = "hi") int {
+    println(b);
+    return a;
+}
