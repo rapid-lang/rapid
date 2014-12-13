@@ -34,9 +34,7 @@ let check_t_sexpr expected_t xpr =
             (Ast_printer.string_of_t expected_t)
             (Ast_printer.string_of_t found_t)))
 
-let is_not_default = function
-    | NullExpr -> true
-    | _ -> false
+let is_not_default x = (x = NullExpr)
 
 let rec check_arg_types = function
     | (((t, _)::tl),(param :: pl)) -> let () = check_t_sexpr t param in
@@ -57,7 +55,7 @@ let rec rewrite_sexpr st ft = function
         | Bool -> SExprBool(SBoolVar id)
         | _ -> raise UnsupportedDatatypeErr)
     | SExprBool(SBoolCast e) ->
-        let xpr = (rewrite_sexpr st ft e) in
+        let xpr = rewrite_sexpr st ft e in
            SExprBool(SBoolCast(xpr))
     | SCall(id, xprs) ->
         let xprs = (List.map (rewrite_sexpr st ft) xprs) in
@@ -71,7 +69,6 @@ let rewrite_sexpr_to_t st ft xpr t =
     let typed_xpr = rewrite_sexpr st ft xpr in
     let () = check_t_sexpr t typed_xpr in
     typed_xpr
-
 
 (* checks that an assignment has the proper types *)
 let check_var_assign_use sym_tbl id xpr =
@@ -89,12 +86,12 @@ let check_s_output sym_tbl ft = function
 
 (*Check that the return statement has expressions with the right types*)
 let rec check_return_types = function 
-    | ((xpr :: s),(t :: types)) -> let () = (check_t_sexpr t xpr) in
+    | (xpr :: s),(t :: types) -> let () = (check_t_sexpr t xpr) in
         check_return_types (s, types)
     (*To few vals returned*)
-    | (([]),(t::types)) -> raise InvalidReturnTypeErr
+    | ([]),(t::types) -> raise InvalidReturnTypeErr
     (*to many vals returned*)
-    | ((xpr :: s),([])) -> raise InvalidReturnTypeErr
+    | (xpr :: s),([]) -> raise InvalidReturnTypeErr
     | [],[] -> ()
 
 (*Scan all stmts in a function for returns then check the types*)
@@ -104,18 +101,21 @@ let rec check_returns r = function
     | hd :: tl -> hd :: check_returns r tl
     | [] -> []
 
+(*takes an sfunc_lval list * var_type list, gotten the return type list in the funciton table
+  this checks if the left hand side vars or var decls are the same types as the return types. *)
 let rec check_lv_types = function 
-    | ((SFuncTypedId(t, _) :: tl), (expected_t :: types)) -> if t = expected_t
+    | (SFuncTypedId(t, _) :: tl), (expected_t :: types) -> if t = expected_t
             then check_lv_types  (tl, types)
         else raise ReturnTypeMismatchErr
-    | ((SFuncDecl(t, _) :: tl), (expected_t :: types)) -> if t = expected_t
+    | (SFuncDecl(t, _) :: tl), (expected_t :: types) -> if t = expected_t
             then check_lv_types  (tl, types)
         else raise ReturnTypeMismatchErr
-    | ((SFuncId(i) :: tl), _) -> raise SfuncIdNotReWritten
-    | ([], (t::types)) -> raise ReturnTypeMismatchErr
-    | ((s :: tl), []) -> raise ReturnTypeMismatchErr
-    | ([],[]) -> ()
+    | (SFuncId(i) :: tl), _ -> raise SfuncIdNotReWritten
+    | [], (t::types) -> raise ReturnTypeMismatchErr
+    | (s :: tl), [] -> raise ReturnTypeMismatchErr
+    | [],[] -> ()
 
+(*rewrite so ids have a type*)
 let rewrite_lv st = function 
     | SFuncId(i) -> SFuncTypedId((get_type i st), i)
     | SFuncDecl(t, sv) -> SFuncDecl(t, sv)
@@ -149,6 +149,7 @@ let rec var_analysis st ft = function
         SFuncCall(lv, id, xprs) :: (var_analysis st ft tl)
     | [] -> []
 
+(*adds any var decls on the left hand side of a function statement to the symbol table.*)
 let rec scope_lv st = function
     | SFuncDecl(t, (id, _)) :: tl -> let st = (add_sym t id st) in
         scope_lv st tl

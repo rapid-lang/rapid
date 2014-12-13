@@ -30,7 +30,7 @@ and sexpr =
     | SExprBool of bool_expr
     | SId of string
     | SCall of func_call_expr
-    | SCallTyped of var_type * func_call_expr
+    | SCallTyped of var_type * func_call_expr (*return type, id, arg expressions*)
     | NullExpr (*this is for implied  Null expr*)
     | UntypedNullExpr (*This is for when you type out null in rapid code.*)
 
