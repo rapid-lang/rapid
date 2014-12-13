@@ -14,6 +14,9 @@ let rec string_of_t = function
     | Float -> "float"
     | ListType(s) -> sprintf "list<%s>" (string_of_t s)
     | UserDef(s) -> sprintf "(USER_DEF %s)" s
+    | Void -> "void"
+    | Multi -> "multi return"
+    | Var -> "var"
 
 let bin_op_s = function
     | Add -> "+"

@@ -162,7 +162,8 @@ let sfunccall_to_code lv id xprs =
     let lhs = lv_to_code lv in
     let code_pairs = List.map sexpr_to_code xprs in
     let (tmps, refs) = gen_call ("","") code_pairs in
-    sprintf "%s\n%s = %s( %s )" tmps lhs id refs
+    if lhs = "" then sprintf "%s\n%s( %s )" tmps id refs
+        else sprintf "%s\n%s = %s( %s )" tmps lhs id refs
 
 let sast_to_code = function
     | SDecl(_, (id, xpr)) -> sassign_to_code (id, xpr)
@@ -183,22 +184,25 @@ let defaults_to_code = function
                 id
                 (sassign_to_code (id, xpr))
 
-let func_to_code f = 
-    let (id, args, rets, body) = f in
-    sprintf "func %s( %s ) (%s){\n%s\n%s\n}" 
-        id
-        (String.concat "," (List.map arg_to_code args))
-        (String.concat ", " (List.map go_type_from_type rets))
-        (String.concat "\n" (List.map defaults_to_code args))
-        (String.concat "\n" (List.map sast_to_code body))
-
 let rec grab_decls = function
     | SDecl(t, (id, _)) :: tl ->
         sprintf "var %s %s" id (go_type_from_type t) :: grab_decls tl
     | SFuncCall(lv, _,_) :: tl -> 
-        String.concat "\n" (List.map decls_from_lv lv) :: grab_decls tl
+        (String.concat "\n" (List.map decls_from_lv lv)) :: grab_decls tl
     | _ :: tl -> grab_decls tl
     | [] -> []
+
+let func_to_code f = 
+    let (id, args, rets, body) = f in
+    sprintf "func %s( %s ) (%s){\n%s\n%s\n%s\n}" 
+        id
+        (String.concat "," (List.map arg_to_code args))
+        (String.concat ", " (List.map go_type_from_type rets))
+        (String.concat "\n" (List.map defaults_to_code args))
+        (String.concat "\n"  (grab_decls body))
+        (String.concat "\n" (List.map sast_to_code body))
+
+
 
 let skeleton decls main fns = "package main\n import (\"fmt\")\n" ^
     "var _ = fmt.Printf\n" ^ decls ^ "\nfunc main() {\n" ^
