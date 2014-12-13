@@ -1,0 +1,22 @@
+
+int n = foo(); // this is vdecl stmnt with a funcall expr.
+
+boo(); //one statement
+
+func too(int b) string{
+    return "s";
+}
+
+// now w/ return type
+func foo() int {
+    int x;
+	(x, int y, string z) = boo(); //Also one statement, boo not an expr.
+	return 5;
+}
+
+// now w/ return type tuple
+func boo() int, int, string{
+	int a = 2;
+	int b = 3;
+	return a, foo(), too(b);
+}

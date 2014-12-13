@@ -54,6 +54,18 @@ let rec get_type id = function
             else get_type id scope_list
     | _ -> raise(VariatbleNotDefinedErr(Format.sprintf "%s is not defined" id))
 
+let get_return_type id ft = 
+    let (_, ret_t) = StringMap.find id ft in
+    match ret_t with
+        | [] -> Void
+        | t :: [] -> t
+        | t_list -> Multi
+
+let get_return_type_list id ft =
+    let (_, retl) = StringMap.find id ft in retl
+
+let get_arg_types id ft =
+    let (arg_ts, _) = StringMap.find id ft in arg_ts
 
 (* adds a new empty symbol table for use in the new scope *)
 let new_scope sym_tbl = empty_symbol_table :: sym_tbl
@@ -72,6 +84,7 @@ let sexpr_to_t expected_t = function
     | SExprBool _ -> Bool
     | SExprString _ -> String
     | NullExpr -> expected_t
+    | SCallTyped(t, _) -> t
     | UntypedNullExpr -> expected_t
     | SId _ | _ -> raise UnsupportedSexprTypeClassification
 

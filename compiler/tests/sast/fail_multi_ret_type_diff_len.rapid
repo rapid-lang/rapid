@@ -1,0 +1,9 @@
+int c;
+(int b, c) = boo();
+
+// now w/ return type tuple
+func boo() int, int, int {
+	int a = 2;
+	int b = 3;
+	return a, b, 4;
+}

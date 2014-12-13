@@ -35,6 +35,7 @@ let rec translate_expr = function
     | Ast.CastBool c  -> SExprBool(SBoolCast (translate_expr c))
     (* we put a placeholder with the ID in and check after and reclassify *)
     | Ast.Id id       -> SId id
+    | Ast.Call(id, expr) -> SCall(id, (List.map translate_expr expr))
     | Ast.Nullxpr -> UntypedNullExpr
     | _ -> raise UnsupportedExpressionType
 
@@ -62,10 +63,22 @@ let translate_output = function
     | Ast.Printf(format :: xpr_l) -> SPrintf(translate_expr format, List.map translate_expr xpr_l)
     | _ -> raise(UnsupportedOutputType("Not yet implemented"))
 
+let translate_vars = function
+    | Ast.ID(s) -> SFuncId(s)
+    | Ast.VDecl(vd) -> 
+        match translate_decl vd with 
+            | SDecl(t, (id, xpr)) -> SFuncDecl(t,(id, xpr))(*xpr will be None*)
+
+let translate_fcall id exprs = 
+    let sxprs = (List.map translate_expr exprs) in
+    (id, sxprs)
+
 let translate_statement = function
     | Ast.VarDecl vd -> translate_decl vd
     | Ast.Assign(id, xpr) -> SAssign(id, translate_expr xpr)
     | Ast.Output o -> SOutput(translate_output o)
+    | Ast.FuncCall(vl, (id, exprs)) -> let(id, sexprs) = translate_fcall id exprs in
+        SFuncCall((List.map translate_vars vl), id, sexprs)
     | _ -> raise(UnsupportedStatementTypeErr "type unknown")
 
 let translate_fstatement = function
