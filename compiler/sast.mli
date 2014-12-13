@@ -42,8 +42,8 @@ type svar_assign = string * sexpr
 
 type sfunc_lval = 
     | SFuncDecl of var_type * svar_assign (*always a vdecl*)
-    | SFuncId of string
-    | SFuncTypedId of var_type * string
+    | SFuncId of string (*after translate before second pass*)
+    | SFuncTypedId of var_type * string (*After second pass*)
 
 type semantic_stmt =
     | SAssign of svar_assign
