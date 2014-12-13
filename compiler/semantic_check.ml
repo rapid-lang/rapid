@@ -141,7 +141,8 @@ let rec var_analysis st ft = function
     | SFuncCall (lv, id, xprs) :: tl ->
         let lv = (List.map (rewrite_lv st) lv) in 
         let check_lv ft id = function
-            | [] -> ()
+            | [] -> () (*ignoring return types so foo(); is always a valid stmnt*)
+            (*If there is left hand side to the statement make sure types match*)
             | _ -> check_lv_types (lv, (get_return_type_list id ft)) in
         let () = check_lv ft id lv in
         let xprs = (List.map (rewrite_sexpr st ft) xprs) in
