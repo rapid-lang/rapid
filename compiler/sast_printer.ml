@@ -12,17 +12,17 @@ let string_expr_s = function
     | SStringVar id -> sprintf "(String Var: %s)" id
     | SStringNull -> "(String NULL)"
 
-let int_expr_s = function
+let rec int_expr_s = function
     | SIntExprLit i -> sprintf "(Int Lit: %d)" i
     | SIntVar id -> sprintf "(Int Var: %s)" id
+    | SIntCast e -> sprintf "(Cast (%s) to int)" (sexpr_s e)
     | SIntNull -> "(Int NULL)"
-
-let float_expr_s = function
+and float_expr_s = function
     | SFloatExprLit f -> sprintf "(Lit %f)" f
     | SFloatVar id -> sprintf "(Float Var %s)" id
+    | SFloatCast e -> sprintf "(Cast (%s) to float)" (sexpr_s e)
     | SFloatNull -> "(Float NULL)"
-
-let rec bool_expr_s = function
+and bool_expr_s = function
     | SBoolExprLit b -> sprintf "(Bool lit: %b)" b
     | SBoolVar id -> sprintf "(Bool Var: %s)" id
     | SBoolCast e -> sprintf "(Cast (%s) to boolean)" (sexpr_s e)

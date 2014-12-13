@@ -57,6 +57,12 @@ let rec rewrite_sexpr st ft = function
     | SExprBool(SBoolCast e) ->
         let xpr = rewrite_sexpr st ft e in
            SExprBool(SBoolCast(xpr))
+    | SExprInt(SIntCast e) ->
+        let xpr = rewrite_sexpr st ft e in
+           SExprInt(SIntCast(xpr))
+    | SExprFloat(SFloatCast e) ->
+        let xpr = rewrite_sexpr st ft e in
+           SExprFloat(SFloatCast(xpr))
     | SCall(id, xprs) ->
         let xprs = (List.map (rewrite_sexpr st ft) xprs) in
         let () = check_arg_types ((get_arg_types id ft), xprs) in

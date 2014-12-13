@@ -40,7 +40,7 @@ let translate_int_xpr = function
 
 let translate_float_xpr = function
     | Ast.FloatLit i -> SFloatExprLit i
-    | Ast.CastInt c  -> SIntCast (translate_expr c)
+    | Ast.CastFloat c  -> SFloatCast (translate_expr c)
     | _ -> raise InvalidIntExprType
 
 let translate_string_xpr = function

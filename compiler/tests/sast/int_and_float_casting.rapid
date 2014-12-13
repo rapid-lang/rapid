@@ -1,5 +1,2 @@
-float f = 5.3;
-int x = int(f);
-
 float d = 3.3;
-int y = float(d);
+int y = int(d);

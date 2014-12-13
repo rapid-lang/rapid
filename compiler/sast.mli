@@ -15,7 +15,7 @@ type int_expr =
 and float_expr =
     | SFloatExprLit of float
     | SFloatVar of string
-    | SIntCast of sexpr
+    | SFloatCast of sexpr
     | SFloatNull
 and bool_expr =
     | SBoolExprLit of bool
