@@ -1,5 +1,5 @@
 
-(int n) = foo(); // this is vdecl stmnt with a funcall expr.
+int n = foo(); // this is vdecl stmnt with a funcall expr.
 n = 2;
 boo(); //one statement
 
