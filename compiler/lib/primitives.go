@@ -24,3 +24,23 @@ func StringToBool(s String) Bool {
 	tmp := !(s == nil || *s == "")
 	return Bool(&tmp)
 }
+
+func IntToFloat(i Int) Float {
+	tmp := float64(*i)
+	return Float(&tmp)
+}
+
+func FloatToFloat(f Float) Float {
+	tmp := float64(*f)
+	return Float(&tmp)
+}
+
+func FloatToInt(f Float) Int {
+	tmp := int(*f)
+	return Int(&tmp)
+}
+
+func IntToInt(i Int) Int {
+	tmp := int(*i)
+	return Int(&tmp)
+}
