@@ -1,6 +1,6 @@
 int b = 1;
 
-b = foo(foo(b, "hi"), "bye");
+b = foo(foo(2));
 
 println(b);
 

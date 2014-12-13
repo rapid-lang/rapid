@@ -38,12 +38,12 @@ let is_not_default x = (x = NullExpr)
 
 let rec check_arg_types = function
     | (((t, _)::tl),(param :: pl)) -> let () = check_t_sexpr t param in
-        check_arg_types (tl, pl)
+        param :: check_arg_types (tl, pl)
     | (((_, xpr) :: tl), []) -> if (is_not_default xpr) 
             then raise TooFewArgsErr
-        else () (*This is the case where the user didn't enter some optional args*)
+        else NullExpr :: check_arg_types (tl, []) (*This is the case where the user didn't enter some optional args*)
     | ([], (param :: pl)) -> raise TooManyArgsErr
-    | ([],[]) -> () 
+    | ([],[]) -> [] 
 
 (* Takes a symbol table and sexpr and rewrites variable references to be typed *)
 let rec rewrite_sexpr st ft = function
@@ -59,7 +59,7 @@ let rec rewrite_sexpr st ft = function
            SExprBool(SBoolCast(xpr))
     | SCall(id, xprs) ->
         let xprs = (List.map (rewrite_sexpr st ft) xprs) in
-        let () = check_arg_types ((get_arg_types id ft), xprs) in
+        let xprs = check_arg_types ((get_arg_types id ft), xprs) in
         SCallTyped((get_return_type id ft), (id, xprs))
     (* TODO: add all new expressions that can contain variable references to be simplified *)
     | xpr -> xpr
@@ -152,7 +152,7 @@ let rec var_analysis st ft = function
             | _ -> check_lv_types (lv, (get_return_type_list id ft)) in
         let () = check_lv ft id lv in
         let xprs = (List.map (rewrite_sexpr st ft) xprs) in
-        let () = check_arg_types ((get_arg_types id ft), xprs) in
+        let xprs = check_arg_types ((get_arg_types id ft), xprs) in
         let st = scope_lv st lv in 
         SFuncCall(lv, id, xprs) :: (var_analysis st ft tl)
     | [] -> []
