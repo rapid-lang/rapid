@@ -25,6 +25,8 @@ exception SfuncIdNotReWritten
 exception TooFewArgsErr
 exception TooManyArgsErr
 
+type allowed_types = AllTypes | NumberTypes
+
 (* Takes a type and a typed sexpr and confirms it is the proper type *)
 let check_t_sexpr expected_t xpr =
     let found_t = sexpr_to_t expected_t xpr in
@@ -42,11 +44,12 @@ let is_not_default x = (x = NullExpr)
 let rec check_arg_types = function
     | (((t, _)::tl),(param :: pl)) -> let () = check_t_sexpr t param in
         param :: check_arg_types (tl, pl)
-    | (((_, xpr) :: tl), []) -> if (is_not_default xpr) 
+    | (((_, xpr) :: tl), []) -> if (is_not_default xpr)
             then raise TooFewArgsErr
         else NullExpr :: check_arg_types (tl, []) (*This is the case where the user didn't enter some optional args*)
     | ([], (param :: pl)) -> raise TooManyArgsErr
-    | ([],[]) -> [] 
+    | ([],[]) -> []
+
 
 (* Takes a symbol table and sexpr and rewrites variable references to be typed *)
 let rec rewrite_sexpr st ft = function
@@ -57,15 +60,24 @@ let rec rewrite_sexpr st ft = function
         | Float -> SExprFloat(SFloatVar id)
         | Bool -> SExprBool(SBoolVar id)
         | _ -> raise UnsupportedDatatypeErr)
-    | SExprBool(SBoolCast e) ->
-        let xpr = rewrite_sexpr st ft e in
-           SExprBool(SBoolCast(xpr))
+    | SExprBool(SBoolCast e) -> SExprBool(SBoolCast(rewrite_cast st ft e AllTypes))
+    | SExprInt(SIntCast e) -> SExprInt(SIntCast(rewrite_cast st ft e NumberTypes))
+    | SExprFloat(SFloatCast e) -> SExprFloat(SFloatCast(rewrite_cast st ft e NumberTypes))
+    | SExprString(SStringCast e) -> SExprString(SStringCast(rewrite_cast st ft e AllTypes))
     | SCall(id, xprs) ->
         let xprs = (List.map (rewrite_sexpr st ft) xprs) in
         let xprs = check_arg_types ((get_arg_types id ft), xprs) in
         SCallTyped((get_return_type id ft), (id, xprs))
     (* TODO: add all new expressions that can contain variable references to be simplified *)
     | xpr -> xpr
+and rewrite_cast st ft xpr t_opt =
+    let xpr = rewrite_sexpr st ft xpr in
+    let t = sexpr_to_t Void xpr in
+    match (t_opt, t) with
+        | (AllTypes, (Int | Float | String | Bool)) -> xpr
+        | (NumberTypes, (Int | Float)) -> xpr
+        | _ -> raise(InvalidTypeErr(sprintf
+            "Cast cannot use %s expression" (Ast_printer.string_of_t t)))
 
 (* typechecks a sexpr *)
 let rewrite_sexpr_to_t st ft xpr t =
@@ -119,7 +131,7 @@ let rec check_lv_types = function
     | [],[] -> ()
 
 (*rewrite so ids have a type*)
-let rewrite_lv st = function 
+let rewrite_lv st = function
     | SFuncId(i) -> SFuncTypedId((get_type i st), i)
     | SFuncDecl(t, sv) -> SFuncDecl(t, sv)
 
@@ -127,8 +139,8 @@ let rewrite_lv st = function
 let rec scope_lv st = function
     | SFuncDecl(t, (id, _)) :: tl -> let st = (add_sym t id st) in
         scope_lv st tl
-    | SFuncId(i) :: tl -> scope_lv st tl 
-    | SFuncTypedId(_, _) :: tl -> scope_lv st tl 
+    | SFuncId(i) :: tl -> scope_lv st tl
+    | SFuncTypedId(_, _) :: tl -> scope_lv st tl
     | [] -> st
 
 (* Processes an unsafe SAST and returns a type checked SAST *)
@@ -149,7 +161,7 @@ let rec var_analysis st ft = function
     | SReturn(s) :: tl -> let xprs = List.map (rewrite_sexpr st ft) s in
          SReturn(xprs) :: (var_analysis st ft tl)
     | SFuncCall (lv, id, xprs) :: tl ->
-        let lv = (List.map (rewrite_lv st) lv) in 
+        let lv = (List.map (rewrite_lv st) lv) in
         let check_lv ft id = function
             | [] -> () (*ignoring return types so foo(); is always a valid stmnt*)
             (*If there is left hand side to the statement make sure types match*)
@@ -157,7 +169,7 @@ let rec var_analysis st ft = function
         let () = check_lv ft id lv in
         let xprs = (List.map (rewrite_sexpr st ft) xprs) in
         let xprs = check_arg_types ((get_arg_types id ft), xprs) in
-        let st = scope_lv st lv in 
+        let st = scope_lv st lv in
         SFuncCall(lv, id, xprs) :: (var_analysis st ft tl)
     | [] -> []
 

@@ -7,27 +7,7 @@ exception UnsupportedSOutput
 exception UntypedVariableReference of string
 
 
-let string_expr_s = function
-    | SStringExprLit s -> sprintf "(String Lit: %s)" s
-    | SStringVar id -> sprintf "(String Var: %s)" id
-    | SStringNull -> "(String NULL)"
-
-let int_expr_s = function
-    | SIntExprLit i -> sprintf "(Int Lit: %d)" i
-    | SIntVar id -> sprintf "(Int Var: %s)" id
-    | SIntNull -> "(Int NULL)"
-
-let float_expr_s = function
-    | SFloatExprLit f -> sprintf "(Lit %f)" f
-    | SFloatVar id -> sprintf "(Float Var %s)" id
-    | SFloatNull -> "(Float NULL)"
-
-let rec bool_expr_s = function
-    | SBoolExprLit b -> sprintf "(Bool lit: %b)" b
-    | SBoolVar id -> sprintf "(Bool Var: %s)" id
-    | SBoolCast e -> sprintf "(Cast (%s) to boolean)" (sexpr_s e)
-    | SBoolNull -> "(Bool NULL)"
-and sexpr_s = function
+let rec sexpr_s = function
     | SExprInt i -> int_expr_s i
     | SExprString s -> string_expr_s s
     | SExprFloat s -> float_expr_s s
@@ -41,6 +21,26 @@ and sexpr_s = function
         "Variable references must be rewritten with type information"))
     | UntypedNullExpr -> "(HARD NULL EXPR)"
     | _ -> raise UnsupportedSexpr
+and string_expr_s = function
+    | SStringExprLit s -> sprintf "(String Lit: %s)" s
+    | SStringVar id -> sprintf "(String Var: %s)" id
+    | SStringCast xpr -> sprintf "String Cast (%s)" (sexpr_s xpr)
+    | SStringNull -> "(String NULL)"
+and int_expr_s = function
+    | SIntExprLit i -> sprintf "(Int Lit: %d)" i
+    | SIntVar id -> sprintf "(Int Var: %s)" id
+    | SIntCast e -> sprintf "(Cast (%s) to int)" (sexpr_s e)
+    | SIntNull -> "(Int NULL)"
+and float_expr_s = function
+    | SFloatExprLit f -> sprintf "(Lit %f)" f
+    | SFloatVar id -> sprintf "(Float Var %s)" id
+    | SFloatCast e -> sprintf "(Cast (%s) to float)" (sexpr_s e)
+    | SFloatNull -> "(Float NULL)"
+and bool_expr_s = function
+    | SBoolExprLit b -> sprintf "(Bool lit: %b)" b
+    | SBoolVar id -> sprintf "(Bool Var: %s)" id
+    | SBoolCast e -> sprintf "(Cast (%s) to boolean)" (sexpr_s e)
+    | SBoolNull -> "(Bool NULL)"
 
 let soutput_s = function
     | SPrintln xpr_l -> sprintf "(Println(%s))"

@@ -1,0 +1,8 @@
+int i = 4;
+float f = float(i);
+
+float d = 3.14;
+int j = int(d);
+
+println(f);
+println(j);

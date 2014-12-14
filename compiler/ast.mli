@@ -1,7 +1,7 @@
 open Datatypes
 
 
-type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | Qmark  
+type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | Qmark
 
 type expr =
     | Id of string
@@ -11,6 +11,7 @@ type expr =
     | FloatLit of float
     | Binop of expr * op * expr
     | Call of fcall
+    | Cast of var_type * expr
     | CastBool of expr
     | ListLit of expr list
     | Noexpr
@@ -24,7 +25,7 @@ type print =
     | Println of expr list
 
 (*Used for function calling*)
-type vars = 
+type vars =
     | ID of string
     | VDecl of vdecl
 

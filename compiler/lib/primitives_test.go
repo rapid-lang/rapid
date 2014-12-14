@@ -81,3 +81,43 @@ func TestString(t *testing.T) {
 		t.Error("String s should cast to false")
 	}
 }
+
+func TestCastFloat(t *testing.T) {
+	tmp := 3.14
+	var f Float = &tmp
+
+	i := FloatToInt(f)
+	if *i != 3 {
+		t.Error("Float cast to int failed")
+	}
+
+	f2 := FloatToFloat(f)
+	if *f2 != *f {
+		t.Error("Float cast to float failed")
+	}
+}
+
+func TestCastInt(t *testing.T) {
+	tmp := 7
+	var i Int = &tmp
+
+	f := IntToFloat(i)
+	if *f != 7.0 {
+		t.Error("Float cast to float failed")
+	}
+
+	i2 := IntToInt(i)
+	if *i2 != 7 {
+		t.Error("Float cast to int failed")
+	}
+}
+
+func TestCastToString(t *testing.T) {
+	tmp := 3.14
+	var f Float = &tmp
+
+	s := FloatToString(f)
+	if *s != "3.14" {
+		t.Errorf("Float cast to string failed: produced %s", *s)
+	}
+}

@@ -25,6 +25,7 @@
 %left LT GT LEQ GEQ
 %left PLUS MINUS
 %left TIMES DIVIDE
+%left CASTBOOL
 
 %start program
 %type <Ast.program> program
@@ -79,7 +80,7 @@ arguments:
 formal_list:
     /* TODO: allow user defined types */
     | primtype ID { [($1, $2, None)] }
-    | primtype ID ASSIGN lit {[($1, $2, Some($4))]}                 
+    | primtype ID ASSIGN lit {[($1, $2, Some($4))]}
     | formal_list COMMA primtype ID { ($3, $4, None) :: $1 }
     | formal_list COMMA primtype ID ASSIGN lit {($3, $4, Some($6)) :: $1}
 
@@ -159,7 +160,8 @@ expr:
     | expr LEQ    expr { Binop($1, Leq,   $3) }
     | expr GT     expr { Binop($1, Greater,  $3) }
     | expr GEQ    expr { Binop($1, Geq,   $3) }
-    | expr CASTBOOL    { CastBool $1 }  
+    | expr CASTBOOL    { CastBool $1 }
+    | primtype LPAREN expr RPAREN { Cast($1, $3) }
     | fcall            { Call $1 }
     | LPAREN expr RPAREN { $2 }
     | LBRACKET expression_list_opt RBRACKET { ListLit $2 }

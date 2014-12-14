@@ -44,6 +44,7 @@ let rec expr_s = function
     | StringLit s -> sprintf "(String literal %s)" s
     | FloatLit f -> sprintf "(Float literal %f)" f
     | CastBool e -> sprintf "(Cast (%s) to boolean)" (expr_s e)
+    | Cast(t, i) -> sprintf "(Cast (%s) to %s)" (expr_s i) (string_of_t t)
     | ListLit l -> sprintf "(List literal [%s])"
         (String.concat ", " (List.map expr_s l))
     | Noexpr -> "( NOEXPR )"
