@@ -122,25 +122,16 @@ and list_sexpr_to_code deref_string xpr_l =
     let setups = List.map (fun (s, _) -> s) trans in
     let refs = List.map (fun (_, r) -> deref_string^r) trans in
     setups, refs
-and bin_op_to_code lhs o rhs = function
-    | None ->  let setup1, lefts = sexpr_to_code lhs in
-        let setup2, rights = sexpr_to_code rhs in
-        let os = op_to_code o in
-        let tmp_var = (rand_var_gen ()) in
-        let new_tmps = sprintf "%s := *%s %s *%s" tmp_var lefts (op_to_code o) rights in
-        (setup1 ^ "\n" ^ setup2 ^ "\n" ^ new_tmps) , (sprintf "&%s" tmp_var)
-    | Left ->  let setup1, lefts = cast_to_code Float lhs in
-        let setup2, rights = sexpr_to_code rhs in
-        let os = op_to_code o in
-        let tmp_var = (rand_var_gen ()) in
-        let new_tmps = sprintf "%s := *%s %s *%s" tmp_var lefts (op_to_code o) rights in
-        (setup1 ^ "\n" ^ setup2 ^ "\n" ^ new_tmps) , (sprintf "&%s" tmp_var)
-    | Right -> let setup2, rights = cast_to_code Float rhs in
-        let setup1, lefts = sexpr_to_code lhs in
-        let os = op_to_code o in
-        let tmp_var = (rand_var_gen ()) in
-        let new_tmps = sprintf "%s := *%s %s *%s" tmp_var lefts (op_to_code o) rights in
-        (setup1 ^ "\n" ^ setup2 ^ "\n" ^ new_tmps) , (sprintf "&%s" tmp_var)
+and bin_op_to_code lhs o rhs side = 
+    let (setup1, lefts), (setup2, rights) = match side with 
+        | None ->  sexpr_to_code lhs, sexpr_to_code rhs
+        | Left ->  (cast_to_code Float lhs), sexpr_to_code rhs
+        | Right ->  sexpr_to_code lhs, (cast_to_code Float rhs)
+    in
+    let os = op_to_code o in
+    let tmp_var = (rand_var_gen ()) in
+    let new_tmps = sprintf "%s := *%s %s *%s" tmp_var lefts (op_to_code o) rights in
+    (setup1 ^ "\n" ^ setup2 ^ "\n" ^ new_tmps) , (sprintf "&%s" tmp_var)
 
 let sassign_to_code = function
     | (id, xpr) ->

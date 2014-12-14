@@ -1,5 +1,5 @@
 float a = 3 + 5.5;
-float b = 7 - 5.5;
+float b = 6.5 - 5;
 
 println(a);
 println(b);
