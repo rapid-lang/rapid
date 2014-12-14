@@ -24,6 +24,8 @@ exception ReturnTypeMismatchErr
 exception SfuncIdNotReWritten
 exception TooFewArgsErr
 exception TooManyArgsErr
+exception InvalidBinaryOp
+exception BinOpTypeMismatchErr
 
 (* Takes a type and a typed sexpr and confirms it is the proper type *)
 let check_t_sexpr expected_t xpr =
@@ -48,6 +50,15 @@ let rec check_arg_types = function
     | ([], (param :: pl)) -> raise TooManyArgsErr
     | ([],[]) -> [] 
 
+let get_cast_side = function 
+    | (Int, Float) -> Right
+    | (Float, Int) -> Left
+    | (String, String) -> None
+    | (Bool, Bool) -> None
+    | (Int, Int) -> None
+    | (Float, Float) -> None
+    | _ -> raise BinOpTypeMismatchErr
+
 (* Takes a symbol table and sexpr and rewrites variable references to be typed *)
 let rec rewrite_sexpr st ft = function
     | SId id -> (
@@ -64,6 +75,21 @@ let rec rewrite_sexpr st ft = function
         let xprs = (List.map (rewrite_sexpr st ft) xprs) in
         let xprs = check_arg_types ((get_arg_types id ft), xprs) in
         SCallTyped((get_return_type id ft), (id, xprs))
+    | SBinop (lhs, o, rhs) -> let lhs = rewrite_sexpr st ft lhs in
+        let rhs = rewrite_sexpr st ft rhs in
+        let lt = sexpr_to_t Void lhs in
+        let rt = sexpr_to_t Void rhs in
+        let possible_ts = get_op_types o in
+        if (List.mem rt possible_ts) && (List.mem lt possible_ts) then
+            match o with
+            | Ast.Less | Ast.Greater | Ast.Leq | Ast.Geq | Ast.Equal | Ast.Neq-> 
+                let side = get_cast_side (lt, rt) in 
+                SExprBool(SBoolBinOp(lhs, o, rhs, side)) (*bool exprs allow casting *)
+            | _ -> if(rt = lt) then match lt with
+                    | Int -> SExprInt(SIntBinOp(lhs, o, rhs))
+                    | Float -> SExprFloat(SFloatBinOp(lhs, o, rhs))
+                else raise BinOpTypeMismatchErr
+        else raise InvalidBinaryOp
     (* TODO: add all new expressions that can contain variable references to be simplified *)
     | xpr -> xpr
 

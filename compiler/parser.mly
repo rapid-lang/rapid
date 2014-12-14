@@ -4,9 +4,9 @@
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
-%token LBRACKET RBRACKET LTGEN GTGEN LIST
+%token LBRACKET RBRACKET LIST
 %token PLUS MINUS TIMES DIVIDE ASSIGN CASTBOOL
-%token EQ NEQ LT LEQ GT GEQ
+%token EQ NEQ LT LEQ GT GEQ AND OR
 %token RETURN IF ELSE FOR WHILE FUNC IN
 %token PRINTLN PRINTF // LOG
 // %token INT BOOL FLOAT STRING
@@ -21,7 +21,7 @@
 %nonassoc NOELSE
 %nonassoc ELSE
 %right ASSIGN
-%left EQ NEQ
+%left EQ NEQ AND OR
 %left LT GT LEQ GEQ
 %left PLUS MINUS
 %left TIMES DIVIDE
@@ -35,7 +35,7 @@
 
 primtype:
     | TYPE { Ast_printer.string_to_t $1 }
-    | LIST LTGEN primtype GTGEN { ListType $3 }
+    | LIST LT primtype GT { ListType $3 }
     /* todo: add arrays and dicts to primtype */
 
 
@@ -159,6 +159,8 @@ expr:
     | expr LEQ    expr { Binop($1, Leq,   $3) }
     | expr GT     expr { Binop($1, Greater,  $3) }
     | expr GEQ    expr { Binop($1, Geq,   $3) }
+    | expr AND    expr { Binop($1, And, $3) }
+    | expr OR    expr  { Binop($1, Or, $3 )}
     | expr CASTBOOL    { CastBool $1 }  
     | fcall            { Call $1 }
     | LPAREN expr RPAREN { $2 }

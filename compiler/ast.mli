@@ -1,7 +1,7 @@
 open Datatypes
 
 
-type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | Qmark  
+type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | Qmark | Or | And 
 
 type expr =
     | Id of string

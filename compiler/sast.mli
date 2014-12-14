@@ -1,28 +1,30 @@
 open Ast
 open Datatypes
 
+type cast_side = | Left | Right | None
 
 type int_expr =
     | SIntExprLit of int
     | SIntVar of string
+    | SIntBinOp of sexpr * op * sexpr
     | SIntNull
-
-type float_expr =
+and float_expr =
     | SFloatExprLit of float
     | SFloatVar of string
+    | SFloatBinOp of sexpr * op * sexpr
     | SFloatNull
-
-type string_expr =
+and string_expr =
     | SStringExprLit of string
     | SStringVar of string
     | SStringNull
-
-type bool_expr =
+and bool_expr =
     | SBoolExprLit of bool
     | SBoolVar of string
     | SBoolCast of sexpr
+    | SBoolBinOp of sexpr * op * sexpr * cast_side
     | SBoolNull 
 and func_call_expr = string * sexpr list
+and bin_expr = sexpr * op * sexpr
 and sexpr =
     | SExprInt of int_expr
     | SExprString of string_expr
@@ -31,6 +33,7 @@ and sexpr =
     | SId of string
     | SCall of func_call_expr
     | SCallTyped of var_type * func_call_expr (*return type, id, arg expressions*)
+    | SBinop of bin_expr
     | NullExpr (*this is for implied  Null expr*)
     | UntypedNullExpr (*This is for when you type out null in rapid code.*)
 
