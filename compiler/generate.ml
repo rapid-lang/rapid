@@ -12,6 +12,7 @@ exception UnsupportedFloatExprType
 exception UnsupportedOutputType
 exception UnsupportedSExprType of string
 exception UnsupportedBoolExprType
+exception UnsupportedListExprType
 exception UnsupportedDeclType of string
 exception UnsupportedDatatypeErr
 exception StringExpressionsRequired
@@ -19,12 +20,18 @@ exception StringExpressionsRequired
 
 let rand_var_gen _ = "tmp_" ^ Int64.to_string (Random.int64 Int64.max_int)
 
-let go_type_from_type = function
+let rec go_type_from_type = function
     | Int -> "Int"
     | Float -> "Float"
     | Bool -> "Bool"
     | String -> "String"
+    | ListType(t) ->
+        sprintf "%sList" (go_type_from_type t)
     | _ -> raise UnsupportedDatatypeErr
+and go_tmp_type_from_type = function
+    | ListType(t) ->
+        sprintf "[]%s" (go_type_from_type t)
+    | other_t -> go_type_from_type other_t
 
 let go_type_from_sexpr = function
     | SExprInt _ -> go_type_from_type Int
@@ -46,6 +53,7 @@ let rec sexpr_to_code = function
     | SExprString s -> string_expr_to_code s
     | SExprFloat f -> float_expr_to_code f
     | SExprBool b -> bool_expr_to_code b
+    | SExprList l -> list_expr_to_code l
     | SCallTyped(t, (id, args)) -> func_expr_to_code id args
     | NullExpr -> "", "nil"
     | s -> raise(UnsupportedSExprType(Sast_printer.sexpr_s s))
@@ -114,21 +122,49 @@ and cast_to_code t xpr =
     let cast = sprintf "%sTo%s(%s)" src_type dest_type var in
     setup, cast
 and func_expr_to_code id arg_xrps =
-    let (tmps, refs) = (list_sexpr_to_code "" arg_xrps) in
+    let (tmps, refs) = (list_of_sexpr_to_code "" arg_xrps) in
     let call = sprintf "%s(%s)" id (String.concat ", " refs) in
     (String.concat "\n" tmps), call
-and list_sexpr_to_code deref_string xpr_l =
+(* Helper function that turns a list of expressions into code *)
+and list_of_sexpr_to_code deref_string xpr_l =
     let trans = List.map sexpr_to_code xpr_l in
     let setups = List.map (fun (s, _) -> s) trans in
     let refs = List.map (fun (_, r) -> deref_string^r) trans in
     setups, refs
-and bin_op_to_code lhs o rhs  = 
+and bin_op_to_code lhs o rhs  =
     let setup1, lefts = sexpr_to_code lhs in
     let setup2, rights = sexpr_to_code rhs in
     let os = op_to_code o in
     let tmp_var = (rand_var_gen ()) in
     let new_tmps = sprintf "%s := *%s %s *%s" tmp_var lefts (op_to_code o) rights in
     (setup1 ^ "\n" ^ setup2 ^ "\n" ^ new_tmps) , (sprintf "&%s" tmp_var)
+(* Takes a single expr of type list and converts to code *)
+and list_expr_to_code = function
+    | SListExprLit(Some(t), l) ->
+        let tmp_var = rand_var_gen () in
+        let setups, refs = list_of_sexpr_to_code "" l in
+        let setups = String.concat "\n" setups in
+        let list_setup = sprintf "\n%s := %s{%s}"
+            tmp_var
+            (go_tmp_type_from_type t)
+            (String.concat ", " refs) in
+        setups ^ list_setup,
+        sprintf "&%s" tmp_var
+    | SListVar(t, id) ->
+        let tmp_var = rand_var_gen () in
+            sprintf "%s := %s" tmp_var id,
+            sprintf "%s"
+                tmp_var
+    | SListAccess(xpr_l, xpr_r) ->
+        let setup_l, ref_l = sexpr_to_code xpr_l in
+        let setup_r, ref_r = sexpr_to_code xpr_r in
+        sprintf "%s\n%s"
+            setup_l
+            setup_r,
+        sprintf "(*%s)[*%s]"
+            ref_l
+            ref_r
+    | _ -> raise UnsupportedListExprType
 
 let sassign_to_code = function
     | (id, xpr) ->
@@ -140,12 +176,12 @@ let sassign_to_code = function
 
 let soutput_to_code = function
     | SPrintln xpr_l ->
-        let (setups, refs) = list_sexpr_to_code "*" xpr_l in
+        let (setups, refs) = list_of_sexpr_to_code "*" xpr_l in
             sprintf "%s\nfmt.Println(%s)"
                 (String.concat "\n" setups)
                 (String.concat "," refs)
     | SPrintf(s, xpr_l) ->
-        let (setups, refs) = list_sexpr_to_code "*" xpr_l in
+        let (setups, refs) = list_of_sexpr_to_code "*" xpr_l in
             sprintf "%s\nfmt.Printf(%s, %s)"
                 (String.concat "\n" setups)
                 (get_string_literal_from_sexpr s)
@@ -154,7 +190,7 @@ let soutput_to_code = function
 
 
 let sreturn_to_code xprs =
-    let (tmps, refs) = list_sexpr_to_code "" xprs in
+    let (tmps, refs) = list_of_sexpr_to_code "" xprs in
     sprintf "%s\n return %s" (String.concat "\n" tmps) (String.concat ", " refs)
 
 let decls_from_lv = function
@@ -169,7 +205,7 @@ let lv_to_code lv =
 
 let sfunccall_to_code lv id xprs =
     let lhs = lv_to_code lv in
-    let (tmps, refs) = list_sexpr_to_code "" xprs in
+    let (tmps, refs) = list_of_sexpr_to_code "" xprs in
     let tmps = String.concat "\n" tmps in
     let refs = String.concat "," refs in
     if lhs = "" then sprintf "%s\n%s( %s )" tmps id refs
@@ -214,7 +250,7 @@ let func_to_code f =
 
 
 
-let skeleton decls main fns = "package main\n import (\"fmt\")\n" ^
+let skeleton decls main fns = "package main\nimport (\"fmt\")\n" ^
     "var _ = fmt.Printf\n" ^ decls ^ "\nfunc main() {\n" ^
     main ^ "\n}\n " ^ fns
 

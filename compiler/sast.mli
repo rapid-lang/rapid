@@ -19,7 +19,7 @@ and int_expr =
 and float_expr =
     | SFloatExprLit of float
     | SFloatVar of string
-    | SFloatBinOp of sexpr * op * sexpr 
+    | SFloatBinOp of sexpr * op * sexpr
     | SFloatCast of sexpr
     | SFloatAcc of string * string
     | SFloatNull
@@ -27,11 +27,16 @@ and bool_expr =
     | SBoolExprLit of bool
     | SBoolVar of string
     | SBoolCast of sexpr
-    | SBoolBinOp of sexpr * op * sexpr 
+    | SBoolBinOp of sexpr * op * sexpr
     | SBoolAcc of string * string
     | SBoolNull
 and func_call_expr = string * sexpr list
 and bin_expr = sexpr * op * sexpr
+and list_expr =
+    | SListExprLit of var_type option * sexpr list
+    | SListVar of var_type * string
+    | SListAccess of sexpr * sexpr
+    | SListNull
 and sexpr =
     | SExprInt of int_expr
     | SExprString of string_expr
@@ -39,6 +44,7 @@ and sexpr =
     | SExprBool of bool_expr
     | SExprUserDef of user_def_expr
     | SExprAccess of sexpr * string
+    | SExprList of list_expr
     | SId of string
     | SCall of func_call_expr
     | SCallTyped of var_type * func_call_expr (*return type, id, arg expressions*)

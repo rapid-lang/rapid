@@ -1,0 +1,11 @@
+list<string> x;
+list<int> y = [];
+list<int> z = [1, 2, 3];
+
+list<list<int>> a = [
+  z,
+  [1, 2]
+];
+
+println(a[0][0]);
+println(a[1][1]);

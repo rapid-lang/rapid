@@ -11,7 +11,7 @@ exception ExistingClassErr
 exception ExistingActualErr
 exception ExistingAttributeErr of string
 exception MissingSymbolTablesErr
-exception VariatbleNotDefinedErr of string
+exception VariableNotDefinedErr of string
 exception ClassNotDefinedErr of string
 exception AttributeNotDefinedErr of string
 exception MissingActualErr of string
@@ -36,7 +36,7 @@ module StringMap = Map.Make(String)
 
 let empty_function_table = StringMap.empty
 
-(*add a (id -> typelist*typelist into the funciton table*)
+(*add a (id -> typelist*typelist into the function table*)
 let add_func ft id arg_ts ret_ts =
     if StringMap.mem id ft
         then raise ExistingFuncErr
@@ -67,7 +67,7 @@ let rec get_type id = function
         if StringMap.mem id current_scope
             then StringMap.find id current_scope
             else get_type id scope_list
-    | _ -> raise(VariatbleNotDefinedErr(Format.sprintf "%s is not defined" id))
+    | _ -> raise(VariableNotDefinedErr(Format.sprintf "%s is not defined" id))
 
 let get_return_type id ft =
     let (_, ret_t) = StringMap.find id ft in
@@ -153,7 +153,7 @@ let get_actl_type actl_tbl key =
 
 
 (* returns the type of a typed sexpr *)
-let sexpr_to_t expected_t = function
+let rec sexpr_to_t expected_t = function
     | SExprInt _ -> Int
     | SExprFloat _ -> Float
     | SExprBool _ -> Bool
@@ -164,5 +164,13 @@ let sexpr_to_t expected_t = function
     | NullExpr -> expected_t
     | SCallTyped(t, _) -> t
     | UntypedNullExpr -> expected_t
+    | SExprList l -> (
+        match l with
+        | SListExprLit(Some(t), _) -> t
+        | SListExprLit(None, _) -> expected_t
+        | SListVar(t, _) -> ListType t
+        | SListAccess(xpr_l, xpr_r) -> sexpr_to_t expected_t xpr_l
+        | _ -> raise UnsupportedSexprTypeClassification
+    )
     | SId _ | _ -> raise UnsupportedSexprTypeClassification
 

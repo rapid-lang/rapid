@@ -54,6 +54,9 @@ let rec expr_s = function
         id
         ("\n\t" ^ (String.concat ",\n\t " (List.map actual_s actls)))
     | Access(e, mem) -> sprintf "(ACCESS %s.%s)" (expr_s e) mem
+    | ListAccess(xpr_l, xpr_r) -> sprintf "(List access %s at index %s)"
+        (expr_s xpr_l)
+        (expr_s xpr_r)
     | Noexpr -> "( NOEXPR )"
     | Nullxpr -> "(Null)"
 

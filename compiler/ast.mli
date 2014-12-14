@@ -1,6 +1,6 @@
 open Datatypes
 
-type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | Qmark | Or | And | Mod 
+type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | Qmark | Or | And | Mod
 
 type expr =
     | Id of string
@@ -13,6 +13,7 @@ type expr =
     | Cast of var_type * expr
     | CastBool of expr
     | ListLit of expr list
+    | ListAccess of expr * expr
     | UserDefInst of string * actual list
     | Access of expr * string
     | Noexpr
