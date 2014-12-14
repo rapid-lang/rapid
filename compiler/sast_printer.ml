@@ -39,7 +39,7 @@ let rec sexpr_s = function
     | SExprBool b -> bool_expr_s b
     | SExprUserDef u -> user_def_expr_s u
     | SExprAccess (e, m) -> raise(UntypedAccess(
-        "Accesses must be wrewritten with type information"))
+        "Accesses must be rewritten with type information"))
     | SId _ -> raise(UntypedVariableReference(
         "Variable references must be rewritten with type information"))
     | NullExpr -> "(NULL EXPR)"
@@ -52,8 +52,8 @@ and user_def_expr_s = function
             cls
             ("\n\t" ^ (String.concat ",\n\t" (List.map sactual_s sactls)))
     | SUserDefVar(UserDef cls, id) -> sprintf "(UserDef %s %s)" cls id
-    | SUserDefAcc(UserDef cls, cl, mem) -> sprintf "(UserDef %s Access: %s.%s)"
-        cls cl mem
+    | SUserDefAcc(UserDef cls, var, mem) -> sprintf "(UserDef %s Access: %s.%s)"
+        cls var mem
     | SUserDefNull(UserDef cls) -> sprintf "(UserDef %s NULL)" cls
 
 let soutput_s = function

@@ -30,7 +30,9 @@ let check_t_sexpr expected_t xpr =
             (Ast_printer.string_of_t expected_t)
             (Ast_printer.string_of_t found_t)))
 
-(* Check that the attribute  *)
+(* Check that for a given attribute, it either exists in the actuals, or
+ * it if it isn't place a default value if one exists (or raise if no default
+ * value exists). *)
 let check_attr sactuals_table = function
     | (name, (t, true, NullExpr)) ->
         if StringMap.mem name sactuals_table

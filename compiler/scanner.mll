@@ -88,8 +88,8 @@ rule token = parse
 | "class"    { CLASS }
 | '.'        { ACCESS }
 | "new"      { NEW }
-(*
 | "optional" { OPTIONAL }
+(*
 | "instance" { INSTANCE }
 *)
 

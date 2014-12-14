@@ -1,0 +1,5 @@
+class User {
+	optional int age;
+	string name;
+	string username;
+}

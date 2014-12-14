@@ -9,7 +9,7 @@
 %token EQ NEQ LT LEQ GT GEQ
 %token RETURN IF ELSE FOR WHILE FUNC IN
 %token PRINTLN PRINTF // LOG
-%token CLASS NEW ACCESS
+%token CLASS NEW ACCESS OPTIONAL
 // %token INT BOOL FLOAT STRING
 
 %token <string> ID TYPE STRING_LIT
@@ -205,8 +205,8 @@ actuals_list_internal:
 attr_decl:
     | primtype ID             { NonOption($1 , $2, None) }
     /* we limit the default values to literals */
-    | primtype ID ASSIGN lit { NonOption($1 , $2, Some($4)) }
-    /* TODO: add optional attributes here */
+    | primtype ID ASSIGN lit  { NonOption($1 , $2, Some($4)) }
+    | OPTIONAL primtype ID    { Optional($2, $3) }
 
 
 attribute_list:

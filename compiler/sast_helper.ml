@@ -72,17 +72,17 @@ let new_class class_id attr_tbl class_tbl =
 (* adds a new attribute on the class called class_id *)
 let rec add_attrs attr_tbl = function
     | SNonOption(t, attr_id, Some(default)) :: tl ->
-        insert_attr attr_id attr_tbl (t, false, default) tl
+        add_attrs (insert_attr attr_id attr_tbl (t, false, default)) tl
     | SNonOption(t, attr_id, None) :: tl ->
-        insert_attr attr_id attr_tbl (t, true, NullExpr) tl
+        add_attrs (insert_attr attr_id attr_tbl (t, true, NullExpr)) tl
     | SOptional(t, attr_id) :: tl ->
-        insert_attr attr_id attr_tbl (t, false, NullExpr) tl
+        add_attrs (insert_attr attr_id attr_tbl (t, false, NullExpr)) tl
     | [] -> attr_tbl
     | _ -> raise UnsupportedSattr
-and insert_attr attr_id attr_tbl triple tl =
+and insert_attr attr_id attr_tbl triple =
     if StringMap.mem attr_id attr_tbl
         then raise(ExistingAttributeErr(attr_id))
-        else add_attrs (StringMap.add attr_id triple attr_tbl) tl
+        else StringMap.add attr_id triple attr_tbl
 
 (* Get the table of attributes for a specific class *)
 let get_attr_table class_id class_tbl =
@@ -114,7 +114,7 @@ let rec add_actls actl_tbl = function
     | [] -> actl_tbl
     | _ -> raise UnsupportedSactual
 
-
+(* Get the type of an actual given *)
 let get_actl_type actl_tbl key =
     if StringMap.mem key actl_tbl
         then StringMap.find key actl_tbl
