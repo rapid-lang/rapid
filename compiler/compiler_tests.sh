@@ -38,7 +38,7 @@ do
     if [[ $fail_test && !$outcome  ]]
     then
         echo "success: $test_name"
-    elif [[ outcome ]] && [[ ! $(diff "$tmp_file" "$testpath$suffix") ]]
+    elif [[ outcome ]] && [[ ! $(diff -w "$tmp_file" "$testpath$suffix") ]]
     then
         echo "success: $test_name"
     else

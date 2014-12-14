@@ -118,22 +118,22 @@ comment
 
 ### 2.5 Operators
 
-Operator | Use | Associativity
-:-------:|-----|-----------------
-`+` | Addition | left
-`*` | Multiplication | left
-`/` | Division | left
-`-` | Subtraction | left
-`%` | Modulus | left
-`=`  | Assignment | non-associative
-`==` | Equal to | non-associative
-`!=` | Not equal to | non-associative
-`>` | Greater than | non-associative
-`<` | Less than | non-associative
-`>=` | Greater than or equal to | non-associative
-`<=` | Less than or equal to | non-associative
-`and` | Logical And | non-associative
-`or` | Logical Or | non-associative
+Operator | Use | Associativity| Types
+:-------:|-----|-----------------|------
+`+` | Addition | left | int ,float
+`*` | Multiplication | left | int ,float
+`/` | Division | left | int ,float
+`-` | Subtraction | left | int ,float
+`%` | Modulus | left | int
+`=`  | Assignment | non-associative | All
+`==` | Equal to | non-associative | All
+`!=` | Not equal to | non-associative | All
+`>` | Greater than | non-associative | int, float
+`<` | Less than | non-associative | int, float
+`>=` | Greater than or equal to | non-associative | int, float
+`<=` | Less than or equal to | non-associative | int, float
+`and` | Logical And | non-associative | bool
+`or` | Logical Or | non-associative | bool
 
 ## 3. Types
 
@@ -145,23 +145,24 @@ RAPID is a statically typed language; variables must be explicitly typed upon de
 
 #### null
 
-In RAPID, the `null` keyword represents an uninitialized value.  Any type in rapid may take on `null` if it hasn't been initialized, or otherwise doesn't exist.  The `null` keyword represents a value, but null values are still typed.  Null variables of different types may not be assigned to each other, and are not equal.  Null variables of the same type are equal.  All variables will `null` value are equal to the keyword `null`.
+In RAPID, the `null` keyword represents an uninitialized value.  Any type in rapid may take on `null` if it hasn't been initialized, or otherwise doesn't exist.  The `null` keyword represents a value, but null values are still typed.  Null variables of different types may not be assigned to each other, and may not be compared.  Null variables of the same type are equal.  All variables will `null` value are equal to the keyword `null`.
 
 ```
 int x
 int y = null
 string s
-boolean eq = (x == y) and (s != x) and (x == null) and (s == null)
-x = s  // not valid RAPID
+boolean eq = (x == y) and (x == null) and (s == null)
+x == s  // not valid RAPID
+x = s   // not valid RAPID
 ```
 
-Null values of any type may be used in operations with each other, but result in `null` values. Accessing lists or dictionaries at `null` indexes or keys will result in a runtime error.
+Null values of any type may not be used in operations together.  If they are, the program will exit prematurely, or the HTTP server will return a 500 error.
 
 ```
 int x         // null
-int y = x + 2 // null
+int y = x + 2 // not allowed, the program exits or the request returns 500.
 list<int> a = [1, 2, 3, 4]
-a[y]          // null, Error
+a[x]          // not allowed, the program exits or the request returns 500.
 ```
 
 #### Booleans
@@ -777,17 +778,23 @@ Literals may be of type string, integer, float, boolean, dict, or list.  See Lex
 
 #### Identifiers
 
-Identifiers could be primitive types, lists, dictionaries, objects, JSON objects, functions, classes, or errors.  Identifiers can be modified, and reused throughout a program.
+Identifiers could be primitive types, lists, dictionaries, objects, JSON objects, functions, classes, or errors.  
+
+If an identifier represents a primitive type, list, dictionary, object, JSON object, or error, it may be reused once per block.
 
 For example, in the following example, the variable `a` changes value three times.
 
 ```
-class a {} // `a` is a class
-func a() {} // `a` is a function, the class no longer exists.
-int a = 5 // `a` is an int, the function no longer exists.
+float a = 4.5            // `a` is a float
+func add(int a, int b) { // `a` is an int 
+    return a + b         // the float `a` does not exist in this scope.
+} 
+string a = ""            // invalid RAPID, cannot rename 
+                         // variables within the same scope.
 ```
 
 Identifiers are tied to the scope that they are declared in.  The following example prints `3`, then `5`, then `3`:
+
 ```
 int a = 3
 if (true) {

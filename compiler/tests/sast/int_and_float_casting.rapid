@@ -1,0 +1,2 @@
+float d = 3.3;
+int y = int(d);

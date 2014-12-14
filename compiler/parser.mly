@@ -25,6 +25,7 @@
 %left LT GT LEQ GEQ
 %left PLUS MINUS
 %left TIMES DIVIDE
+%left CASTBOOL
 
 %start program
 %type <Ast.program> program
@@ -56,7 +57,6 @@ datatype_list:
 
 return_type:
     /* TODO: allow user defined types */
-    | primtype                    { [$1] }
     | datatype_list { List.rev $1 }
 
 /*var declarations can now be done inline*/
@@ -80,7 +80,7 @@ arguments:
 formal_list:
     /* TODO: allow user defined types */
     | primtype ID { [($1, $2, None)] }
-    | primtype ID ASSIGN lit {[($1, $2, Some($4))]}                 
+    | primtype ID ASSIGN lit {[($1, $2, Some($4))]}
     | formal_list COMMA primtype ID { ($3, $4, None) :: $1 }
     | formal_list COMMA primtype ID ASSIGN lit {($3, $4, Some($6)) :: $1}
 
@@ -98,15 +98,29 @@ fstmt_list:
 ret_expr_list:
     | expr {[$1]}
     | ret_expr_list COMMA expr {$3 :: $1} 
+    | { [] }
 
 func_stmt:
     | RETURN ret_expr_list SEMI { Return( List.rev $2) }
     | stmt SEMI        { FStmt($1) }
 
+id_list:
+    | id_list COMMA primtype ID { VDecl($3, $4, None) :: $1 }
+    | id_list COMMA ID          { ID($3) :: $1 }
+    | ID {[ID($1)]}
+    | primtype ID {[VDecl($1, $2, None)]}
+
+fcall:
+    | ID LPAREN expression_list_opt RPAREN { ($1, $3) }
+
+func_call:
+    | fcall                {FuncCall([], $1)}
+    | LPAREN id_list RPAREN ASSIGN fcall { FuncCall(List.rev $2, $5) }
 
 stmt:
     | print          { Output $1 }
     | var_decl       { VarDecl $1 }
+    | func_call      { $1 }
     | ID ASSIGN expr { Assign($1, $3) }
     | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
     | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
@@ -132,11 +146,6 @@ lit:
     | FLOAT_LIT  { FloatLit $1 }
     | NULL       { Nullxpr }
 
-
-fcall:
-    | ID LPAREN expression_list_opt RPAREN { FCall($1, $3) }
-
-
 expr:
     | lit              { $1 }
     /* TODO add float handling */
@@ -151,7 +160,8 @@ expr:
     | expr LEQ    expr { Binop($1, Leq,   $3) }
     | expr GT     expr { Binop($1, Greater,  $3) }
     | expr GEQ    expr { Binop($1, Geq,   $3) }
-    | expr CASTBOOL    { CastBool $1 }  
+    | expr CASTBOOL    { CastBool $1 }
+    | primtype LPAREN expr RPAREN { Cast($1, $3) }
     | fcall            { Call $1 }
     | LPAREN expr RPAREN { $2 }
     | LBRACKET expression_list_opt RBRACKET { ListLit $2 }

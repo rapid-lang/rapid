@@ -65,10 +65,10 @@ rule token = parse
 | '=' { ASSIGN }
 
 (* Casting operators *)
-| '?' { CASTBOOL }                             
+| '?'      { CASTBOOL }
 
 | "true"  | "false" as bool_val { BOOL_LIT( string_to_bool bool_val ) }
-| "boolean" | "int"  | "float"| "string" as prim { TYPE prim }
+| "boolean" | "int"  | "float" | "string" as prim { TYPE prim }
 
 (*
 | "dict" { DICT }

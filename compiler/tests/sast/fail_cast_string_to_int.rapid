@@ -1,0 +1,7 @@
+
+string s = "hello";
+
+int i = int(s);
+
+
+
