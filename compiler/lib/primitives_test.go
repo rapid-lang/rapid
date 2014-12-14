@@ -111,3 +111,13 @@ func TestCastInt(t *testing.T) {
 		t.Error("Float cast to int failed")
 	}
 }
+
+func TestCastToString(t *testing.T) {
+	tmp := 3.14
+	var f Float = &tmp
+
+	s := FloatToString(f)
+	if *s != "3.14" {
+		t.Errorf("Float cast to string failed: produced %s", *s)
+	}
+}

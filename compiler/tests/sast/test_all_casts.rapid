@@ -13,4 +13,7 @@ b = 3.14?;
 b = boolean(3.14);
 
 
+string s2 = string(b);
+
+
 

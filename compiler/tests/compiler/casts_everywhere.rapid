@@ -1,0 +1,12 @@
+
+println(int(3.14));
+
+println(string(3.14));
+
+println(boolean(3.14));
+
+println(float(3.14));
+
+println(string(true));
+
+
