@@ -17,14 +17,14 @@ and int_expr =
 and float_expr =
     | SFloatExprLit of float
     | SFloatVar of string
-    | SFloatBinOp of sexpr * op * sexpr * cast_side
+    | SFloatBinOp of sexpr * op * sexpr 
     | SFloatCast of sexpr
     | SFloatNull
 and bool_expr =
     | SBoolExprLit of bool
     | SBoolVar of string
     | SBoolCast of sexpr
-    | SBoolBinOp of sexpr * op * sexpr * cast_side
+    | SBoolBinOp of sexpr * op * sexpr 
     | SBoolNull 
 and func_call_expr = string * sexpr list
 and bin_expr = sexpr * op * sexpr

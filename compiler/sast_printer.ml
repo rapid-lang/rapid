@@ -36,14 +36,14 @@ and float_expr_s = function
     | SFloatExprLit f -> sprintf "(Lit %f)" f
     | SFloatVar id -> sprintf "(Float Var %s)" id
     | SFloatCast e -> sprintf "(Cast (%s) to float)" (sexpr_s e)
-    | SFloatBinOp(lhs, o, rhs, _) -> sprintf "(%s %s %s)"
+    | SFloatBinOp(lhs, o, rhs) -> sprintf "(%s %s %s)"
         (sexpr_s lhs) (Ast_printer.bin_op_s o) (sexpr_s rhs)
     | SFloatNull -> "(Float NULL)"
 and bool_expr_s = function
     | SBoolExprLit b -> sprintf "(Bool lit: %b)" b
     | SBoolVar id -> sprintf "(Bool Var: %s)" id
     | SBoolCast e -> sprintf "(Cast (%s) to boolean)" (sexpr_s e)
-    | SBoolBinOp(lhs, o, rhs, _) -> sprintf "(%s %s %s)"
+    | SBoolBinOp(lhs, o, rhs) -> sprintf "(%s %s %s)"
         (sexpr_s lhs) (Ast_printer.bin_op_s o) (sexpr_s rhs)
     | SBoolNull -> "(Bool NULL)"
 

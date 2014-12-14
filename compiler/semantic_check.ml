@@ -86,18 +86,18 @@ let rec rewrite_sexpr st ft = function
         let possible_ts = get_op_types o in
         if (List.mem rt possible_ts) && (List.mem lt possible_ts) then
             match o with
-            | Ast.Less | Ast.Greater | Ast.Leq | Ast.Geq | Ast.Equal | Ast.Neq-> 
-                let side = get_cast_side (lt, rt) in 
-                SExprBool(SBoolBinOp(lhs, o, rhs, side)) (*bool exprs allow casting *)
+            | Ast.Less | Ast.Greater | Ast.Leq | Ast.Geq | Ast.Equal | Ast.Neq -> 
+                let lhs, rhs =  binop_cast_floats lhs rhs (get_cast_side (lt, rt)) in
+                SExprBool(SBoolBinOp(lhs, o, rhs))(*bool exprs allow casting *)
             | Ast.And | Ast.Or -> if(rt = lt && lt = Bool)
-                then SExprBool(SBoolBinOp(lhs, o, rhs, None))
+                then SExprBool(SBoolBinOp(lhs, o, rhs))
                 else raise BinOpTypeMismatchErr
             | _ -> if(rt = lt) then match lt with
                     | Int -> SExprInt(SIntBinOp(lhs, o, rhs))
-                    | Float -> SExprFloat(SFloatBinOp(lhs, o, rhs, None))
+                    | Float -> SExprFloat(SFloatBinOp(lhs, o, rhs))
                 else 
-                    let side = get_cast_side (lt, rt) in
-                    SExprFloat(SFloatBinOp(lhs, o, rhs, side)) 
+                    let lhs, rhs = binop_cast_floats lhs rhs (get_cast_side (lt, rt)) in
+                    SExprFloat(SFloatBinOp(lhs, o, rhs)) 
         else raise InvalidBinaryOp
     (* TODO: add all new expressions that can contain variable references to be simplified *)
     | xpr -> xpr
@@ -109,6 +109,10 @@ and rewrite_cast st ft xpr t_opt =
         | (NumberTypes, (Int | Float)) -> xpr
         | _ -> raise(InvalidTypeErr(sprintf
             "Cast cannot use %s expression" (Ast_printer.string_of_t t)))
+and binop_cast_floats lhs rhs = function
+    | Left -> SExprFloat(SFloatCast(lhs)), rhs
+    | Right -> lhs, SExprFloat(SFloatCast(rhs))
+    | _ -> lhs, rhs
 
 (* typechecks a sexpr *)
 let rewrite_sexpr_to_t st ft xpr t =

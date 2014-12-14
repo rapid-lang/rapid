@@ -72,7 +72,7 @@ and int_expr_to_code = function
         let tmp_var = rand_var_gen () in
             sprintf "%s := *%s" tmp_var id,
             sprintf "&%s" tmp_var
-    | SIntBinOp(lhs, o, rhs) -> bin_op_to_code lhs o rhs None
+    | SIntBinOp(lhs, o, rhs) -> bin_op_to_code lhs o rhs
     | SIntNull -> "", "nil"
     | SIntCast c -> cast_to_code Int c
     | _ -> raise UnsupportedIntExprType
@@ -86,7 +86,7 @@ and float_expr_to_code = function
         let tmp_var = rand_var_gen () in
             sprintf "%s := *%s" tmp_var id,
             sprintf "&%s" tmp_var
-    | SFloatBinOp(rhs, o, lhs, side) -> bin_op_to_code rhs o lhs side
+    | SFloatBinOp(rhs, o, lhs) -> bin_op_to_code rhs o lhs
     | SFloatNull -> "", "nil"
     | SFloatCast c -> cast_to_code Float c
     | _ -> raise UnsupportedFloatExprType
@@ -103,7 +103,7 @@ and bool_expr_to_code = function
             sprintf "&%s" tmp_var
     | SBoolCast c -> cast_to_code Bool c
     (*once there is float expr to code then use that insdead of the first sexpr to code in 1rst 2 cases*)
-    | SBoolBinOp(lhs, o, rhs, side) -> bin_op_to_code lhs o rhs side 
+    | SBoolBinOp(lhs, o, rhs) -> bin_op_to_code lhs o rhs
     | SBoolNull -> "", "nil"
     | _ -> raise UnsupportedBoolExprType
 (* takes the destination type and the expression and creates the cast statement *)
@@ -122,12 +122,9 @@ and list_sexpr_to_code deref_string xpr_l =
     let setups = List.map (fun (s, _) -> s) trans in
     let refs = List.map (fun (_, r) -> deref_string^r) trans in
     setups, refs
-and bin_op_to_code lhs o rhs side = 
-    let (setup1, lefts), (setup2, rights) = match side with 
-        | None ->  sexpr_to_code lhs, sexpr_to_code rhs
-        | Left ->  (cast_to_code Float lhs), sexpr_to_code rhs
-        | Right ->  sexpr_to_code lhs, (cast_to_code Float rhs)
-    in
+and bin_op_to_code lhs o rhs  = 
+    let setup1, lefts = sexpr_to_code lhs in
+    let setup2, rights = sexpr_to_code rhs in
     let os = op_to_code o in
     let tmp_var = (rand_var_gen ()) in
     let new_tmps = sprintf "%s := *%s %s *%s" tmp_var lefts (op_to_code o) rights in
