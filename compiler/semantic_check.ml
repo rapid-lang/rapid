@@ -85,6 +85,9 @@ let rec rewrite_sexpr st ft = function
             | Ast.Less | Ast.Greater | Ast.Leq | Ast.Geq | Ast.Equal | Ast.Neq-> 
                 let side = get_cast_side (lt, rt) in 
                 SExprBool(SBoolBinOp(lhs, o, rhs, side)) (*bool exprs allow casting *)
+            | Ast.And | Ast.Or -> if(rt = lt && lt = Bool)
+                then SExprBool(SBoolBinOp(lhs, o, rhs, None))
+                else raise BinOpTypeMismatchErr
             | _ -> if(rt = lt) then match lt with
                     | Int -> SExprInt(SIntBinOp(lhs, o, rhs))
                     | Float -> SExprFloat(SFloatBinOp(lhs, o, rhs))

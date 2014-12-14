@@ -12,20 +12,24 @@ let string_expr_s = function
     | SStringVar id -> sprintf "(String Var: %s)" id
     | SStringNull -> "(String NULL)"
 
-let int_expr_s = function
+let rec int_expr_s = function
     | SIntExprLit i -> sprintf "(Int Lit: %d)" i
     | SIntVar id -> sprintf "(Int Var: %s)" id
+    | SIntBinOp(lhs, o, rhs) -> sprintf "(%s %s %s)"
+        (sexpr_s lhs) (Ast_printer.bin_op_s o) (sexpr_s rhs) 
     | SIntNull -> "(Int NULL)"
-
-let float_expr_s = function
+and float_expr_s = function
     | SFloatExprLit f -> sprintf "(Lit %f)" f
     | SFloatVar id -> sprintf "(Float Var %s)" id
+    | SFloatBinOp(lhs, o, rhs) -> sprintf "(%s %s %s)"
+        (sexpr_s lhs) (Ast_printer.bin_op_s o) (sexpr_s rhs)
     | SFloatNull -> "(Float NULL)"
-
-let rec bool_expr_s = function
+and bool_expr_s = function
     | SBoolExprLit b -> sprintf "(Bool lit: %b)" b
     | SBoolVar id -> sprintf "(Bool Var: %s)" id
     | SBoolCast e -> sprintf "(Cast (%s) to boolean)" (sexpr_s e)
+    | SBoolBinOp(lhs, o, rhs, _) -> sprintf "(%s %s %s)"
+        (sexpr_s lhs) (Ast_printer.bin_op_s o) (sexpr_s rhs)
     | SBoolNull -> "(Bool NULL)"
 and sexpr_s = function
     | SExprInt i -> int_expr_s i
