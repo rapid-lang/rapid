@@ -38,34 +38,9 @@ let get_string_literal_from_sexpr = function
     | SExprString(SStringVar id) -> sprintf "*%s" id
     | _ -> raise StringExpressionsRequired
 
-(* returns a reference to an integer *)
-let int_expr_to_code = function
-    | SIntExprLit i ->
-        let tmp_var = rand_var_gen () in
-            sprintf "%s := %d" tmp_var i,
-            sprintf "&%s" tmp_var
-    | SIntVar id ->
-        let tmp_var = rand_var_gen () in
-            sprintf "%s := *%s" tmp_var id,
-            sprintf "&%s" tmp_var
-    | SIntNull -> "", "nil"
-    | _ -> raise UnsupportedIntExprType
-
-(* returns a reference to a float *)
-let float_expr_to_code = function
-    | SFloatExprLit f ->
-        let tmp_var = rand_var_gen () in
-            sprintf "%s := %f" tmp_var f,
-            sprintf "&%s" tmp_var
-    | SFloatVar id ->
-        let tmp_var = rand_var_gen () in
-            sprintf "%s := *%s" tmp_var id,
-            sprintf "&%s" tmp_var
-    | SFloatNull -> "", "nil"
-    | _ -> raise UnsupportedFloatExprType
-
+let op_to_code o = Ast_printer.bin_op_s o
 (* returns a reference to a string *)
-let string_expr_to_code = function
+let rec string_expr_to_code = function
     | SStringExprLit s ->
         let tmp_var = rand_var_gen () in
             sprintf "%s := \"%s\"" tmp_var s,
@@ -76,21 +51,32 @@ let string_expr_to_code = function
             sprintf "&%s" tmp_var
     | SStringNull -> "", "nil"
     | _ -> raise UnsupportedStringExprType
-
-(*Starts with two empty strings and a list of (string, string)
-  and then builds 2 strings for the temps
-  and a refs.  Temps seperated by "\n" and refs seperated by ", " *)
-let rec gen_call code = function 
-    | (tmp, rf) :: tl->  let (t, r) = code in
-       let tmps = t ^ "\n" ^ tmp in
-       if r = "" then gen_call (tmps,rf) tl
-        else gen_call (tmps, (r ^ ", " ^ rf)) tl
-    | [] -> code
-
-
-
+(* returns a reference to an integer *)
+and int_expr_to_code = function
+    | SIntExprLit i ->
+        let tmp_var = rand_var_gen () in
+            sprintf "%s := %d" tmp_var i,
+            sprintf "&%s" tmp_var
+    | SIntVar id ->
+        let tmp_var = rand_var_gen () in
+            sprintf "%s := *%s" tmp_var id,
+            sprintf "&%s" tmp_var
+    | SIntNull -> "", "nil"
+    | _ -> raise UnsupportedIntExprType
+(* returns a reference to a float *)
+and float_expr_to_code = function
+    | SFloatExprLit f ->
+        let tmp_var = rand_var_gen () in
+            sprintf "%s := %f" tmp_var f,
+            sprintf "&%s" tmp_var
+    | SFloatVar id ->
+        let tmp_var = rand_var_gen () in
+            sprintf "%s := *%s" tmp_var id,
+            sprintf "&%s" tmp_var
+    | SFloatNull -> "", "nil"
+    | _ -> raise UnsupportedFloatExprType
 (* returns a reference to a boolean *)
-let rec bool_expr_to_code = function
+and bool_expr_to_code = function
     | SBoolExprLit b ->
         let tmp_var = rand_var_gen () in
             sprintf "%s := %b" tmp_var b,
@@ -100,6 +86,25 @@ let rec bool_expr_to_code = function
             sprintf "%s := *%s" tmp_var id,
             sprintf "&%s" tmp_var
     | SBoolCast c -> bool_cast_to_code c
+    (*once there is float expr to code then use that insdead of the first sexpr to code in 1rst 2 cases*)
+    | SBoolBinOp(lhs, o, rhs, Left) -> let setup1, lefts = sexpr_to_code lhs in
+        let setup2, rights = sexpr_to_code rhs in
+        let os = op_to_code o in
+        let tmp_var = (rand_var_gen ()) in
+        let new_tmps = sprintf "%s := *%s %s *%s" tmp_var lefts (op_to_code o) rights in
+        (setup1 ^ "\n" ^ setup2 ^ "\n" ^ new_tmps) , (sprintf "&%s" tmp_var)
+    | SBoolBinOp(lhs, o, rhs, Right) -> let setup2, rights = sexpr_to_code rhs in
+        let setup1, leftss = sexpr_to_code lhs in
+        let os = op_to_code o in
+        let tmp_var = (rand_var_gen ()) in
+        let new_tmps = sprintf "%s := *%s %s *%s" tmp_var lefts (op_to_code o) rights in
+        (setup1 ^ "\n" ^ setup2 ^ "\n" ^ new_tmps) , (sprintf "&%s" tmp_var)
+    | SBoolBinOp(lhs, o, rhs, None) -> let setup1, lefts = sexpr_to_code lhs in
+        let setup2, rights = sexpr_to_code rhs in
+        let os = op_to_code o in
+        let tmp_var = (rand_var_gen ()) in
+        let new_tmps = sprintf "%s := *%s %s *%s" tmp_var lefts (op_to_code o) rights in
+        (setup1 ^ "\n" ^ setup2 ^ "\n" ^ new_tmps) , (sprintf "&%s" tmp_var)
     | SBoolNull -> "", "nil"
     | _ -> raise UnsupportedBoolExprType
 and bool_cast_to_code xpr =
