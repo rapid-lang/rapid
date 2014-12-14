@@ -1,0 +1,9 @@
+class User {
+	int age;
+	string name;
+}
+
+User u = new User(age = 10 , name = "Sarah");
+
+string n = u.name;
+int a = u.age;

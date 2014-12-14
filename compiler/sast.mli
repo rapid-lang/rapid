@@ -5,21 +5,25 @@ open Datatypes
 type bool_expr =
     | SBoolExprLit of bool
     | SBoolVar of string
+    | SBoolAcc of string * string
     | SBoolNull
 
 type int_expr =
     | SIntExprLit of int
     | SIntVar of string
+    | SIntAcc of string * string
     | SIntNull
 
 type float_expr =
     | SFloatExprLit of float
     | SFloatVar of string
+    | SFloatAcc of string * string
     | SFloatNull
 
 type string_expr =
     | SStringExprLit of string
     | SStringVar of string
+    | SStringAcc of string * string
     | SStringNull
 
 type sexpr =
@@ -28,12 +32,14 @@ type sexpr =
     | SExprFloat of float_expr
     | SExprBool of bool_expr
     | SExprUserDef of user_def_expr
+    | SExprAccess of sexpr * string
     | SId of string
     | NullExpr
 and user_def_expr =
-    | SUserDefInst of string * sactual list
-    | SUserDefVar of string
-    | SUserDefNull
+    | SUserDefInst of var_type * sactual list (* class * actuals *)
+    | SUserDefVar of var_type * string (* class * variablename *)
+    | SUserDefAcc of var_type * string * string
+    | SUserDefNull of var_type
 and sactual =
     | SActual of string * sexpr
 
@@ -48,7 +54,6 @@ type semantic_stmt =
     | SDecl of var_type * svar_assign
     | SOutput of soutput
     | SUserDefDecl of string * svar_assign
-
 
 type sattr =
     | SNonOption of var_type * string * sexpr option

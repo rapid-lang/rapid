@@ -9,7 +9,7 @@
 %token EQ NEQ LT LEQ GT GEQ
 %token RETURN IF ELSE FOR WHILE FUNC IN
 %token PRINTLN PRINTF // LOG
-%token CLASS NEW
+%token CLASS NEW ACCESS
 // %token INT BOOL FLOAT STRING
 
 %token <string> ID TYPE STRING_LIT
@@ -25,6 +25,7 @@
 %left LT GT LEQ GEQ
 %left PLUS MINUS
 %left TIMES DIVIDE
+%left ACCESS
 
 %start program
 %type <Ast.program> program
@@ -165,6 +166,7 @@ expr:
     | expr GT     expr { Binop($1, Greater,  $3) }
     | expr GEQ    expr { Binop($1, Geq,   $3) }
     | NEW ID LPAREN actuals_list_opt RPAREN { UserDefInst($2, $4)}
+    | expr ACCESS ID      { Access($1, $3) }
     | fcall            { Call $1 }
     | LPAREN expr RPAREN { $2 }
     | LBRACKET expression_list_opt RBRACKET { ListLit $2 }

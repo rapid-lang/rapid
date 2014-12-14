@@ -30,20 +30,24 @@ let translate_bool_xpr = function
     | _ -> raise InvalidBoolExprType
 
 
+(* TODO: a ton more types here, also support recursive expressions *)
 let rec translate_expr = function
-    (* TODO: a ton more types here, also support recursive expressions *)
     | Ast.IntLit i               -> SExprInt(SIntExprLit i)
     | Ast.StringLit s            -> SExprString(SStringExprLit s)
     | Ast.FloatLit f             -> SExprFloat(SFloatExprLit f)
     | Ast.BoolLit b              -> SExprBool(SBoolExprLit b)
     | Ast.UserDefInst(nm, actls) -> translate_user_def_inst nm actls
+    | Ast.Access(e, mem)         -> translate_access e mem
     (* we put a placeholder with the ID in and check after and reclassify *)
     | Ast.Id id                  -> SId id
     | _ -> raise UnsupportedExpressionType
 and translate_user_def_inst class_id actls =
-    SExprUserDef (SUserDefInst (class_id, (List.map translate_actual actls)))
+    SExprUserDef (SUserDefInst
+        (UserDef class_id, (List.map translate_actual actls)))
 and translate_actual = function
     | Ast.Actual(nm, xpr) -> SActual(nm, (translate_expr xpr))
+and translate_access xpr mem =
+    SExprAccess((translate_expr xpr), mem)
 
 
 let translate_assign id xpr = match translate_expr xpr with

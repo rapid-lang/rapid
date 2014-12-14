@@ -1,0 +1,16 @@
+
+class User {
+	string username;
+	string full_name;
+	string password;
+	int age;
+}
+
+
+User bob = new User(
+    username="burgerbob",
+    full_name="Bob Belcher",
+    password="burgersrock",
+    full_name="Sam Sour",
+    age=42
+);

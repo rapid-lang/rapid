@@ -41,10 +41,10 @@ let rec expr_s = function
     | FloatLit f -> sprintf "(Float literal %f)" f
     | ListLit l -> sprintf "(List literal [%s])"
         (String.concat ", " (List.map expr_s l))
-    | UserDefInst(id, actls) -> sprintf "(Instantiate new UserDef %s: (%s))"
+    | UserDefInst(id, actls) -> sprintf "(INSTANTIATE new UserDef %s(%s))"
         id
         ("\n\t" ^ (String.concat ",\n\t " (List.map actual_s actls)))
-
+    | Access(e, mem) -> sprintf "(ACCESS %s.%s)" (expr_s e) mem
     | Noexpr -> "( NOEXPR )"
 and fcall_s = function
     | FCall(f, es) -> sprintf "(Call (%s) with (%s))"
@@ -114,7 +114,6 @@ let func_decl_s f = sprintf "{\nfname = \"%s\"\nformals = [%s]\n\tbody = [%s]\n}
     (concat ",\n" (List.map fstmt_s f.body))
 
 
-
 let attr_s = function
     | NonOption(t, id, Some(xpr)) -> sprintf "(ATTR: %s of %s = %s)"
         id
@@ -133,7 +132,6 @@ let class_s (name, attrs) =
         name
         (concat "\n" (List.map (fun a -> "\t" ^ a)
             (List.map attr_s attrs)))
-
 
 
 let program_s (stmts, funcs, classes) = sprintf

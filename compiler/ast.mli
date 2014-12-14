@@ -14,6 +14,7 @@ type expr =
     | Call of fcall
     | ListLit of expr list
     | UserDefInst of string * actual list
+    | Access of expr * string
     | Noexpr
 and fcall =
     | FCall of string * expr list
