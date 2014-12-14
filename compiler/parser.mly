@@ -21,10 +21,10 @@
 %nonassoc NOELSE
 %nonassoc ELSE
 %right ASSIGN
-%left LT GT LEQ GEQ EQ NEQ AND OR
 %left PLUS MINUS
 %left TIMES DIVIDE MOD
 %left CASTBOOL
+%left LT GT LEQ GEQ EQ NEQ AND OR
 
 %start program
 %type <Ast.program> program
