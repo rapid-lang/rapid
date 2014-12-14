@@ -1,0 +1,10 @@
+int b = 1;
+
+b = foo(foo(2));
+
+println(b);
+
+func foo(int a, string b = "hi") int {
+    println(b);
+    return a;
+}

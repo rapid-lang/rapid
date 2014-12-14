@@ -1,0 +1,3 @@
+func useless(int x) int{
+    return x;
+}

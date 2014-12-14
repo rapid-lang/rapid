@@ -1,0 +1,6 @@
+
+func foo() boolean{
+    int i = 1;
+    return i?;
+}
+

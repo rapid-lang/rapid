@@ -1,7 +1,7 @@
-open Sast;;
-open Sast_printer;;
-open Sast_helper;;
-open Datatypes;;
+open Sast
+open Sast_printer
+open Sast_helper
+open Datatypes
 
 exception UnsupportedStatementTypeErr of string
 exception UnsupportedOutputType of string
@@ -13,34 +13,26 @@ exception InvalidIntExprType
 exception InvalidFloatExprType
 
 
-let translate_int_xpr = function
-    | Ast.IntLit i -> SIntExprLit i
-    | _ -> raise InvalidIntExprType
-
-let translate_float_xpr = function
-    | Ast.FloatLit i -> SFloatExprLit i
-    | _ -> raise InvalidIntExprType
-
-let translate_string_xpr = function
-    | Ast.StringLit s -> SStringExprLit s
-    | _ -> raise InvalidStringExprType
-
-let translate_bool_xpr = function
-    | Ast.BoolLit b -> SBoolExprLit b
-    | _ -> raise InvalidBoolExprType
-
-
-(* TODO: a ton more types here, also support recursive expressions *)
 let rec translate_expr = function
-    | Ast.IntLit i               -> SExprInt(SIntExprLit i)
-    | Ast.StringLit s            -> SExprString(SStringExprLit s)
-    | Ast.FloatLit f             -> SExprFloat(SFloatExprLit f)
-    | Ast.BoolLit b              -> SExprBool(SBoolExprLit b)
+    (* TODO: a ton more types here, also support recursive expressions *)
+    | Ast.IntLit i    -> SExprInt(SIntExprLit i)
+    | Ast.StringLit s -> SExprString(SStringExprLit s)
+    | Ast.FloatLit f  -> SExprFloat(SFloatExprLit f)
+    | Ast.BoolLit b   -> SExprBool(SBoolExprLit b)
+    | Ast.CastBool c  -> SExprBool(SBoolCast (translate_expr c))
+    | Ast.Cast(t, xpr) -> translate_cast xpr t
     | Ast.UserDefInst(nm, actls) -> translate_user_def_inst nm actls
     | Ast.Access(e, mem)         -> translate_access e mem
     (* we put a placeholder with the ID in and check after and reclassify *)
-    | Ast.Id id                  -> SId id
+    | Ast.Id id       -> SId id
+    | Ast.Call(id, expr) -> SCall(id, (List.map translate_expr expr))
+    | Ast.Nullxpr -> UntypedNullExpr
     | _ -> raise UnsupportedExpressionType
+and translate_cast xpr = function
+    | Int -> SExprInt(SIntCast(translate_expr xpr))
+    | Float -> SExprFloat(SFloatCast(translate_expr xpr))
+    | Bool -> SExprBool(SBoolCast(translate_expr xpr))
+    | String -> SExprString(SStringCast(translate_expr xpr))
 and translate_user_def_inst class_id actls =
     SExprUserDef (SUserDefInst
         (UserDef class_id, (List.map translate_actual actls)))
@@ -48,7 +40,6 @@ and translate_actual = function
     | Ast.Actual(nm, xpr) -> SActual(nm, (translate_expr xpr))
 and translate_access xpr mem =
     SExprAccess((translate_expr xpr), mem)
-
 
 let translate_assign id xpr = match translate_expr xpr with
     | SExprInt _    -> (id, xpr)
@@ -72,11 +63,23 @@ let translate_output = function
     | Ast.Printf(format :: xpr_l) -> SPrintf(translate_expr format, List.map translate_expr xpr_l)
     | _ -> raise(UnsupportedOutputType("Not yet implemented"))
 
+let translate_vars = function
+    | Ast.ID(s) -> SFuncId(s)
+    | Ast.VDecl(vd) ->
+        match translate_decl vd with
+            | SDecl(t, (id, xpr)) -> SFuncDecl(t,(id, xpr))(*xpr will be None*)
+
+let translate_fcall id exprs =
+    let sxprs = (List.map translate_expr exprs) in
+    (id, sxprs)
+
 let translate_statement = function
     | Ast.VarDecl vd -> translate_decl vd
     | Ast.Assign(id, xpr) -> SAssign(id, translate_expr xpr)
     | Ast.Output o -> SOutput(translate_output o)
     | Ast.UserDefDecl udd -> translate_user_def_decl udd
+    | Ast.FuncCall(vl, (id, exprs)) -> let(id, sexprs) = translate_fcall id exprs in
+        SFuncCall((List.map translate_vars vl), id, sexprs)
     | _ -> raise(UnsupportedStatementTypeErr "type unknown")
 
 let translate_attr = function
@@ -88,4 +91,14 @@ let translate_class (name, attrs) =
     name,
     (List.map translate_attr attrs)
 
+let translate_fstatement = function
+    | Ast.FStmt stmt -> translate_statement stmt
+    | Ast.Return expr -> SReturn(List.map translate_expr expr)
 
+let translate_function (f : Ast.func_decl) =
+    (
+        f.fname,
+        (List.map translate_decl f.args),
+        f.return,
+        (List.map translate_fstatement f.body)
+    )

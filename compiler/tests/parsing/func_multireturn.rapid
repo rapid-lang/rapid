@@ -1,0 +1,4 @@
+func foo(string s, int x = 2, int a) int, string{
+	a = 3;
+	//return a, s;
+}

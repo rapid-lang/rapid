@@ -1,0 +1,33 @@
+int x;
+string z = "wow";
+string y;
+
+(x, y) = foo();
+
+println(x); // 1
+println(y); //wow
+
+blank(1);
+
+func foo() int, string{
+	return boo(1), z;
+}
+
+func boo(int i, string s = "def") int {
+    (int j, string q) = too(i, s);
+    println(j);
+    println(q);
+	println(s);
+	println(i);
+	return i;
+}
+
+func too(int n, string a) int, string{
+    println(n);
+    println(a);
+	return 2, "b";
+}
+func blank(int i){
+	println(i);
+	return;
+}

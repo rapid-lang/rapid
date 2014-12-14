@@ -10,7 +10,7 @@ exception UnsupportedStringExprType
 exception UnsupportedIntExprType
 exception UnsupportedFloatExprType
 exception UnsupportedOutputType
-exception UnsupportedSExprType
+exception UnsupportedSExprType of string
 exception UnsupportedBoolExprType
 exception UnsupportedDeclType of string
 exception UnsupportedDatatypeErr
@@ -26,14 +26,42 @@ let go_type_from_type = function
     | String -> "String"
     | _ -> raise UnsupportedDatatypeErr
 
+let go_type_from_sexpr = function
+    | SExprInt _ -> go_type_from_type Int
+    | SExprFloat _ -> go_type_from_type Float
+    | SExprBool _ -> go_type_from_type Bool
+    | SExprString _ -> go_type_from_type String
+
 (* must return a direct reference to a string *)
 let get_string_literal_from_sexpr = function
     | SExprString(SStringExprLit s) -> sprintf "(\"%s\")" s
     | SExprString(SStringVar id) -> sprintf "*%s" id
     | _ -> raise StringExpressionsRequired
 
+(* top level function for generating sexprs *)
+let rec sexpr_to_code = function
+    | SExprInt i -> int_expr_to_code i
+    | SExprString s -> string_expr_to_code s
+    | SExprFloat f -> float_expr_to_code f
+    | SExprBool b -> bool_expr_to_code b
+    | SCallTyped(t, (id, args)) -> func_expr_to_code id args
+    | NullExpr -> "", "nil"
+    | s -> raise(UnsupportedSExprType(Sast_printer.sexpr_s s))
+(* returns a reference to a string *)
+and string_expr_to_code = function
+    | SStringExprLit s ->
+        let tmp_var = rand_var_gen () in
+            sprintf "%s := \"%s\"" tmp_var s,
+            sprintf "&%s" tmp_var
+    | SStringVar id ->
+        let tmp_var = rand_var_gen () in
+            sprintf "%s := *%s" tmp_var id,
+            sprintf "&%s" tmp_var
+    | SStringCast c -> cast_to_code String c
+    | SStringNull -> "", "nil"
+    | _ -> raise UnsupportedStringExprType
 (* returns a reference to an integer *)
-let int_expr_to_code = function
+and int_expr_to_code = function
     | SIntExprLit i ->
         let tmp_var = rand_var_gen () in
             sprintf "%s := %d" tmp_var i,
@@ -43,10 +71,10 @@ let int_expr_to_code = function
             sprintf "%s := *%s" tmp_var id,
             sprintf "&%s" tmp_var
     | SIntNull -> "", "nil"
+    | SIntCast c -> cast_to_code Int c
     | _ -> raise UnsupportedIntExprType
-
 (* returns a reference to a float *)
-let float_expr_to_code = function
+and float_expr_to_code = function
     | SFloatExprLit f ->
         let tmp_var = rand_var_gen () in
             sprintf "%s := %f" tmp_var f,
@@ -55,24 +83,12 @@ let float_expr_to_code = function
         let tmp_var = rand_var_gen () in
             sprintf "%s := *%s" tmp_var id,
             sprintf "&%s" tmp_var
+    | SFloatCast c -> cast_to_code Float c
     | SFloatNull -> "", "nil"
     | _ -> raise UnsupportedFloatExprType
 
-(* returns a reference to a string *)
-let string_expr_to_code = function
-    | SStringExprLit s ->
-        let tmp_var = rand_var_gen () in
-            sprintf "%s := \"%s\"" tmp_var s,
-            sprintf "&%s" tmp_var
-    | SStringVar id ->
-        let tmp_var = rand_var_gen () in
-            sprintf "%s := *%s" tmp_var id,
-            sprintf "&%s" tmp_var
-    | SStringNull -> "", "nil"
-    | _ -> raise UnsupportedStringExprType
-
 (* returns a reference to a boolean *)
-let bool_expr_to_code = function
+and bool_expr_to_code = function
     | SBoolExprLit b ->
         let tmp_var = rand_var_gen () in
             sprintf "%s := %b" tmp_var b,
@@ -81,15 +97,25 @@ let bool_expr_to_code = function
         let tmp_var = rand_var_gen () in
             sprintf "%s := *%s" tmp_var id,
             sprintf "&%s" tmp_var
+    | SBoolCast c -> cast_to_code Bool c
     | SBoolNull -> "", "nil"
     | _ -> raise UnsupportedBoolExprType
-
-let sexpr_to_code = function
-    | SExprInt i -> int_expr_to_code i
-    | SExprString s -> string_expr_to_code s
-    | SExprFloat f -> float_expr_to_code f
-    | SExprBool b -> bool_expr_to_code b
-    | _ -> raise UnsupportedSExprType
+(* takes the destination type and the expression and creates the cast statement *)
+and cast_to_code t xpr =
+    let src_type = go_type_from_sexpr xpr in
+    let dest_type = go_type_from_type t in
+    let setup, var = sexpr_to_code xpr in
+    let cast = sprintf "%sTo%s(%s)" src_type dest_type var in
+    setup, cast
+and func_expr_to_code id arg_xrps =
+    let (tmps, refs) = (list_sexpr_to_code "" arg_xrps) in
+    let call = sprintf "%s(%s)" id (String.concat ", " refs) in
+    (String.concat "\n" tmps), call
+and list_sexpr_to_code deref_string xpr_l =
+    let trans = List.map sexpr_to_code xpr_l in
+    let setups = List.map (fun (s, _) -> s) trans in
+    let refs = List.map (fun (_, r) -> deref_string^r) trans in
+    setups, refs
 
 let sassign_to_code = function
     | (id, xpr) ->
@@ -99,40 +125,14 @@ let sassign_to_code = function
         sprintf "Assignment expression not yet supported -> %s"
         (svar_assign_s a)))
 
-
-let sdecl_to_code (id, xpr) t = match t, xpr with
-    | Int, SExprInt xpr ->
-        let setup, ref = int_expr_to_code xpr in
-            sprintf "var %s Int\n_=%s\n%s\n%s = %s"
-                id id setup id ref
-    | Float, SExprFloat xpr ->
-        let setup, ref = float_expr_to_code xpr in
-            sprintf "var %s Float\n_=%s\n%s\n%s = %s"
-                id id setup id ref
-    | String, SExprString xpr ->
-        let setup, ref = string_expr_to_code xpr in
-            sprintf "var %s String\n_=%s\n%s\n%s = %s"
-                id id setup id ref
-    | Bool, SExprBool xpr ->
-        let setup, ref = bool_expr_to_code xpr in
-            sprintf "var %s Bool\n_=%s\n%s\n%s = %s"
-                id id setup id ref
-    | (Int | Float | String | Bool ) as t, NullExpr ->
-        sprintf "var %s %s\n_ = %s" id (go_type_from_type t) id
-    | _ -> raise(UnsupportedDeclType(svar_decl_s t (id, xpr)))
-
 let soutput_to_code = function
     | SPrintln xpr_l ->
-        let trans = List.map sexpr_to_code xpr_l in
-        let setups = List.map (fun (s, _) -> s) trans in
-        let refs = List.map (fun (_, r) -> "*"^r) trans in
+        let (setups, refs) = list_sexpr_to_code "*" xpr_l in
             sprintf "%s\nfmt.Println(%s)"
                 (String.concat "\n" setups)
                 (String.concat "," refs)
     | SPrintf(s, xpr_l) ->
-        let trans = List.map sexpr_to_code xpr_l in
-        let setups = List.map (fun (s, _) -> s) trans in
-        let refs = List.map (fun (_, r) -> "*"^r) trans in
+        let (setups, refs) = list_sexpr_to_code "*" xpr_l in
             sprintf "%s\nfmt.Printf(%s, %s)"
                 (String.concat "\n" setups)
                 (get_string_literal_from_sexpr s)
@@ -140,37 +140,80 @@ let soutput_to_code = function
     | _ -> raise UnsupportedOutputType
 
 
-let stmts_to_code = function
-    | SDecl(t, (id, xpr)) -> sdecl_to_code (id, xpr) t
+let sreturn_to_code xprs =
+    let (tmps, refs) = list_sexpr_to_code "" xprs in
+    sprintf "%s\n return %s" (String.concat "\n" tmps) (String.concat ", " refs)
+
+let decls_from_lv = function
+    | SFuncDecl(t, (id, _)) -> sprintf "var %s %s" id (go_type_from_type t)
+    | _ -> ""
+let get_ids = function
+    | SFuncDecl(_, (id, _ ) ) -> id
+    | SFuncTypedId (_, id) -> id
+
+let lv_to_code lv =
+    String.concat ", " (List.map get_ids lv)
+
+let sfunccall_to_code lv id xprs =
+    let lhs = lv_to_code lv in
+    let (tmps, refs) = list_sexpr_to_code "" xprs in
+    let tmps = String.concat "\n" tmps in
+    let refs = String.concat "," refs in
+    if lhs = "" then sprintf "%s\n%s( %s )" tmps id refs
+        else sprintf "%s\n%s = %s( %s )" tmps lhs id refs
+
+let sast_to_code = function
+    | SDecl(_, (id, xpr)) -> sassign_to_code (id, xpr)
     | SAssign a -> sassign_to_code a
     | SOutput p -> soutput_to_code p
+    | SReturn xprs -> sreturn_to_code xprs
+    | SFuncCall (lv, id, xprs) -> sfunccall_to_code lv id xprs
     | _ -> raise(UnsupportedSemanticStatementType)
 
-let sattr_to_code = function
-    | SOptional(t, id) | SNonOption(t, id, _) -> sprintf "%s %s"
+let arg_to_code = function
+    | SDecl(t, (id, _) ) -> sprintf "%s %s"
         id
         (go_type_from_type t)
 
-let class_to_code (name, sattrs) =
-    let attr_names = List.map (fun a -> match a with
-        | SOptional(_, id) | SNonOption(_, id, _) -> id) sattrs in
-    sprintf "type %s struct {\n%s\n}\nfunc new_%s(%s)%s{return %s{\n%s}\n}"
-        name
-        (String.concat "\n" (List.map sattr_to_code sattrs))
-        name
-        (String.concat "," (List.map sattr_to_code sattrs))
-        name
-        name
-        (String.concat "" (List.map (fun a -> sprintf "%s: %s,\n" a a) attr_names))
+let defaults_to_code = function
+    | SDecl(_, (id, xpr)) -> if xpr = NullExpr then ""
+        else sprintf "if %s == nil {\n %s\n}"
+                id
+                (sassign_to_code (id, xpr))
 
-let skeleton = "package main\n" ^
-    "import (\"fmt\")\n" ^
-    "var _ = fmt.Printf\n"
+let rec grab_decls = function
+    | SDecl(t, (id, _)) :: tl ->
+        sprintf "var %s %s" id (go_type_from_type t) :: grab_decls tl
+    | SFuncCall(lv, _,_) :: tl ->
+        (String.concat "\n" (List.map decls_from_lv lv)) :: grab_decls tl
+    | _ :: tl -> grab_decls tl
+    | [] -> []
 
-let build_prog (stmts, classes) =
-    let stmt_lines = List.map stmts_to_code stmts in
-    let class_decls = List.map class_to_code classes in
-    let script_stmts = String.concat "\n" stmt_lines in
-    let gen_code_classes = String.concat "\n" class_decls in
-    skeleton ^ gen_code_classes ^ "\nfunc main() {\n" ^ script_stmts ^ "\n}\n"
+let func_to_code f =
+    let (id, args, rets, body) = f in
+    sprintf "func %s( %s ) (%s){\n%s\n%s\n%s\n}"
+        id
+        (String.concat "," (List.map arg_to_code args))
+        (String.concat ", " (List.map go_type_from_type rets))
+        (String.concat "\n" (List.map defaults_to_code args))
+        (String.concat "\n"  (grab_decls body))
+        (String.concat "\n" (List.map sast_to_code body))
+
+
+
+let skeleton decls main fns = "package main\n import (\"fmt\")\n" ^
+    "var _ = fmt.Printf\n" ^ decls ^ "\nfunc main() {\n" ^
+    main ^ "\n}\n " ^ fns
+
+
+
+let build_prog sast =
+    (* Ignore classes for now *)
+    let (stmts, _, funcs) = sast in
+    let decls = String.concat "\n" (grab_decls stmts) in
+    let code_lines = List.map sast_to_code stmts in
+    let gen_code = String.concat "\n" code_lines in
+    let func_lines = List.map func_to_code funcs in
+    let func_code = String.concat "\n\n" func_lines in
+    skeleton decls gen_code func_code
 

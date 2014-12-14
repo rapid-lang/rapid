@@ -1,0 +1,6 @@
+
+func foo() int{
+    int i = 1;
+    return i?;
+}
+

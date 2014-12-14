@@ -1,0 +1,4 @@
+
+int i = 4;
+boolean b = i?;
+

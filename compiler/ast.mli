@@ -1,8 +1,7 @@
 open Datatypes
 
 
-
-type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq
+type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | Qmark
 
 type expr =
     | Id of string
@@ -12,12 +11,14 @@ type expr =
     | FloatLit of float
     | Binop of expr * op * expr
     | Call of fcall
+    | Cast of var_type * expr
+    | CastBool of expr
     | ListLit of expr list
     | UserDefInst of string * actual list
     | Access of expr * string
     | Noexpr
-and fcall =
-    | FCall of string * expr list
+    | Nullxpr
+and fcall = string * expr list
 and actual =
     | Actual of string * expr
 
@@ -29,6 +30,11 @@ type print =
     | Printf of expr list
     | Println of expr list
 
+(*Used for function calling*)
+type vars =
+    | ID of string
+    | VDecl of vdecl
+
 type stmt =
     | Assign of string * expr
     | Block of stmt list
@@ -38,15 +44,15 @@ type stmt =
     | Output of print
     | VarDecl of vdecl
     | UserDefDecl of user_def_decl
-    | FuncCall of fcall
+    | FuncCall of vars list * fcall
 
 type func_stmt =
     | FStmt of stmt
-    | Return of expr
+    | Return of expr list
 
 type func_decl = {
     fname : string;
-    formals : string list;
+    args : vdecl list;
     return : var_type list;
     body : func_stmt list;
 }
@@ -61,7 +67,7 @@ type class_decl = string * attr list
 type class_decl = string * attr list * func_decl list * route_decl list
 *)
 
-type program = stmt list * func_decl list * class_decl list
+type program = stmt list * class_decl list * func_decl list
 (*
 type program = stmt list * func_decl list * class_decl list * route_decl list
 *)

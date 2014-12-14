@@ -1,0 +1,4 @@
+func foo(int a, int b = 0) int{
+	int x = 2;
+	x = 3;
+}

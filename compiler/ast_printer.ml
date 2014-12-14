@@ -14,6 +14,9 @@ let rec string_of_t = function
     | Float -> "float"
     | ListType(s) -> sprintf "list<%s>" (string_of_t s)
     | UserDef(s) -> sprintf "(USER_DEF %s)" s
+    | Void -> "void"
+    | Multi -> "multi return"
+    | Var -> "var"
 
 let bin_op_s = function
     | Add -> "+"
@@ -26,6 +29,7 @@ let bin_op_s = function
     | Leq -> "<="
     | Greater -> ">"
     | Geq -> ">="
+    | Qmark -> "?"
 
 (* Converts expressions to strings *)
 let rec expr_s = function
@@ -39,6 +43,8 @@ let rec expr_s = function
     | BoolLit b -> sprintf "(Bool literal %b)" b
     | StringLit s -> sprintf "(String literal %s)" s
     | FloatLit f -> sprintf "(Float literal %f)" f
+    | CastBool e -> sprintf "(Cast (%s) to boolean)" (expr_s e)
+    | Cast(t, i) -> sprintf "(Cast (%s) to %s)" (expr_s i) (string_of_t t)
     | ListLit l -> sprintf "(List literal [%s])"
         (String.concat ", " (List.map expr_s l))
     | UserDefInst(id, actls) -> sprintf "(INSTANTIATE new UserDef %s(%s))"
@@ -46,8 +52,10 @@ let rec expr_s = function
         ("\n\t" ^ (String.concat ",\n\t " (List.map actual_s actls)))
     | Access(e, mem) -> sprintf "(ACCESS %s.%s)" (expr_s e) mem
     | Noexpr -> "( NOEXPR )"
+    | Nullxpr -> "(Null)"
+
 and fcall_s = function
-    | FCall(f, es) -> sprintf "(Call (%s) with (%s))"
+    | (f, es) -> sprintf "(Call (%s) with (%s))"
         f
         (concat ", " (List.map (fun e -> sprintf "(%s)" (expr_s e)) es))
 and actual_s = function
@@ -74,6 +82,10 @@ let string_of_user_def_decl (cls, nm, e) = sprintf "%s %s %s"
         | None     -> "(Not assigned)")
 
 (* Prettyprint statements *)
+let func_lvalue_s = function
+    | ID(i) -> i
+    | VDecl(t, id, x) -> string_of_vdecl (t,id,x)
+
 let rec stmt_s = function
     | Assign(v, e) -> sprintf "(Assign %s (%s))"
         v
@@ -101,16 +113,18 @@ let rec stmt_s = function
         (string_of_vdecl vd)
     | UserDefDecl ud -> sprintf "(UserDefDecl (%s))"
         (string_of_user_def_decl ud)
-    | FuncCall f -> fcall_s f
+    | FuncCall(s,f) -> sprintf "(FuncCall(%s = %s))"
+        (concat ", " (List.map func_lvalue_s s))
+        (fcall_s f)
 
 let fstmt_s = function
     | Return e -> sprintf "(Return (%s))"
-        (expr_s e)
+        (concat ", " (List.map expr_s e))
     | FStmt s -> stmt_s s
 
-let func_decl_s f = sprintf "{\nfname = \"%s\"\nformals = [%s]\n\tbody = [%s]\n}"
+let func_decl_s f = sprintf "{\nfname = \"%s\"\nargs = [%s]\n\tbody = [%s]\n}"
     f.fname
-    (concat ", " f.formals)
+    (concat ", " (List.map string_of_vdecl f.args))
     (concat ",\n" (List.map fstmt_s f.body))
 
 
@@ -134,7 +148,7 @@ let class_s (name, attrs) =
             (List.map attr_s attrs)))
 
 
-let program_s (stmts, funcs, classes) = sprintf
+let program_s (stmts, classes, funcs) = sprintf
     "classes:{\n%s\n}\nstatements:{\n%s\n}\nfunctions:\n%s"
     (concat "\n" (List.rev (List.map class_s classes)))
     (concat "\n" (List.rev (List.map stmt_s stmts)))

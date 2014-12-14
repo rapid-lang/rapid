@@ -1,5 +1,5 @@
 
-func useless(int x) {
+func useless(int x) int{
     return x;
 }
 
