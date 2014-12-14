@@ -90,8 +90,10 @@ let rec rewrite_sexpr st ft = function
                 else raise BinOpTypeMismatchErr
             | _ -> if(rt = lt) then match lt with
                     | Int -> SExprInt(SIntBinOp(lhs, o, rhs))
-                    | Float -> SExprFloat(SFloatBinOp(lhs, o, rhs))
-                else raise BinOpTypeMismatchErr
+                    | Float -> SExprFloat(SFloatBinOp(lhs, o, rhs, None))
+                else 
+                    let side = get_cast_side (lt, rt) in
+                    SExprFloat(SFloatBinOp(lhs, o, rhs, side)) 
         else raise InvalidBinaryOp
     (* TODO: add all new expressions that can contain variable references to be simplified *)
     | xpr -> xpr

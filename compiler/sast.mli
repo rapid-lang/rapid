@@ -11,7 +11,7 @@ type int_expr =
 and float_expr =
     | SFloatExprLit of float
     | SFloatVar of string
-    | SFloatBinOp of sexpr * op * sexpr
+    | SFloatBinOp of sexpr * op * sexpr * cast_side
     | SFloatNull
 and string_expr =
     | SStringExprLit of string

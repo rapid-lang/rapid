@@ -21,7 +21,7 @@ let rec int_expr_s = function
 and float_expr_s = function
     | SFloatExprLit f -> sprintf "(Lit %f)" f
     | SFloatVar id -> sprintf "(Float Var %s)" id
-    | SFloatBinOp(lhs, o, rhs) -> sprintf "(%s %s %s)"
+    | SFloatBinOp(lhs, o, rhs, _) -> sprintf "(%s %s %s)"
         (sexpr_s lhs) (Ast_printer.bin_op_s o) (sexpr_s rhs)
     | SFloatNull -> "(Float NULL)"
 and bool_expr_s = function

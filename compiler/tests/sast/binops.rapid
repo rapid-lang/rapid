@@ -5,3 +5,5 @@ boolean b = c == 4.4;
 b = a < c;
 b = "afda" ==  "Afda";
 b = a == c and b;
+
+float f = 3 + 3.3 + 2.2 + 3;
