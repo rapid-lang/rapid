@@ -61,6 +61,7 @@ and int_expr_to_code = function
         let tmp_var = rand_var_gen () in
             sprintf "%s := *%s" tmp_var id,
             sprintf "&%s" tmp_var
+    | SIntBinOp(lhs, o, rhs) -> bin_op_to_code lhs o rhs None
     | SIntNull -> "", "nil"
     | _ -> raise UnsupportedIntExprType
 (* returns a reference to a float *)
@@ -73,6 +74,7 @@ and float_expr_to_code = function
         let tmp_var = rand_var_gen () in
             sprintf "%s := *%s" tmp_var id,
             sprintf "&%s" tmp_var
+    | SFloatBinOp(rhs, o, lhs, side) -> bin_op_to_code rhs o lhs side
     | SFloatNull -> "", "nil"
     | _ -> raise UnsupportedFloatExprType
 (* returns a reference to a boolean *)
@@ -87,24 +89,7 @@ and bool_expr_to_code = function
             sprintf "&%s" tmp_var
     | SBoolCast c -> bool_cast_to_code c
     (*once there is float expr to code then use that insdead of the first sexpr to code in 1rst 2 cases*)
-    | SBoolBinOp(lhs, o, rhs, Left) -> let setup1, lefts = sexpr_to_code lhs in
-        let setup2, rights = sexpr_to_code rhs in
-        let os = op_to_code o in
-        let tmp_var = (rand_var_gen ()) in
-        let new_tmps = sprintf "%s := *%s %s *%s" tmp_var lefts (op_to_code o) rights in
-        (setup1 ^ "\n" ^ setup2 ^ "\n" ^ new_tmps) , (sprintf "&%s" tmp_var)
-    | SBoolBinOp(lhs, o, rhs, Right) -> let setup2, rights = sexpr_to_code rhs in
-        let setup1, leftss = sexpr_to_code lhs in
-        let os = op_to_code o in
-        let tmp_var = (rand_var_gen ()) in
-        let new_tmps = sprintf "%s := *%s %s *%s" tmp_var lefts (op_to_code o) rights in
-        (setup1 ^ "\n" ^ setup2 ^ "\n" ^ new_tmps) , (sprintf "&%s" tmp_var)
-    | SBoolBinOp(lhs, o, rhs, None) -> let setup1, lefts = sexpr_to_code lhs in
-        let setup2, rights = sexpr_to_code rhs in
-        let os = op_to_code o in
-        let tmp_var = (rand_var_gen ()) in
-        let new_tmps = sprintf "%s := *%s %s *%s" tmp_var lefts (op_to_code o) rights in
-        (setup1 ^ "\n" ^ setup2 ^ "\n" ^ new_tmps) , (sprintf "&%s" tmp_var)
+    | SBoolBinOp(lhs, o, rhs, side) -> bin_op_to_code lhs o rhs side 
     | SBoolNull -> "", "nil"
     | _ -> raise UnsupportedBoolExprType
 and bool_cast_to_code xpr =
@@ -129,6 +114,25 @@ and list_sexpr_to_code deref_string xpr_l =
     let setups = List.map (fun (s, _) -> s) trans in
     let refs = List.map (fun (_, r) -> deref_string^r) trans in
     setups, refs
+and bin_op_to_code lhs o rhs = function
+    | None ->  let setup1, lefts = sexpr_to_code lhs in
+        let setup2, rights = sexpr_to_code rhs in
+        let os = op_to_code o in
+        let tmp_var = (rand_var_gen ()) in
+        let new_tmps = sprintf "%s := *%s %s *%s" tmp_var lefts (op_to_code o) rights in
+        (setup1 ^ "\n" ^ setup2 ^ "\n" ^ new_tmps) , (sprintf "&%s" tmp_var)
+    | Left ->  let setup1, lefts = sexpr_to_code lhs in
+        let setup2, rights = sexpr_to_code rhs in
+        let os = op_to_code o in
+        let tmp_var = (rand_var_gen ()) in
+        let new_tmps = sprintf "%s := *%s %s *%s" tmp_var lefts (op_to_code o) rights in
+        (setup1 ^ "\n" ^ setup2 ^ "\n" ^ new_tmps) , (sprintf "&%s" tmp_var)
+    | Right -> let setup2, rights = sexpr_to_code rhs in
+        let setup1, lefts = sexpr_to_code lhs in
+        let os = op_to_code o in
+        let tmp_var = (rand_var_gen ()) in
+        let new_tmps = sprintf "%s := *%s %s *%s" tmp_var lefts (op_to_code o) rights in
+        (setup1 ^ "\n" ^ setup2 ^ "\n" ^ new_tmps) , (sprintf "&%s" tmp_var)
 
 let sassign_to_code = function
     | (id, xpr) ->

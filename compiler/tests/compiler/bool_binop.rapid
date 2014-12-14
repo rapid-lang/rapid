@@ -8,3 +8,17 @@ println(a < b);
 println(a >= b);
 println(a <= b);
 println((a == b) or (b != a));
+
+string s =  "a";
+
+println("a" == s);
+
+println(foo(b, a == b));
+
+func foo(int a, boolean b, int c = 2) boolean{
+	return a == c and b;
+}
+
+float c = 3.14;
+println(a + b - 3 * 2);
+println(3.3 + c * 1.1);
