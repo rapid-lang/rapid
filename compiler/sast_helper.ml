@@ -22,6 +22,7 @@ let get_op_types = function
     | Ast.Add | Ast.Sub | Ast.Mult | Ast.Div | Ast.Less | Ast.Greater | Ast.Leq | Ast.Geq -> [Int; Float]
     | Ast.Equal | Ast.Neq -> [Bool; Int; Float; String]
     | Ast.And | Ast.Or -> [(Bool)]
+    | Ast.Mod -> [(Int)]
 
 module StringMap = Map.Make(String)
 

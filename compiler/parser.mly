@@ -6,7 +6,7 @@
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
 %token LBRACKET RBRACKET LIST
 %token PLUS MINUS TIMES DIVIDE ASSIGN CASTBOOL
-%token EQ NEQ LT LEQ GT GEQ AND OR
+%token EQ NEQ LT LEQ GT GEQ AND OR MOD
 %token RETURN IF ELSE FOR WHILE FUNC IN
 %token PRINTLN PRINTF // LOG
 // %token INT BOOL FLOAT STRING
@@ -21,10 +21,9 @@
 %nonassoc NOELSE
 %nonassoc ELSE
 %right ASSIGN
-%left EQ NEQ AND OR
-%left LT GT LEQ GEQ
+%left LT GT LEQ GEQ EQ NEQ AND OR
 %left PLUS MINUS
-%left TIMES DIVIDE
+%left TIMES DIVIDE MOD
 %left CASTBOOL
 
 %start program
@@ -85,7 +84,7 @@ formal_list:
     | formal_list COMMA primtype ID ASSIGN lit {($3, $4, Some($6)) :: $1}
 
 
-/* a tuple here of (primtype, ID) */
+/* a tuple here of (primtype, ID, optional expr) expr is the optional assign */
 var_decl:
     | primtype ID             { ($1 , $2, None) }
     | primtype ID ASSIGN expr { ($1 , $2, Some($4)) }
@@ -148,7 +147,6 @@ lit:
 
 expr:
     | lit              { $1 }
-    /* TODO add float handling */
     | ID               { Id $1 }
     | expr PLUS   expr { Binop($1, Add,   $3) }
     | expr MINUS  expr { Binop($1, Sub,   $3) }
@@ -162,6 +160,7 @@ expr:
     | expr GEQ    expr { Binop($1, Geq,   $3) }
     | expr AND    expr { Binop($1, And, $3) }
     | expr OR    expr  { Binop($1, Or, $3 )}
+    | expr MOD expr    { Binop($1, Mod, $3 )}
     | expr CASTBOOL    { CastBool $1 }  
     | primtype LPAREN expr RPAREN { Cast($1, $3) }
     | fcall            { Call $1 }

@@ -39,7 +39,8 @@ rule token = parse
 | '*' { TIMES }
 | '/' { DIVIDE }
 | "and" {AND}
-| "or" {OR}
+| "or" { OR }
+| "%" { MOD }
 
 (* comparisons *)
 | "==" { EQ }

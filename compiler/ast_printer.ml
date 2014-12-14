@@ -32,6 +32,7 @@ let bin_op_s = function
     | Qmark -> "?"
     | Or -> "||"
     | And -> "&&"
+    | Mod -> "%"
 
 (* Converts expressions to strings *)
 let rec expr_s = function

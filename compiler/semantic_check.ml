@@ -54,8 +54,8 @@ let rec check_arg_types = function
 
 
 let get_cast_side = function 
-    | (Int, Float) -> Right
-    | (Float, Int) -> Left
+    | (Int, Float) -> Left
+    | (Float, Int) -> Right
     | (String, String) -> None
     | (Bool, Bool) -> None
     | (Int, Int) -> None

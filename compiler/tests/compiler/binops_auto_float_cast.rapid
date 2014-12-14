@@ -1,0 +1,21 @@
+float a = 3 + 5.5;
+float b = 7 - 5.5;
+
+println(a);
+println(b);
+
+println(a > 1);
+
+int c = int(5.5 + 3);
+
+println(c % 3);
+
+println(c);
+
+println(foo(b, c));
+
+func foo(float f, int b) float{
+	float a = f + b;
+	println(a);
+	return a/b;
+}
