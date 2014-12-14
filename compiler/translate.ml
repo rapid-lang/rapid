@@ -20,32 +20,17 @@ let rec translate_expr = function
     | Ast.FloatLit f  -> SExprFloat(SFloatExprLit f)
     | Ast.BoolLit b   -> SExprBool(SBoolExprLit b)
     | Ast.CastBool c  -> SExprBool(SBoolCast (translate_expr c))
-    | Ast.CastInt i   -> SExprInt(SIntCast   (translate_expr i))
-    | Ast.CastFloat f -> SExprFloat(SFloatCast (translate_expr f))
+    | Ast.Cast(t, xpr) -> translate_cast xpr t
     (* we put a placeholder with the ID in and check after and reclassify *)
     | Ast.Id id       -> SId id
     | Ast.Call(id, expr) -> SCall(id, (List.map translate_expr expr))
     | Ast.Nullxpr -> UntypedNullExpr
     | _ -> raise UnsupportedExpressionType
-
-let translate_bool_xpr = function
-    | Ast.BoolLit b -> SBoolExprLit b
-    | Ast.CastBool c  -> SBoolCast (translate_expr c)
-    | _ -> raise InvalidBoolExprType
-
-let translate_int_xpr = function
-    | Ast.IntLit i -> SIntExprLit i
-    | Ast.CastInt c  -> SIntCast (translate_expr c)
-    | _ -> raise InvalidIntExprType
-
-let translate_float_xpr = function
-    | Ast.FloatLit i -> SFloatExprLit i
-    | Ast.CastFloat c  -> SFloatCast (translate_expr c)
-    | _ -> raise InvalidIntExprType
-
-let translate_string_xpr = function
-    | Ast.StringLit s -> SStringExprLit s
-    | _ -> raise InvalidStringExprType
+and translate_cast xpr = function
+    | Int -> SExprInt(SIntCast(translate_expr xpr))
+    | Float -> SExprFloat(SFloatCast(translate_expr xpr))
+    | Bool -> SExprBool(SBoolCast(translate_expr xpr))
+    | String -> SExprString(SStringCast(translate_expr xpr))
 
 let translate_assign id xpr = match translate_expr xpr with
     | SExprInt _    -> (id, xpr)
@@ -68,11 +53,11 @@ let translate_output = function
 
 let translate_vars = function
     | Ast.ID(s) -> SFuncId(s)
-    | Ast.VDecl(vd) -> 
-        match translate_decl vd with 
+    | Ast.VDecl(vd) ->
+        match translate_decl vd with
             | SDecl(t, (id, xpr)) -> SFuncDecl(t,(id, xpr))(*xpr will be None*)
 
-let translate_fcall id exprs = 
+let translate_fcall id exprs =
     let sxprs = (List.map translate_expr exprs) in
     (id, sxprs)
 

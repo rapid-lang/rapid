@@ -65,9 +65,7 @@ rule token = parse
 | '=' { ASSIGN }
 
 (* Casting operators *)
-| '?'      { CASTBOOL }  
-| "int("   { CASTINT  }
-| "float(" { CASTFLOAT }                         
+| '?'      { CASTBOOL }
 
 | "true"  | "false" as bool_val { BOOL_LIT( string_to_bool bool_val ) }
 | "boolean" | "int"  | "float" | "string" as prim { TYPE prim }

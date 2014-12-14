@@ -5,9 +5,9 @@ open Datatypes
 type string_expr =
     | SStringExprLit of string
     | SStringVar of string
+    | SStringCast of sexpr
     | SStringNull
-
-type int_expr =
+and int_expr =
     | SIntExprLit of int
     | SIntVar of string
     | SIntCast of sexpr
@@ -21,7 +21,7 @@ and bool_expr =
     | SBoolExprLit of bool
     | SBoolVar of string
     | SBoolCast of sexpr
-    | SBoolNull 
+    | SBoolNull
 and func_call_expr = string * sexpr list
 and sexpr =
     | SExprInt of int_expr
@@ -30,9 +30,9 @@ and sexpr =
     | SExprBool of bool_expr
     | SId of string
     | SCall of func_call_expr
-    | SCallTyped of var_type * func_call_expr (*return type, id, arg expressions*)
-    | NullExpr (*this is for implied  Null expr*)
-    | UntypedNullExpr (*This is for when you type out null in rapid code.*)
+    | SCallTyped of var_type * func_call_expr (* return type, id, arg expressions *)
+    | NullExpr (* this is for implied  Null expr *)
+    | UntypedNullExpr (* this is for when you type out null in rapid code *)
 
 type soutput =
     | SPrintf of sexpr * sexpr list
@@ -40,7 +40,7 @@ type soutput =
 
 type svar_assign = string * sexpr
 
-type sfunc_lval = 
+type sfunc_lval =
     | SFuncDecl of var_type * svar_assign (*always a vdecl*)
     | SFuncId of string (*after translate before second pass*)
     | SFuncTypedId of var_type * string (*After second pass*)

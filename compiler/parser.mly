@@ -22,10 +22,10 @@
 %nonassoc ELSE
 %right ASSIGN
 %left EQ NEQ
-%left CASTBOOL
 %left LT GT LEQ GEQ
 %left PLUS MINUS
 %left TIMES DIVIDE
+%left CASTBOOL
 
 %start program
 %type <Ast.program> program

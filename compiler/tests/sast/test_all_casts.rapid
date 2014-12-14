@@ -1,0 +1,16 @@
+
+string s = string(7);
+s = string(3.14);
+s = string(3.14);
+s = string(false);
+
+int i = int(7);
+i = int(3.14);
+
+boolean b = 7?;
+b = boolean(7);
+b = 3.14?;
+b = boolean(3.14);
+
+
+
