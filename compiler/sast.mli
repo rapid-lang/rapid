@@ -38,7 +38,7 @@ type sexpr =
 and user_def_expr =
     | SUserDefInst of var_type * sactual list (* class * actuals *)
     | SUserDefVar of var_type * string (* class * variablename *)
-    | SUserDefAcc of var_type * string * string
+    | SUserDefAcc of var_type * string * string (* class * var_id * member *)
     | SUserDefNull of var_type
 and sactual =
     | SActual of string * sexpr
