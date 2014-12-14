@@ -14,11 +14,17 @@ type expr =
     | Cast of var_type * expr
     | CastBool of expr
     | ListLit of expr list
+    | UserDefInst of string * actual list
+    | Access of expr * string
     | Noexpr
     | Nullxpr
 and fcall = string * expr list
+and actual =
+    | Actual of string * expr
 
 type vdecl = var_type * string * expr option
+
+type user_def_decl = string * string * expr option
 
 type print =
     | Printf of expr list
@@ -37,6 +43,7 @@ type stmt =
     | While of expr * stmt
     | Output of print
     | VarDecl of vdecl
+    | UserDefDecl of user_def_decl
     | FuncCall of vars list * fcall
 
 type func_stmt =
@@ -50,5 +57,18 @@ type func_decl = {
     body : func_stmt list;
 }
 
-type program = stmt list * func_decl list
+type attr =
+    | NonOption of var_type * string * expr option
+    | Optional of var_type * string
+
+type class_decl = string * attr list
+
+(*
+type class_decl = string * attr list * func_decl list * route_decl list
+*)
+
+type program = stmt list * class_decl list * func_decl list
+(*
+type program = stmt list * func_decl list * class_decl list * route_decl list
+*)
 

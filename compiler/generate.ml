@@ -184,14 +184,14 @@ let defaults_to_code = function
 let rec grab_decls = function
     | SDecl(t, (id, _)) :: tl ->
         sprintf "var %s %s" id (go_type_from_type t) :: grab_decls tl
-    | SFuncCall(lv, _,_) :: tl -> 
+    | SFuncCall(lv, _,_) :: tl ->
         (String.concat "\n" (List.map decls_from_lv lv)) :: grab_decls tl
     | _ :: tl -> grab_decls tl
     | [] -> []
 
-let func_to_code f = 
+let func_to_code f =
     let (id, args, rets, body) = f in
-    sprintf "func %s( %s ) (%s){\n%s\n%s\n%s\n}" 
+    sprintf "func %s( %s ) (%s){\n%s\n%s\n%s\n}"
         id
         (String.concat "," (List.map arg_to_code args))
         (String.concat ", " (List.map go_type_from_type rets))
@@ -208,7 +208,8 @@ let skeleton decls main fns = "package main\n import (\"fmt\")\n" ^
 
 
 let build_prog sast =
-    let (stmts, funcs) = sast in
+    (* Ignore classes for now *)
+    let (stmts, _, funcs) = sast in
     let decls = String.concat "\n" (grab_decls stmts) in
     let code_lines = List.map sast_to_code stmts in
     let gen_code = String.concat "\n" code_lines in

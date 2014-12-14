@@ -12,10 +12,12 @@ exception UnsupportedStatementTypeErr of string
 exception UndeclaredVarErr of string
 exception InvalidTypeReassignErr of string
 exception InvalidTypeErr of string
+exception MissingRequiredArgument of string
 exception UnsupportedExpressionType
 exception UnsupportedSexpr
 exception UnsupportedDatatypeErr
 exception StringDatatypeRequiredErr
+exception InvalidTypeMemberAccess
 exception InvalidArgErr
 exception InvalidArgOrder
 exception InvalidReturnTypeErr
@@ -51,27 +53,89 @@ let rec check_arg_types = function
     | ([],[]) -> []
 
 
+(* Takes a type and a typed sexpr and confirms it is the proper type *)
+let check_t_sexpr expected_t xpr =
+    let found_t = sexpr_to_t expected_t xpr in
+    if found_t = expected_t
+        then ()
+        else raise(InvalidTypeErr(Format.sprintf "Expected %s expression, found %s"
+            (Ast_printer.string_of_t expected_t)
+            (Ast_printer.string_of_t found_t)))
+
+(* Check that for a given attribute, it either exists in the actuals, or
+ * it if it isn't place a default value if one exists (or raise if no default
+ * value exists). *)
+let check_attr sactuals_table = function
+    | (name, (t, true, NullExpr)) ->
+        if StringMap.mem name sactuals_table
+            then let expr = StringMap.find name sactuals_table in
+                let () = check_t_sexpr t expr in
+                SActual(name, expr)
+            else raise( MissingRequiredArgument
+                            (Format.sprintf "Argument %s is missing" name))
+    | (name, (t, false, xpr)) ->
+        if StringMap.mem name sactuals_table
+            then let expr = StringMap.find name sactuals_table in
+                let () = check_t_sexpr t expr in
+                SActual(name, expr)
+            else SActual(name, xpr)
+
+(* Check that all of the actuals in the instantiation are valid. *)
+let check_user_def_inst ct t sactls =
+    let sactuals_table = add_actls empty_actuals_table sactls in
+    let attr_table = get_attr_table t ct in
+    let checked_sactuals = List.map
+        (check_attr sactuals_table)
+        (StringMap.bindings attr_table) in
+    SUserDefInst (UserDef t, checked_sactuals)
+
+
 (* Takes a symbol table and sexpr and rewrites variable references to be typed *)
-let rec rewrite_sexpr st ft = function
+let rec rewrite_sexpr st ct ft = function
     | SId id -> (
         match get_type id st with
         | Int -> SExprInt(SIntVar id)
         | String -> SExprString(SStringVar id)
         | Float -> SExprFloat(SFloatVar id)
         | Bool -> SExprBool(SBoolVar id)
+        | UserDef cls -> SExprUserDef(SUserDefVar ((UserDef cls), id))
         | _ -> raise UnsupportedDatatypeErr)
-    | SExprBool(SBoolCast e) -> SExprBool(SBoolCast(rewrite_cast st ft e AllTypes))
-    | SExprInt(SIntCast e) -> SExprInt(SIntCast(rewrite_cast st ft e NumberTypes))
-    | SExprFloat(SFloatCast e) -> SExprFloat(SFloatCast(rewrite_cast st ft e NumberTypes))
-    | SExprString(SStringCast e) -> SExprString(SStringCast(rewrite_cast st ft e AllTypes))
+    | SExprBool(SBoolCast e) -> SExprBool(SBoolCast(rewrite_cast st ct ft e AllTypes))
+    | SExprInt(SIntCast e) -> SExprInt(SIntCast(rewrite_cast st ct ft e NumberTypes))
+    | SExprFloat(SFloatCast e) -> SExprFloat(SFloatCast(rewrite_cast st ct ft e NumberTypes))
+    | SExprString(SStringCast e) -> SExprString(SStringCast(rewrite_cast st ct ft e AllTypes))
     | SCall(id, xprs) ->
-        let xprs = (List.map (rewrite_sexpr st ft) xprs) in
+        let xprs = (List.map (rewrite_sexpr st ct ft) xprs) in
         let xprs = check_arg_types ((get_arg_types id ft), xprs) in
         SCallTyped((get_return_type id ft), (id, xprs))
+    | SExprUserDef udf -> (
+        match udf with
+        | SUserDefInst(UserDef t, sactls) ->
+            let rewritten_sactls = List.map (rewrite_sactl st ct ft) sactls in
+            let expr = check_user_def_inst ct t sactls in
+            SExprUserDef(SUserDefInst(UserDef t, rewritten_sactls))
+        | _ -> SExprUserDef udf)
+    | SExprAccess(xpr, mem) ->
+        let rewritten_sexpr = rewrite_sexpr st ct ft xpr in
+        let cls = match rewritten_sexpr with
+            | SExprUserDef(
+                  SUserDefInst(UserDef s, _)
+                | SUserDefVar(UserDef s, _)
+                | SUserDefNull(UserDef s)) -> s
+            | _ -> raise InvalidTypeMemberAccess in
+        let t = get_attr_type cls ct mem in
+        (match t with
+            | Bool -> SExprBool(SBoolAcc(cls, mem))
+            | Int -> SExprInt(SIntAcc(cls, mem))
+            | Float -> SExprFloat(SFloatAcc(cls, mem))
+            | String -> SExprString(SStringAcc(cls, mem))
+            | UserDef ud -> SExprUserDef(SUserDefAcc(t, cls, mem)))
     (* TODO: add all new expressions that can contain variable references to be simplified *)
     | xpr -> xpr
-and rewrite_cast st ft xpr t_opt =
-    let xpr = rewrite_sexpr st ft xpr in
+and rewrite_sactl st ct ft = function
+    | SActual(name, xpr) -> SActual(name, rewrite_sexpr st ct ft xpr)
+and rewrite_cast st ct ft xpr t_opt =
+    let xpr = rewrite_sexpr st ct ft xpr in
     let t = sexpr_to_t Void xpr in
     match (t_opt, t) with
         | (AllTypes, (Int | Float | String | Bool)) -> xpr
@@ -80,27 +144,26 @@ and rewrite_cast st ft xpr t_opt =
             "Cast cannot use %s expression" (Ast_printer.string_of_t t)))
 
 (* typechecks a sexpr *)
-let rewrite_sexpr_to_t st ft xpr t =
-    let typed_xpr = rewrite_sexpr st ft xpr in
+let rewrite_sexpr_to_t st ct ft xpr t =
+    let typed_xpr = rewrite_sexpr st ct ft xpr in
     let () = check_t_sexpr t typed_xpr in
     typed_xpr
 
 (* checks that an assignment has the proper types *)
-let check_var_assign_use sym_tbl id xpr =
-    let var_t = (get_type id sym_tbl) in
+let check_var_assign_use st id xpr =
+    let var_t = (get_type id st) in
     let () = check_t_sexpr var_t xpr in
-    sym_tbl
-
+    st
 
 (* rewrites any sexprs in an SOutput statement *)
-let check_s_output sym_tbl ft = function
+let check_s_output st ct ft = function
     | SPrintf(s, xpr_l) ->
-        let format_str = rewrite_sexpr_to_t sym_tbl ft s String in
-        SPrintf(format_str, List.map (rewrite_sexpr sym_tbl ft ) xpr_l)
-    | SPrintln(xpr_l) -> SPrintln(List.map (rewrite_sexpr sym_tbl ft) xpr_l)
+        let format_str = rewrite_sexpr_to_t st ct ft s String in
+        SPrintf(format_str, List.map (rewrite_sexpr st ct ft ) xpr_l)
+    | SPrintln(xpr_l) -> SPrintln(List.map (rewrite_sexpr st ct ft) xpr_l)
 
 (*Check that the return statement has expressions with the right types*)
-let rec check_return_types = function 
+let rec check_return_types = function
     | (xpr :: s),(t :: types) -> let () = (check_t_sexpr t xpr) in
         check_return_types (s, types)
     (*To few vals returned*)
@@ -110,7 +173,7 @@ let rec check_return_types = function
     | [],[] -> ()
 
 (*Scan all stmts in a function for returns then check the types*)
-let rec check_returns r = function 
+let rec check_returns r = function
     | SReturn(s) :: tl-> let _ = check_return_types (s, r) in
          SReturn(s) :: check_returns r tl
     | hd :: tl -> hd :: check_returns r tl
@@ -118,7 +181,7 @@ let rec check_returns r = function
 
 (*takes an sfunc_lval list * var_type list, gotten the return type list in the funciton table
   this checks if the left hand side vars or var decls are the same types as the return types. *)
-let rec check_lv_types = function 
+let rec check_lv_types = function
     | (SFuncTypedId(t, _) :: tl), (expected_t :: types) -> if t = expected_t
             then check_lv_types  (tl, types)
         else raise ReturnTypeMismatchErr
@@ -144,22 +207,22 @@ let rec scope_lv st = function
     | [] -> st
 
 (* Processes an unsafe SAST and returns a type checked SAST *)
-let rec var_analysis st ft = function
+let rec var_analysis st ct ft = function
     | SDecl(t, (id, xpr)) :: tl ->
-        let expr = rewrite_sexpr st ft xpr in
+        let expr = rewrite_sexpr st ct ft xpr in
         let st = add_sym t id st in
         let () = check_t_sexpr t expr in
-            SDecl(t, (id, expr)) :: var_analysis st ft tl
+            SDecl(t, (id, expr)) :: var_analysis st ct ft tl
     | SAssign(id, xpr) :: tl ->
-        let expr = rewrite_sexpr st ft xpr in
+        let expr = rewrite_sexpr st ct ft xpr in
         let st = check_var_assign_use st id expr in
-            SAssign(id, expr) :: (var_analysis st ft tl)
+            SAssign(id, expr) :: (var_analysis st ct ft tl)
     | SOutput(so) :: tl ->
-        let so = check_s_output st ft so in
-            SOutput(so) :: (var_analysis st ft tl)
+        let so = check_s_output st ct ft so in
+            SOutput(so) :: (var_analysis st ct ft tl)
     (*Return stmts are xpr lists, tranlslate all the expressions here*)
-    | SReturn(s) :: tl -> let xprs = List.map (rewrite_sexpr st ft) s in
-         SReturn(xprs) :: (var_analysis st ft tl)
+    | SReturn(s) :: tl -> let xprs = List.map (rewrite_sexpr st ct ft) s in
+         SReturn(xprs) :: (var_analysis st ct ft tl)
     | SFuncCall (lv, id, xprs) :: tl ->
         let lv = (List.map (rewrite_lv st) lv) in
         let check_lv ft id = function
@@ -167,10 +230,16 @@ let rec var_analysis st ft = function
             (*If there is left hand side to the statement make sure types match*)
             | _ -> check_lv_types (lv, (get_return_type_list id ft)) in
         let () = check_lv ft id lv in
-        let xprs = (List.map (rewrite_sexpr st ft) xprs) in
+        let xprs = (List.map (rewrite_sexpr st ct ft) xprs) in
         let xprs = check_arg_types ((get_arg_types id ft), xprs) in
         let st = scope_lv st lv in
-        SFuncCall(lv, id, xprs) :: (var_analysis st ft tl)
+        SFuncCall(lv, id, xprs) :: (var_analysis st ct ft tl)
+    | SUserDefDecl(cls, (id, xpr)) :: tl ->
+        let expr = rewrite_sexpr st ct ft xpr in
+        let t = UserDef cls in
+        let st = add_sym t id st in
+        let () = check_t_sexpr t expr in
+            SUserDefDecl(cls, (id, xpr)) :: var_analysis st ct ft tl
     | [] -> []
 
 (*
@@ -181,7 +250,7 @@ let rec add_to_scope st = function
     | SDecl(t, (id, xpr)) :: tl ->
        let st = add_sym t id st in
         add_to_scope st tl
-    | SFuncCall (lv, _, _) :: tl -> let st = scope_lv st lv in 
+    | SFuncCall (lv, _, _) :: tl -> let st = scope_lv st lv in
         add_to_scope st tl
     | _ :: tl -> add_to_scope st tl
     | [] -> st
@@ -210,27 +279,27 @@ let check_for_return body =
         | SReturn(s) -> ()
         | _ -> raise NoReturnErr
 
-let rec check_funcs st ft = function
+let rec check_funcs st ct ft = function
     | (fname, args, rets, body) :: tl ->
         let _ = check_arg_order args in
         let scoped_st = new_scope st in
-        let targs = var_analysis scoped_st ft args in
+        let targs = var_analysis scoped_st ct ft args in
         (*args are added to function scope*)
         let scoped_st = add_to_scope scoped_st args in
         (*typecheck the body and rewrite vars to have type*)
-        let tbody = var_analysis scoped_st ft body in
+        let tbody = var_analysis scoped_st ct ft body in
         (*check the return type matches the return statement*)
         let _  = check_returns rets tbody in
         (*if no return types then don't worry, else find a return stmnt*)
-        if rets = [] then 
-            (fname, targs, rets, tbody) :: check_funcs st ft tl
+        if rets = [] then
+            (fname, targs, rets, tbody) :: check_funcs st ct ft tl
         else
             let () = check_for_return tbody in
-            (fname, targs, rets, tbody) :: check_funcs st ft tl
+            (fname, targs, rets, tbody) :: check_funcs st ct ft tl
     | [] -> []
 
 let rec build_function_table ft = function
-    | (fname, args, rets, body) :: tl -> 
+    | (fname, args, rets, body) :: tl ->
         let args_to_type = function
             | SDecl(t, (id, xpr)) -> (t, xpr)
             | _ -> raise InvalidArgErr
@@ -240,26 +309,42 @@ let rec build_function_table ft = function
         build_function_table ft tl
     | [] -> ft
 
+(* Prcesses unchecked classes, adding them and their attributes to class_tbl *)
+let rec class_analysis class_tbl = function
+    | (class_id, attrs) :: tl ->
+        let attr_tbl = add_attrs empty_attribute_table attrs in
+        let class_tbl = new_class class_id attr_tbl class_tbl in
+        let lst, class_tbl = class_analysis class_tbl tl in
+        ((class_id, attrs) :: lst), class_tbl
+    | [] -> [], class_tbl
+
+
+
+let gen_class_stmts stmts =
+    let sclasses = List.map translate_class stmts in
+    let (checked_sclasses, ct) = class_analysis class_table sclasses in
+    checked_sclasses, ct
+
 (*The order of the checking and building of symbol tables may need to change
     to allow functions to be Hoisted*)
-let gen_semantic_program stmts funcs =
+let gen_semantic_program stmts classes funcs =
     (* build an unsafe semantic AST *)
     let s_stmts = List.map translate_statement stmts in
     let s_funcs = List.map translate_function funcs in
     let ft = build_function_table empty_function_table s_funcs in
+    let checked_classes, ct = gen_class_stmts classes in
     (* typecheck and reclassify all variable usage *)
-    
-    let checked_stmts = var_analysis symbol_table_list ft s_stmts in
+    let checked_stmts = var_analysis symbol_table_list ct ft s_stmts in
     (*Add all the var decls to the global scope*)
     let st = add_to_scope symbol_table_list s_stmts in
     (*typecheck all the functions (including args and returns)*)
-    let checked_funcs = check_funcs st ft s_funcs in
-    (checked_stmts, checked_funcs)
+    let checked_funcs = check_funcs st ct ft s_funcs in
+    (checked_stmts, checked_classes, checked_funcs)
 
 
 let sast_from_ast ast =
     (* ignore functions for now *)
-    let (stmts, funcs) = ast in
+    let (stmts, classes, funcs) = ast in
     let stmts = List.rev stmts in
-    gen_semantic_program stmts funcs
+    gen_semantic_program stmts classes funcs
 

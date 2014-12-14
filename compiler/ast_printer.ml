@@ -47,6 +47,10 @@ let rec expr_s = function
     | Cast(t, i) -> sprintf "(Cast (%s) to %s)" (expr_s i) (string_of_t t)
     | ListLit l -> sprintf "(List literal [%s])"
         (String.concat ", " (List.map expr_s l))
+    | UserDefInst(id, actls) -> sprintf "(INSTANTIATE new UserDef %s(%s))"
+        id
+        ("\n\t" ^ (String.concat ",\n\t " (List.map actual_s actls)))
+    | Access(e, mem) -> sprintf "(ACCESS %s.%s)" (expr_s e) mem
     | Noexpr -> "( NOEXPR )"
     | Nullxpr -> "(Null)"
 
@@ -54,6 +58,8 @@ and fcall_s = function
     | (f, es) -> sprintf "(Call (%s) with (%s))"
         f
         (concat ", " (List.map (fun e -> sprintf "(%s)" (expr_s e)) es))
+and actual_s = function
+    | Actual(id, e) -> sprintf "(ACTUAL: %s=%s)" id (expr_s e)
 
 let output_s = function
     | Printf el -> sprintf "(Printf(%s))"
@@ -65,7 +71,14 @@ let string_of_vdecl (t, nm, e) = sprintf "%s %s %s"
     (string_of_t t)
     nm
     (match e with
-        | Some exp -> sprintf "= %s" (expr_s exp)
+        | Some xpr -> sprintf "= %s" (expr_s xpr)
+        | None     -> "(Not assigned)")
+
+let string_of_user_def_decl (cls, nm, e) = sprintf "%s %s %s"
+    cls
+    nm
+    (match e with
+        | Some xpr -> sprintf "= %s" (expr_s xpr)
         | None     -> "(Not assigned)")
 
 (* Prettyprint statements *)
@@ -98,7 +111,9 @@ let rec stmt_s = function
         (output_s o)
     | VarDecl vd -> sprintf "(VarDecl (%s))"
         (string_of_vdecl vd)
-    | FuncCall(s,f) -> sprintf "(FuncCall(%s = %s))" 
+    | UserDefDecl ud -> sprintf "(UserDefDecl (%s))"
+        (string_of_user_def_decl ud)
+    | FuncCall(s,f) -> sprintf "(FuncCall(%s = %s))"
         (concat ", " (List.map func_lvalue_s s))
         (fcall_s f)
 
@@ -112,7 +127,30 @@ let func_decl_s f = sprintf "{\nfname = \"%s\"\nargs = [%s]\n\tbody = [%s]\n}"
     (concat ", " (List.map string_of_vdecl f.args))
     (concat ",\n" (List.map fstmt_s f.body))
 
-let program_s (stmts, funcs) = sprintf "statements:{\n%s\n}\nfunctions:\n%s"
+
+let attr_s = function
+    | NonOption(t, id, Some(xpr)) -> sprintf "(ATTR: %s of %s = %s)"
+        id
+        (string_of_t t)
+        (expr_s xpr)
+    | NonOption(t, id, None) -> sprintf "(ATTR: %s of %s)"
+        id
+        (string_of_t t)
+    | Optional(t,id) -> sprintf "(ATTR: OPTIONAL %s of %s)"
+        id
+        (string_of_t t)
+
+
+let class_s (name, attrs) =
+    sprintf "(CLASS %s:\n%s)"
+        name
+        (concat "\n" (List.map (fun a -> "\t" ^ a)
+            (List.map attr_s attrs)))
+
+
+let program_s (stmts, classes, funcs) = sprintf
+    "classes:{\n%s\n}\nstatements:{\n%s\n}\nfunctions:\n%s"
+    (concat "\n" (List.rev (List.map class_s classes)))
     (concat "\n" (List.rev (List.map stmt_s stmts)))
     (concat "\n" (List.rev (List.map func_decl_s funcs)))
 

@@ -1,0 +1,6 @@
+class User {
+	optional int age;
+	string username;
+}
+
+User bob = new User(username="bobiscool");
