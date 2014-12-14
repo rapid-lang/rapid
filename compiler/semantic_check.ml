@@ -80,7 +80,7 @@ let check_attr sactuals_table = function
                 SActual(name, expr)
             else SActual(name, xpr)
 
-
+(* Check that all of the actuals in the instantiation are valid. *)
 let check_user_def_inst ct t sactls =
     let sactuals_table = add_actls empty_actuals_table sactls in
     let attr_table = get_attr_table t ct in

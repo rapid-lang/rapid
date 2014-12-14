@@ -145,7 +145,5 @@ let string_of_sast sast =
     let stmt_strings = List.map semantic_stmt_s stmts in
     let class_strings = List.map semantic_class_s classes in
     let func_strings = List.map semantic_func_s funcs in
-    String.concat " " (List.append
-        (List.append stmt_strings class_strings)
-        func_strings)
+    String.concat " "  (stmt_strings @ class_strings @ func_strings)
 
