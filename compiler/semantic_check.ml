@@ -24,7 +24,6 @@ exception ReturnTypeMismatchErr
 exception SfuncIdNotReWritten
 exception TooFewArgsErr
 exception TooManyArgsErr
-exception Invali
 
 type allowed_types = AllTypes | NumberTypes
 
