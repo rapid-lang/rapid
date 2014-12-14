@@ -69,9 +69,9 @@ and sactual_s = function
     | SActual(k,v) -> sprintf "(ACTUAL: %s=%s)" k (sexpr_s v)
 and user_def_expr_s = function
     | SUserDefInst(UserDef cls, sactls) ->
-        sprintf "(INSTANTIATE new UserDef %s(%s))"
+        sprintf "(INSTANTIATE new UserDef %s(\n\t%s))"
             cls
-            ("\n\t" ^ (String.concat ",\n\t" (List.map sactual_s sactls)))
+            (String.concat ",\n\t" (List.map sactual_s sactls))
     | SUserDefVar(UserDef cls, id) -> sprintf "(UserDef %s %s)" cls id
     | SUserDefAcc(UserDef cls, var, mem) -> sprintf "(UserDef %s Access: %s.%s)"
         cls var mem
