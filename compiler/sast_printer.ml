@@ -6,32 +6,7 @@ exception UnsupportedSexpr
 exception UnsupportedSOutput
 exception UntypedVariableReference of string
 
-
-let string_expr_s = function
-    | SStringExprLit s -> sprintf "(String Lit: %s)" s
-    | SStringVar id -> sprintf "(String Var: %s)" id
-    | SStringNull -> "(String NULL)"
-
-let rec int_expr_s = function
-    | SIntExprLit i -> sprintf "(Int Lit: %d)" i
-    | SIntVar id -> sprintf "(Int Var: %s)" id
-    | SIntBinOp(lhs, o, rhs) -> sprintf "(%s %s %s)"
-        (sexpr_s lhs) (Ast_printer.bin_op_s o) (sexpr_s rhs) 
-    | SIntNull -> "(Int NULL)"
-and float_expr_s = function
-    | SFloatExprLit f -> sprintf "(Lit %f)" f
-    | SFloatVar id -> sprintf "(Float Var %s)" id
-    | SFloatBinOp(lhs, o, rhs, _) -> sprintf "(%s %s %s)"
-        (sexpr_s lhs) (Ast_printer.bin_op_s o) (sexpr_s rhs)
-    | SFloatNull -> "(Float NULL)"
-and bool_expr_s = function
-    | SBoolExprLit b -> sprintf "(Bool lit: %b)" b
-    | SBoolVar id -> sprintf "(Bool Var: %s)" id
-    | SBoolCast e -> sprintf "(Cast (%s) to boolean)" (sexpr_s e)
-    | SBoolBinOp(lhs, o, rhs, _) -> sprintf "(%s %s %s)"
-        (sexpr_s lhs) (Ast_printer.bin_op_s o) (sexpr_s rhs)
-    | SBoolNull -> "(Bool NULL)"
-and sexpr_s = function
+let rec sexpr_s = function
     | SExprInt i -> int_expr_s i
     | SExprString s -> string_expr_s s
     | SExprFloat s -> float_expr_s s
@@ -45,6 +20,32 @@ and sexpr_s = function
         "Variable references must be rewritten with type information"))
     | UntypedNullExpr -> "(HARD NULL EXPR)"
     | _ -> raise UnsupportedSexpr
+and string_expr_s = function
+    | SStringExprLit s -> sprintf "(String Lit: %s)" s
+    | SStringVar id -> sprintf "(String Var: %s)" id
+    | SStringCast xpr -> sprintf "String Cast (%s)" (sexpr_s xpr)
+    | SStringNull -> "(String NULL)"
+and int_expr_s = function
+    | SIntExprLit i -> sprintf "(Int Lit: %d)" i
+    | SIntVar id -> sprintf "(Int Var: %s)" id
+    | SIntCast e -> sprintf "(Cast (%s) to int)" (sexpr_s e)
+    | SIntBinOp(lhs, o, rhs) -> sprintf "(%s %s %s)"
+        (sexpr_s lhs) (Ast_printer.bin_op_s o) (sexpr_s rhs)
+    | SIntNull -> "(Int NULL)"
+and float_expr_s = function
+    | SFloatExprLit f -> sprintf "(Lit %f)" f
+    | SFloatVar id -> sprintf "(Float Var %s)" id
+    | SFloatCast e -> sprintf "(Cast (%s) to float)" (sexpr_s e)
+    | SFloatBinOp(lhs, o, rhs, _) -> sprintf "(%s %s %s)"
+        (sexpr_s lhs) (Ast_printer.bin_op_s o) (sexpr_s rhs)
+    | SFloatNull -> "(Float NULL)"
+and bool_expr_s = function
+    | SBoolExprLit b -> sprintf "(Bool lit: %b)" b
+    | SBoolVar id -> sprintf "(Bool Var: %s)" id
+    | SBoolCast e -> sprintf "(Cast (%s) to boolean)" (sexpr_s e)
+    | SBoolBinOp(lhs, o, rhs, _) -> sprintf "(%s %s %s)"
+        (sexpr_s lhs) (Ast_printer.bin_op_s o) (sexpr_s rhs)
+    | SBoolNull -> "(Bool NULL)"
 
 let soutput_s = function
     | SPrintln xpr_l -> sprintf "(Println(%s))"

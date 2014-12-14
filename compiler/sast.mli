@@ -3,20 +3,23 @@ open Datatypes
 
 type cast_side = | Left | Right | None
 
-type int_expr =
+type string_expr =
+    | SStringExprLit of string
+    | SStringVar of string
+    | SStringCast of sexpr
+    | SStringNull
+and int_expr =
     | SIntExprLit of int
     | SIntVar of string
     | SIntBinOp of sexpr * op * sexpr
+    | SIntCast of sexpr
     | SIntNull
 and float_expr =
     | SFloatExprLit of float
     | SFloatVar of string
     | SFloatBinOp of sexpr * op * sexpr * cast_side
+    | SFloatCast of sexpr
     | SFloatNull
-and string_expr =
-    | SStringExprLit of string
-    | SStringVar of string
-    | SStringNull
 and bool_expr =
     | SBoolExprLit of bool
     | SBoolVar of string
@@ -43,7 +46,7 @@ type soutput =
 
 type svar_assign = string * sexpr
 
-type sfunc_lval = 
+type sfunc_lval =
     | SFuncDecl of var_type * svar_assign (*always a vdecl*)
     | SFuncId of string (*after translate before second pass*)
     | SFuncTypedId of var_type * string (*After second pass*)
