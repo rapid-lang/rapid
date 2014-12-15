@@ -8,18 +8,22 @@ exception UnsupportedSattr
 exception UntypedVariableReference of string
 exception UntypedAccess of string
 
+
 let rec sexpr_s = function
     | SExprInt i -> int_expr_s i
     | SExprString s -> string_expr_s s
     | SExprFloat s -> float_expr_s s
     | SExprBool b -> bool_expr_s b
+    | SExprUserDef u -> user_def_expr_s u
     | SCallTyped (t, (id, args)) -> sprintf "(Call %s) args = %s returns = %s"
         id
         (String.concat ", " (List.map sexpr_s args))
         (Ast_printer.string_of_t t)
-    | NullExpr -> "(NULL EXPR)"
+    | SExprAccess (e, m) -> raise(UntypedAccess(
+        "Accesses must be rewritten with type information"))
     | SId _ -> raise(UntypedVariableReference(
         "Variable references must be rewritten with type information"))
+    | NullExpr -> "(NULL EXPR)"
     | UntypedNullExpr -> "(HARD NULL EXPR)"
     | _ -> raise UnsupportedSexpr
 and string_expr_s = function
@@ -52,24 +56,6 @@ and bool_expr_s = function
         (sexpr_s lhs) (Ast_printer.bin_op_s o) (sexpr_s rhs)
     | SBoolAcc(cls, mem) -> sprintf "(Bool Access: %s.%s)" cls mem
     | SBoolNull -> "(Bool NULL)"
-
-let rec sexpr_s = function
-    | SExprInt i -> int_expr_s i
-    | SExprString s -> string_expr_s s
-    | SExprFloat s -> float_expr_s s
-    | SExprBool b -> bool_expr_s b
-    | SExprUserDef u -> user_def_expr_s u
-    | SCallTyped (t, (id, args)) -> sprintf "(Call %s) args = %s returns = %s"
-        id
-        (String.concat ", " (List.map sexpr_s args))
-        (Ast_printer.string_of_t t)
-    | SExprAccess (e, m) -> raise(UntypedAccess(
-        "Accesses must be rewritten with type information"))
-    | SId _ -> raise(UntypedVariableReference(
-        "Variable references must be rewritten with type information"))
-    | NullExpr -> "(NULL EXPR)"
-    | UntypedNullExpr -> "(HARD NULL EXPR)"
-    | _ -> raise UnsupportedSexpr
 and sactual_s = function
     | SActual(k,v) -> sprintf "(ACTUAL: %s=%s)" k (sexpr_s v)
 and user_def_expr_s = function
