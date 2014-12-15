@@ -1,0 +1,6 @@
+int a = 2 + b - c + 4;
+i = a == b;
+b = a > b;
+c = a and b;
+
+d = b or c;

@@ -15,3 +15,8 @@ printf("%t\n", f?);
 f = 0.0;
 printf("%t\n", f?);
 
+foo(f?);
+
+func foo(boolean i) {
+	println(i);
+}

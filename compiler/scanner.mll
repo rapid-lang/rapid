@@ -33,15 +33,14 @@ rule token = parse
 | "," { COMMA }
 (* | ":" { COLON }  *)
 
-(* generic type declaration *)
-| "<" { LTGEN }
-| ">" { GTGEN }
-
 (* operators *)
 | '+' { PLUS }
 | '-' { MINUS }
 | '*' { TIMES }
 | '/' { DIVIDE }
+| "and" {AND}
+| "or" { OR }
+| "%" { MOD }
 
 (* comparisons *)
 | "==" { EQ }

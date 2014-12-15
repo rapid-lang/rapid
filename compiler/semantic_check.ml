@@ -26,6 +26,8 @@ exception ReturnTypeMismatchErr
 exception SfuncIdNotReWritten
 exception TooFewArgsErr
 exception TooManyArgsErr
+exception InvalidBinaryOp
+exception BinOpTypeMismatchErr
 
 type allowed_types = AllTypes | NumberTypes
 
@@ -52,6 +54,15 @@ let rec check_arg_types = function
     | ([], (param :: pl)) -> raise TooManyArgsErr
     | ([],[]) -> []
 
+
+let get_cast_side = function 
+    | (Int, Float) -> Left
+    | (Float, Int) -> Right
+    | (String, String) -> None
+    | (Bool, Bool) -> None
+    | (Int, Int) -> None
+    | (Float, Float) -> None
+    | _ -> raise BinOpTypeMismatchErr
 
 (* Takes a type and a typed sexpr and confirms it is the proper type *)
 let check_t_sexpr expected_t xpr =
@@ -89,7 +100,6 @@ let check_user_def_inst ct t sactls =
         (StringMap.bindings attr_table) in
     SUserDefInst (UserDef t, checked_sactuals)
 
-
 (* Takes a symbol table and sexpr and rewrites variable references to be typed *)
 let rec rewrite_sexpr st ct ft = function
     | SId id -> (
@@ -108,6 +118,26 @@ let rec rewrite_sexpr st ct ft = function
         let xprs = (List.map (rewrite_sexpr st ct ft) xprs) in
         let xprs = check_arg_types ((get_arg_types id ft), xprs) in
         SCallTyped((get_return_type id ft), (id, xprs))
+    | SBinop (lhs, o, rhs) -> let lhs = rewrite_sexpr st ct ft lhs in
+        let rhs = rewrite_sexpr st ct ft rhs in
+        let lt = sexpr_to_t Void lhs in
+        let rt = sexpr_to_t Void rhs in
+        let possible_ts = get_op_types o in
+        if (List.mem rt possible_ts) && (List.mem lt possible_ts) then
+            match o with
+            | Ast.Less | Ast.Greater | Ast.Leq | Ast.Geq | Ast.Equal | Ast.Neq -> 
+                let lhs, rhs =  binop_cast_floats lhs rhs (get_cast_side (lt, rt)) in
+                SExprBool(SBoolBinOp(lhs, o, rhs))(*bool exprs allow casting *)
+            | Ast.And | Ast.Or -> if(rt = lt && lt = Bool)
+                then SExprBool(SBoolBinOp(lhs, o, rhs))
+                else raise BinOpTypeMismatchErr
+            | _ -> if(rt = lt) then match lt with
+                    | Int -> SExprInt(SIntBinOp(lhs, o, rhs))
+                    | Float -> SExprFloat(SFloatBinOp(lhs, o, rhs))
+                else 
+                    let lhs, rhs = binop_cast_floats lhs rhs (get_cast_side (lt, rt)) in
+                    SExprFloat(SFloatBinOp(lhs, o, rhs)) 
+        else raise InvalidBinaryOp
     | SExprUserDef udf -> (
         match udf with
         | SUserDefInst(UserDef t, sactls) ->
@@ -142,6 +172,10 @@ and rewrite_cast st ct ft xpr t_opt =
         | (NumberTypes, (Int | Float)) -> xpr
         | _ -> raise(InvalidTypeErr(sprintf
             "Cast cannot use %s expression" (Ast_printer.string_of_t t)))
+and binop_cast_floats lhs rhs = function
+    | Left -> SExprFloat(SFloatCast(lhs)), rhs
+    | Right -> lhs, SExprFloat(SFloatCast(rhs))
+    | _ -> lhs, rhs
 
 (* typechecks a sexpr *)
 let rewrite_sexpr_to_t st ct ft xpr t =

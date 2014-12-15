@@ -38,6 +38,8 @@ let get_string_literal_from_sexpr = function
     | SExprString(SStringVar id) -> sprintf "*%s" id
     | _ -> raise StringExpressionsRequired
 
+let op_to_code o = Ast_printer.bin_op_s o
+
 (* top level function for generating sexprs *)
 let rec sexpr_to_code = function
     | SExprInt i -> int_expr_to_code i
@@ -70,6 +72,7 @@ and int_expr_to_code = function
         let tmp_var = rand_var_gen () in
             sprintf "%s := *%s" tmp_var id,
             sprintf "&%s" tmp_var
+    | SIntBinOp(lhs, o, rhs) -> bin_op_to_code lhs o rhs
     | SIntNull -> "", "nil"
     | SIntCast c -> cast_to_code Int c
     | _ -> raise UnsupportedIntExprType
@@ -83,8 +86,9 @@ and float_expr_to_code = function
         let tmp_var = rand_var_gen () in
             sprintf "%s := *%s" tmp_var id,
             sprintf "&%s" tmp_var
-    | SFloatCast c -> cast_to_code Float c
+    | SFloatBinOp(rhs, o, lhs) -> bin_op_to_code rhs o lhs
     | SFloatNull -> "", "nil"
+    | SFloatCast c -> cast_to_code Float c
     | _ -> raise UnsupportedFloatExprType
 
 (* returns a reference to a boolean *)
@@ -98,6 +102,8 @@ and bool_expr_to_code = function
             sprintf "%s := *%s" tmp_var id,
             sprintf "&%s" tmp_var
     | SBoolCast c -> cast_to_code Bool c
+    (*once there is float expr to code then use that insdead of the first sexpr to code in 1rst 2 cases*)
+    | SBoolBinOp(lhs, o, rhs) -> bin_op_to_code lhs o rhs
     | SBoolNull -> "", "nil"
     | _ -> raise UnsupportedBoolExprType
 (* takes the destination type and the expression and creates the cast statement *)
@@ -116,6 +122,13 @@ and list_sexpr_to_code deref_string xpr_l =
     let setups = List.map (fun (s, _) -> s) trans in
     let refs = List.map (fun (_, r) -> deref_string^r) trans in
     setups, refs
+and bin_op_to_code lhs o rhs  = 
+    let setup1, lefts = sexpr_to_code lhs in
+    let setup2, rights = sexpr_to_code rhs in
+    let os = op_to_code o in
+    let tmp_var = (rand_var_gen ()) in
+    let new_tmps = sprintf "%s := *%s %s *%s" tmp_var lefts (op_to_code o) rights in
+    (setup1 ^ "\n" ^ setup2 ^ "\n" ^ new_tmps) , (sprintf "&%s" tmp_var)
 
 let sassign_to_code = function
     | (id, xpr) ->

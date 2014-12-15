@@ -8,7 +8,6 @@ exception UnsupportedSattr
 exception UntypedVariableReference of string
 exception UntypedAccess of string
 
-
 let rec sexpr_s = function
     | SExprInt i -> int_expr_s i
     | SExprString s -> string_expr_s s
@@ -33,6 +32,8 @@ and int_expr_s = function
     | SIntExprLit i -> sprintf "(Int Lit: %d)" i
     | SIntVar id -> sprintf "(Int Var: %s)" id
     | SIntCast e -> sprintf "(Cast (%s) to int)" (sexpr_s e)
+    | SIntBinOp(lhs, o, rhs) -> sprintf "(%s %s %s)"
+        (sexpr_s lhs) (Ast_printer.bin_op_s o) (sexpr_s rhs)
     | SIntAcc(cls, mem) -> sprintf "(Int Access: %s.%s)" cls mem
     | SIntNull -> "(Int NULL)"
 and float_expr_s = function
@@ -40,11 +41,15 @@ and float_expr_s = function
     | SFloatVar id -> sprintf "(Float Var %s)" id
     | SFloatAcc(cls, mem) -> sprintf "(Float Access: %s.%s)" cls mem
     | SFloatCast e -> sprintf "(Cast (%s) to float)" (sexpr_s e)
+    | SFloatBinOp(lhs, o, rhs) -> sprintf "(%s %s %s)"
+        (sexpr_s lhs) (Ast_printer.bin_op_s o) (sexpr_s rhs)
     | SFloatNull -> "(Float NULL)"
 and bool_expr_s = function
     | SBoolExprLit b -> sprintf "(Bool lit: %b)" b
     | SBoolVar id -> sprintf "(Bool Var: %s)" id
     | SBoolCast e -> sprintf "(Cast (%s) to boolean)" (sexpr_s e)
+    | SBoolBinOp(lhs, o, rhs) -> sprintf "(%s %s %s)"
+        (sexpr_s lhs) (Ast_printer.bin_op_s o) (sexpr_s rhs)
     | SBoolAcc(cls, mem) -> sprintf "(Bool Access: %s.%s)" cls mem
     | SBoolNull -> "(Bool NULL)"
 

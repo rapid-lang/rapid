@@ -4,9 +4,9 @@
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
-%token LBRACKET RBRACKET LTGEN GTGEN LIST
+%token LBRACKET RBRACKET LIST
 %token PLUS MINUS TIMES DIVIDE ASSIGN CASTBOOL
-%token EQ NEQ LT LEQ GT GEQ
+%token EQ NEQ LT LEQ GT GEQ AND OR MOD
 %token RETURN IF ELSE FOR WHILE FUNC IN
 %token PRINTLN PRINTF // LOG
 %token CLASS NEW ACCESS OPTIONAL
@@ -21,13 +21,14 @@
 
 %nonassoc NOELSE
 %nonassoc ELSE
+
 %right ASSIGN
-%left EQ NEQ
-%left LT GT LEQ GEQ
+%left LT GT LEQ GEQ EQ NEQ AND OR
 %left PLUS MINUS
-%left TIMES DIVIDE
+%left TIMES DIVIDE MOD
 %left ACCESS
 %left CASTBOOL
+
 
 %start program
 %type <Ast.program> program
@@ -38,8 +39,8 @@
 
 primtype:
     | TYPE { Ast_printer.string_to_t $1 }
-    | LIST LTGEN primtype GTGEN { ListType $3 }
-    /* todo: add arrays, dicts to primtype */
+    | LIST LT primtype GT { ListType $3 }
+    /* todo: add arrays and dicts to primtype */
 
 
 /* Base level expressions of a program:
@@ -94,7 +95,7 @@ formal_list:
     | formal_list COMMA primtype ID ASSIGN lit {($3, $4, Some($6)) :: $1}
 
 
-/* a tuple here of (primtype, ID) */
+/* a tuple here of (primtype, ID, optional expr) expr is the optional assign */
 var_decl:
     | primtype ID             { ($1 , $2, None) }
     | primtype ID ASSIGN expr { ($1 , $2, Some($4)) }
@@ -161,7 +162,6 @@ lit:
 
 expr:
     | lit              { $1 }
-    /* TODO add float handling */
     | ID               { Id $1 }
     | expr PLUS   expr { Binop($1, Add,   $3) }
     | expr MINUS  expr { Binop($1, Sub,   $3) }
@@ -173,12 +173,15 @@ expr:
     | expr LEQ    expr { Binop($1, Leq,   $3) }
     | expr GT     expr { Binop($1, Greater,  $3) }
     | expr GEQ    expr { Binop($1, Geq,   $3) }
+    | expr AND    expr { Binop($1, And, $3) }
+    | expr OR    expr  { Binop($1, Or, $3 )}
+    | expr MOD expr    { Binop($1, Mod, $3 )}
+    | expr CASTBOOL    { CastBool $1 }  
+    | primtype LPAREN expr RPAREN { Cast($1, $3) }
+    | fcall            { Call $1 }
+    | LPAREN expr RPAREN { $2 }
     | NEW ID LPAREN actuals_list_opt RPAREN { UserDefInst($2, $4)}
     | expr ACCESS ID                        { Access($1, $3) }
-    | expr CASTBOOL                         { CastBool $1 }
-    | primtype LPAREN expr RPAREN           { Cast($1, $3) }
-    | fcall                                 { Call $1 }
-    | LPAREN expr RPAREN                    { $2 }
     | LBRACKET expression_list_opt RBRACKET { ListLit $2 }
 
 

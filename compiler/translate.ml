@@ -26,8 +26,10 @@ let rec translate_expr = function
     (* we put a placeholder with the ID in and check after and reclassify *)
     | Ast.Id id       -> SId id
     | Ast.Call(id, expr) -> SCall(id, (List.map translate_expr expr))
+    | Ast.Binop(lhs, o, rhs) -> Sast.SBinop(translate_expr lhs, o, translate_expr rhs)
     | Ast.Nullxpr -> UntypedNullExpr
     | _ -> raise UnsupportedExpressionType
+    
 and translate_cast xpr = function
     | Int -> SExprInt(SIntCast(translate_expr xpr))
     | Float -> SExprFloat(SFloatCast(translate_expr xpr))

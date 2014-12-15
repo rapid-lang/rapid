@@ -30,6 +30,9 @@ let bin_op_s = function
     | Greater -> ">"
     | Geq -> ">="
     | Qmark -> "?"
+    | Or -> "||"
+    | And -> "&&"
+    | Mod -> "%"
 
 (* Converts expressions to strings *)
 let rec expr_s = function
