@@ -15,21 +15,22 @@ exception InvalidFloatExprType
 
 let rec translate_expr = function
     (* TODO: a ton more types here, also support recursive expressions *)
-    | Ast.IntLit i    -> SExprInt(SIntExprLit i)
-    | Ast.StringLit s -> SExprString(SStringExprLit s)
-    | Ast.FloatLit f  -> SExprFloat(SFloatExprLit f)
-    | Ast.BoolLit b   -> SExprBool(SBoolExprLit b)
-    | Ast.CastBool c  -> SExprBool(SBoolCast (translate_expr c))
+    | Ast.IntLit i     -> SExprInt(SIntExprLit i)
+    | Ast.StringLit s  -> SExprString(SStringExprLit s)
+    | Ast.FloatLit f   -> SExprFloat(SFloatExprLit f)
+    | Ast.BoolLit b    -> SExprBool(SBoolExprLit b)
+    | Ast.CastBool c   -> SExprBool(SBoolCast (translate_expr c))
     | Ast.Cast(t, xpr) -> translate_cast xpr t
     | Ast.UserDefInst(nm, actls) -> translate_user_def_inst nm actls
     | Ast.Access(e, mem)         -> translate_access e mem
     (* we put a placeholder with the ID in and check after and reclassify *)
-    | Ast.Id id       -> SId id
-    | Ast.Call(id, expr) -> SCall(id, (List.map translate_expr expr))
-    | Ast.Binop(lhs, o, rhs) -> Sast.SBinop(translate_expr lhs, o, translate_expr rhs)
-    | Ast.Nullxpr -> UntypedNullExpr
-    | _ -> raise UnsupportedExpressionType
-    
+    | Ast.Id id        -> SId id
+    | Ast.Binop(lhs, o, rhs) ->
+        Sast.SBinop(translate_expr lhs, o, translate_expr rhs)
+    | Ast.Call c       -> translate_call c
+    | Ast.Nullxpr      -> UntypedNullExpr
+    | _                -> raise UnsupportedExpressionType
+
 and translate_cast xpr = function
     | Int -> SExprInt(SIntCast(translate_expr xpr))
     | Float -> SExprFloat(SFloatCast(translate_expr xpr))
@@ -42,6 +43,11 @@ and translate_actual = function
     | Ast.Actual(nm, xpr) -> SActual(nm, (translate_expr xpr))
 and translate_access xpr mem =
     SExprAccess((translate_expr xpr), mem)
+and translate_call = function
+    | (None, id, exprs) -> SCall(SFCall
+        (None, id, (List.map translate_expr exprs)))
+    | (Some(xpr), id, exprs) -> SCall(SFCall
+        (Some(translate_expr xpr), id, (List.map translate_expr exprs)))
 
 let translate_assign id xpr = match translate_expr xpr with
     | SExprInt _    -> (id, xpr)
@@ -71,17 +77,21 @@ let translate_vars = function
         match translate_decl vd with
             | SDecl(t, (id, xpr)) -> SFuncDecl(t,(id, xpr))(*xpr will be None*)
 
-let translate_fcall id exprs =
-    let sxprs = (List.map translate_expr exprs) in
-    (id, sxprs)
+let translate_fcall = function
+    | (Some(xpr), id, exprs) ->
+        let sexprs = (List.map translate_expr exprs) in
+        SFCall(Some(translate_expr xpr), id, sexprs)
+    | (None, id, exprs) ->
+        let sexprs = (List.map translate_expr exprs) in
+        SFCall(None, id, sexprs)
 
 let translate_statement = function
     | Ast.VarDecl vd -> translate_decl vd
     | Ast.Assign(id, xpr) -> SAssign(id, translate_expr xpr)
     | Ast.Output o -> SOutput(translate_output o)
     | Ast.UserDefDecl udd -> translate_user_def_decl udd
-    | Ast.FuncCall(vl, (id, exprs)) -> let(id, sexprs) = translate_fcall id exprs in
-        SFuncCall((List.map translate_vars vl), id, sexprs)
+    | Ast.FuncCall(vl, fc) -> let sfc = translate_fcall fc in
+        SFuncCall((List.map translate_vars vl), sfc)
     | _ -> raise(UnsupportedStatementTypeErr "type unknown")
 
 let translate_attr = function

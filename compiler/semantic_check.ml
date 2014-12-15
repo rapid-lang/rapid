@@ -55,7 +55,7 @@ let rec check_arg_types = function
     | ([],[]) -> []
 
 
-let get_cast_side = function 
+let get_cast_side = function
     | (Int, Float) -> Left
     | (Float, Int) -> Right
     | (String, String) -> None
@@ -114,10 +114,15 @@ let rec rewrite_sexpr st ct ft = function
     | SExprInt(SIntCast e) -> SExprInt(SIntCast(rewrite_cast st ct ft e NumberTypes))
     | SExprFloat(SFloatCast e) -> SExprFloat(SFloatCast(rewrite_cast st ct ft e NumberTypes))
     | SExprString(SStringCast e) -> SExprString(SStringCast(rewrite_cast st ct ft e AllTypes))
-    | SCall(id, xprs) ->
-        let xprs = (List.map (rewrite_sexpr st ct ft) xprs) in
-        let xprs = check_arg_types ((get_arg_types id ft), xprs) in
-        SCallTyped((get_return_type id ft), (id, xprs))
+    | SCall(c) -> (match c with
+        | SFCall(Some(xpr), id, xprs) ->
+            let xprs = (List.map (rewrite_sexpr st ct ft) xprs) in
+            let xprs = check_arg_types ((get_arg_types id ft), xprs) in
+            SCallTyped((get_return_type id ft), SFCall(Some(xpr), id, xprs))
+        | SFCall(None, id, xprs) ->
+            let xprs = (List.map (rewrite_sexpr st ct ft) xprs) in
+            let xprs = check_arg_types ((get_arg_types id ft), xprs) in
+            SCallTyped((get_return_type id ft), SFCall(None, id, xprs)))
     | SBinop (lhs, o, rhs) -> let lhs = rewrite_sexpr st ct ft lhs in
         let rhs = rewrite_sexpr st ct ft rhs in
         let lt = sexpr_to_t Void lhs in
@@ -125,7 +130,7 @@ let rec rewrite_sexpr st ct ft = function
         let possible_ts = get_op_types o in
         if (List.mem rt possible_ts) && (List.mem lt possible_ts) then
             match o with
-            | Ast.Less | Ast.Greater | Ast.Leq | Ast.Geq | Ast.Equal | Ast.Neq -> 
+            | Ast.Less | Ast.Greater | Ast.Leq | Ast.Geq | Ast.Equal | Ast.Neq ->
                 let lhs, rhs =  binop_cast_floats lhs rhs (get_cast_side (lt, rt)) in
                 SExprBool(SBoolBinOp(lhs, o, rhs))(*bool exprs allow casting *)
             | Ast.And | Ast.Or -> if(rt = lt && lt = Bool)
@@ -134,9 +139,9 @@ let rec rewrite_sexpr st ct ft = function
             | _ -> if(rt = lt) then match lt with
                     | Int -> SExprInt(SIntBinOp(lhs, o, rhs))
                     | Float -> SExprFloat(SFloatBinOp(lhs, o, rhs))
-                else 
+                else
                     let lhs, rhs = binop_cast_floats lhs rhs (get_cast_side (lt, rt)) in
-                    SExprFloat(SFloatBinOp(lhs, o, rhs)) 
+                    SExprFloat(SFloatBinOp(lhs, o, rhs))
         else raise InvalidBinaryOp
     | SExprUserDef udf -> (
         match udf with
@@ -257,7 +262,7 @@ let rec var_analysis st ct ft = function
     (*Return stmts are xpr lists, tranlslate all the expressions here*)
     | SReturn(s) :: tl -> let xprs = List.map (rewrite_sexpr st ct ft) s in
          SReturn(xprs) :: (var_analysis st ct ft tl)
-    | SFuncCall (lv, id, xprs) :: tl ->
+    | SFuncCall (lv, SFCall(None, id, xprs)) :: tl ->
         let lv = (List.map (rewrite_lv st) lv) in
         let check_lv ft id = function
             | [] -> () (*ignoring return types so foo(); is always a valid stmnt*)
@@ -267,7 +272,7 @@ let rec var_analysis st ct ft = function
         let xprs = (List.map (rewrite_sexpr st ct ft) xprs) in
         let xprs = check_arg_types ((get_arg_types id ft), xprs) in
         let st = scope_lv st lv in
-        SFuncCall(lv, id, xprs) :: (var_analysis st ct ft tl)
+        SFuncCall(lv, SFCall(None, id, xprs)) :: (var_analysis st ct ft tl)
     | SUserDefDecl(cls, (id, xpr)) :: tl ->
         let expr = rewrite_sexpr st ct ft xpr in
         let t = UserDef cls in
@@ -284,7 +289,7 @@ let rec add_to_scope st = function
     | SDecl(t, (id, xpr)) :: tl ->
        let st = add_sym t id st in
         add_to_scope st tl
-    | SFuncCall (lv, _, _) :: tl -> let st = scope_lv st lv in
+    | SFuncCall (lv, _) :: tl -> let st = scope_lv st lv in
         add_to_scope st tl
     | _ :: tl -> add_to_scope st tl
     | [] -> st
@@ -351,7 +356,6 @@ let rec class_analysis class_tbl = function
         let lst, class_tbl = class_analysis class_tbl tl in
         ((class_id, attrs) :: lst), class_tbl
     | [] -> [], class_tbl
-
 
 
 let gen_class_stmts stmts =

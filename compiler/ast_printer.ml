@@ -58,7 +58,11 @@ let rec expr_s = function
     | Nullxpr -> "(Null)"
 
 and fcall_s = function
-    | (f, es) -> sprintf "(Call (%s) with (%s))"
+    | (None, f, es) -> sprintf "(Call (%s) with (%s))"
+        f
+        (concat ", " (List.map (fun e -> sprintf "(%s)" (expr_s e)) es))
+    | (Some(xpr), f, es) -> sprintf "(Call %s.(%s) with (%s))"
+        (expr_s xpr)
         f
         (concat ", " (List.map (fun e -> sprintf "(%s)" (expr_s e)) es))
 and actual_s = function

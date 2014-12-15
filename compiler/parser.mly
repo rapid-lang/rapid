@@ -40,7 +40,7 @@
 primtype:
     | TYPE { Ast_printer.string_to_t $1 }
     | LIST LT primtype GT { ListType $3 }
-    /* todo: add arrays and dicts to primtype */
+    /* todo: add arrays, dicts to primtype */
 
 
 /* Base level expressions of a program:
@@ -126,7 +126,8 @@ id_list:
     | primtype ID {[VDecl($1, $2, None)]}
 
 fcall:
-    | ID LPAREN expression_list_opt RPAREN { ($1, $3) }
+    | ID LPAREN expression_list_opt RPAREN             { (None,     $1, $3) }
+    | expr ACCESS ID LPAREN expression_list_opt RPAREN { (Some($1), $3, $5) }
 
 func_call:
     | fcall                {FuncCall([], $1)}
@@ -176,7 +177,7 @@ expr:
     | expr AND    expr { Binop($1, And, $3) }
     | expr OR    expr  { Binop($1, Or, $3 )}
     | expr MOD expr    { Binop($1, Mod, $3 )}
-    | expr CASTBOOL    { CastBool $1 }  
+    | expr CASTBOOL    { CastBool $1 }
     | primtype LPAREN expr RPAREN { Cast($1, $3) }
     | fcall            { Call $1 }
     | LPAREN expr RPAREN { $2 }

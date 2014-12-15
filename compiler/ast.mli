@@ -1,6 +1,6 @@
 open Datatypes
 
-type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | Qmark | Or | And | Mod 
+type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | Qmark | Or | And | Mod
 
 type expr =
     | Id of string
@@ -17,7 +17,7 @@ type expr =
     | Access of expr * string
     | Noexpr
     | Nullxpr
-and fcall = string * expr list
+and fcall = expr option * string * expr list
 and actual =
     | Actual of string * expr
 

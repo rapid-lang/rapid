@@ -19,7 +19,7 @@ and int_expr =
 and float_expr =
     | SFloatExprLit of float
     | SFloatVar of string
-    | SFloatBinOp of sexpr * op * sexpr 
+    | SFloatBinOp of sexpr * op * sexpr
     | SFloatCast of sexpr
     | SFloatAcc of string * string
     | SFloatNull
@@ -27,11 +27,12 @@ and bool_expr =
     | SBoolExprLit of bool
     | SBoolVar of string
     | SBoolCast of sexpr
-    | SBoolBinOp of sexpr * op * sexpr 
+    | SBoolBinOp of sexpr * op * sexpr
     | SBoolAcc of string * string
     | SBoolNull
-and func_call_expr = string * sexpr list
 and bin_expr = sexpr * op * sexpr
+and func_call_expr =
+    | SFCall of sexpr option * string * sexpr list
 and sexpr =
     | SExprInt of int_expr
     | SExprString of string_expr
@@ -69,7 +70,7 @@ type semantic_stmt =
     | SDecl of var_type * svar_assign
     | SOutput of soutput
     | SReturn of sexpr list
-    | SFuncCall of sfunc_lval list * string * sexpr list (*left hand of assing, fname, args*)
+    | SFuncCall of sfunc_lval list * func_call_expr (*left hand of assing, func_call*)
     | SUserDefDecl of string * svar_assign
 
 type sattr =

@@ -46,7 +46,7 @@ let rec sexpr_to_code = function
     | SExprString s -> string_expr_to_code s
     | SExprFloat f -> float_expr_to_code f
     | SExprBool b -> bool_expr_to_code b
-    | SCallTyped(t, (id, args)) -> func_expr_to_code id args
+    | SCallTyped(t, SFCall(None, id, args)) -> func_expr_to_code id args
     | NullExpr -> "", "nil"
     | s -> raise(UnsupportedSExprType(Sast_printer.sexpr_s s))
 (* returns a reference to a string *)
@@ -122,7 +122,7 @@ and list_sexpr_to_code deref_string xpr_l =
     let setups = List.map (fun (s, _) -> s) trans in
     let refs = List.map (fun (_, r) -> deref_string^r) trans in
     setups, refs
-and bin_op_to_code lhs o rhs  = 
+and bin_op_to_code lhs o rhs  =
     let setup1, lefts = sexpr_to_code lhs in
     let setup2, rights = sexpr_to_code rhs in
     let os = op_to_code o in
@@ -180,7 +180,7 @@ let sast_to_code = function
     | SAssign a -> sassign_to_code a
     | SOutput p -> soutput_to_code p
     | SReturn xprs -> sreturn_to_code xprs
-    | SFuncCall (lv, id, xprs) -> sfunccall_to_code lv id xprs
+    | SFuncCall (lv, SFCall(None, id, xprs)) -> sfunccall_to_code lv id xprs
     | _ -> raise(UnsupportedSemanticStatementType)
 
 let arg_to_code = function
@@ -197,7 +197,7 @@ let defaults_to_code = function
 let rec grab_decls = function
     | SDecl(t, (id, _)) :: tl ->
         sprintf "var %s %s" id (go_type_from_type t) :: grab_decls tl
-    | SFuncCall(lv, _,_) :: tl ->
+    | SFuncCall(lv,_) :: tl ->
         (String.concat "\n" (List.map decls_from_lv lv)) :: grab_decls tl
     | _ :: tl -> grab_decls tl
     | [] -> []
