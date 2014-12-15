@@ -1,0 +1,5 @@
+Error e;
+
+e = new Error();
+
+Error moocow = new Error(color="spotted", size="800kg", taste="delicious");

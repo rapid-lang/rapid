@@ -59,6 +59,8 @@ rule token = parse
 
 | "while" { WHILE }
 
+| "Error" { ERROR }
+
 (* primatives *)
 | '=' { ASSIGN }
 

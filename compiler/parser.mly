@@ -10,6 +10,7 @@
 %token RETURN IF ELSE FOR WHILE FUNC IN
 %token PRINTLN PRINTF // LOG
 %token CLASS NEW ACCESS OPTIONAL
+%token ERROR
 // %token INT BOOL FLOAT STRING
 
 %token <string> ID TYPE STRING_LIT
@@ -40,7 +41,7 @@
 primtype:
     | TYPE { Ast_printer.string_to_t $1 }
     | LIST LT primtype GT { ListType $3 }
-    /* todo: add arrays and dicts to primtype */
+    /* todo: add arrays , dicts to primtype */
 
 
 /* Base level expressions of a program:
@@ -100,11 +101,13 @@ var_decl:
     | primtype ID             { ($1 , $2, None) }
     | primtype ID ASSIGN expr { ($1 , $2, Some($4)) }
 
+error_decl:
+    | ERROR ID                      { ($2,  None) }
+    | ERROR ID ASSIGN expr    { ($2,  Some($4)) }
 
 user_def_decl:
     | ID ID             { ($1, $2, None) }
     | ID ID ASSIGN expr { ($1, $2, Some($4)) }
-
 
 fstmt_list:
     | /* nothing */         { [] }
@@ -143,6 +146,7 @@ stmt:
     | user_def_decl SEMI { UserDefDecl $1 }
     | func_call SEMI     { $1 }
     | ID ASSIGN expr SEMI { Assign($1, $3) }
+    | error_decl SEMI    { ErrorDecl $1   }
     | FOR LPAREN TYPE ID IN expr RPAREN LBRACE stmt_list RBRACE
         { For(Ast_printer.string_to_t $3, $4, $6, List.rev $9) }
     | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE %prec NOELSE { If($3, List.rev $6, []) }
@@ -186,6 +190,7 @@ expr:
     | primtype LPAREN expr RPAREN { Cast($1, $3) }
     | fcall            { Call $1 }
     | LPAREN expr RPAREN { $2 }
+    | NEW ERROR LPAREN actuals_list_opt RPAREN { Error($4) }
     | NEW ID LPAREN actuals_list_opt RPAREN { UserDefInst($2, $4)}
     | expr ACCESS ID                        { Access($1, $3) }
     | LBRACKET expression_list_opt RBRACKET { ListLit $2 }
@@ -194,7 +199,6 @@ expr:
 
 expression_list:
     | expression_list_internal    { List.rev $1 }
-
 
 expression_list_opt:
     | /* nothing */    { [] }
