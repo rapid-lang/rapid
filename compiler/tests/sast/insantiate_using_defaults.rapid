@@ -1,0 +1,7 @@
+class User {
+	string username = "burgerbob";
+	int age = 42;
+}
+
+
+User bob = new User();

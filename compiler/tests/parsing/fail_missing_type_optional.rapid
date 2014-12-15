@@ -1,0 +1,4 @@
+class User {
+	optional age;
+	string username;
+}

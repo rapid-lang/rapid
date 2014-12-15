@@ -9,6 +9,7 @@
 %token EQ NEQ LT LEQ GT GEQ AND OR MOD
 %token RETURN IF ELSE FOR WHILE FUNC IN
 %token PRINTLN PRINTF // LOG
+%token CLASS NEW ACCESS OPTIONAL
 // %token INT BOOL FLOAT STRING
 
 %token <string> ID TYPE STRING_LIT
@@ -22,9 +23,10 @@
 %nonassoc ELSE
 
 %right ASSIGN
+%left LT GT LEQ GEQ EQ NEQ AND OR
 %left PLUS MINUS
 %left TIMES DIVIDE MOD
-%left LT GT LEQ GEQ EQ NEQ AND OR
+%left ACCESS
 %left CASTBOOL
 
 
@@ -41,12 +43,19 @@ primtype:
     /* todo: add arrays and dicts to primtype */
 
 
-/* Base level expressions of a program: 
+/* Base level expressions of a program:
  * TODO: Classes */
 program:
-    | /* nothing */     { [], [] }
-    | program stmt SEMI { ($2 :: fst $1), snd $1 }
-    | program func_decl { fst $1, ($2 :: snd $1) }
+    | /* nothing */ { [], [], [] }
+    | program stmt SEMI {
+        let (statements, classes, functions) = $1 in
+            ($2 :: statements), classes, functions }
+    | program func_decl {
+        let (statements, classes, functions) = $1 in
+            statements, classes, ($2 :: functions) }
+    | program class_decl {
+        let (statements, classes, functions) = $1 in
+            statements, ($2 :: classes), functions }
 
 
 /* TODO: allow user defined types */
@@ -92,13 +101,18 @@ var_decl:
     | primtype ID ASSIGN expr { ($1 , $2, Some($4)) }
 
 
+user_def_decl:
+    | ID ID             { ($1, $2, None) }
+    | ID ID ASSIGN expr { ($1, $2, Some($4)) }
+
+
 fstmt_list:
     | /* nothing */         { [] }
     | fstmt_list func_stmt { $2 :: $1 }
 
 ret_expr_list:
     | expr {[$1]}
-    | ret_expr_list COMMA expr {$3 :: $1} 
+    | ret_expr_list COMMA expr {$3 :: $1}
     | { [] }
 
 func_stmt:
@@ -121,12 +135,11 @@ func_call:
 stmt:
     | print          { Output $1 }
     | var_decl       { VarDecl $1 }
+    | user_def_decl  { UserDefDecl $1 }
     | func_call      { $1 }
     | ID ASSIGN expr { Assign($1, $3) }
     | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
     | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
-    | FOR LPAREN expr_opt SEMI expr_opt SEMI expr_opt RPAREN stmt
-        { For($3, $5, $7, $9) }
     | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
 
 
@@ -167,6 +180,8 @@ expr:
     | primtype LPAREN expr RPAREN { Cast($1, $3) }
     | fcall            { Call $1 }
     | LPAREN expr RPAREN { $2 }
+    | NEW ID LPAREN actuals_list_opt RPAREN { UserDefInst($2, $4)}
+    | expr ACCESS ID                        { Access($1, $3) }
     | LBRACKET expression_list_opt RBRACKET { ListLit $2 }
 
 
@@ -183,5 +198,36 @@ expression_list_internal:
     | expr                               { [$1] }
     | expression_list_internal COMMA expr { $3 :: $1 }
 
+
+actuals_list:
+    | /* nothing */ { [] }
+    | actuals_list_internal  { List.rev $1 }
+
+
+actuals_list_opt:
+    | /* nothing */ { [] }
+    | actuals_list  { $1 }
+
+
+actuals_list_internal:
+    /* TODO: allow user defined types */
+    | ID ASSIGN expr                    { [Actual($1, $3)] }
+    | actuals_list COMMA ID ASSIGN expr { Actual($3, $5) :: $1 }
+
+
+attr_decl:
+    | primtype ID             { NonOption($1 , $2, None) }
+    /* we limit the default values to literals */
+    | primtype ID ASSIGN lit  { NonOption($1 , $2, Some($4)) }
+    | OPTIONAL primtype ID    { Optional($2, $3) }
+
+
+attribute_list:
+    | /* nothing */                 { [] }
+    | attribute_list attr_decl SEMI { $2 :: $1 }
+
+
+class_decl:
+    | CLASS ID LBRACE attribute_list RBRACE { $2, $4 }
 
 %%
