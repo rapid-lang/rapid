@@ -183,6 +183,7 @@ expr:
     | NEW ID LPAREN actuals_list_opt RPAREN { UserDefInst($2, $4)}
     | expr ACCESS ID                        { Access($1, $3) }
     | LBRACKET expression_list_opt RBRACKET { ListLit $2 }
+    | expr LBRACKET expr RBRACKET { ListAccess($1, $3) }
 
 
 expression_list:

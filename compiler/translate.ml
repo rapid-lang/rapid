@@ -13,12 +13,20 @@ exception InvalidIntExprType
 exception InvalidFloatExprType
 
 
+(* Convert AST.exp to SAST.sexpr *)
 let rec translate_expr = function
     (* TODO: a ton more types here, also support recursive expressions *)
     | Ast.IntLit i    -> SExprInt(SIntExprLit i)
     | Ast.StringLit s -> SExprString(SStringExprLit s)
     | Ast.FloatLit f  -> SExprFloat(SFloatExprLit f)
     | Ast.BoolLit b   -> SExprBool(SBoolExprLit b)
+    | Ast.ListLit l   ->
+        let sexpr_list = List.map translate_expr l in
+        SExprList(SListExprLit(None, sexpr_list))
+    | Ast.ListAccess(xpr_l, xpr_r) ->
+        let sxpr_l = translate_expr xpr_l in
+        let sxpr_r = translate_expr xpr_r in
+        SExprList(SListAccess(sxpr_l, sxpr_r))
     | Ast.CastBool c  -> SExprBool(SBoolCast (translate_expr c))
     | Ast.Cast(t, xpr) -> translate_cast xpr t
     | Ast.UserDefInst(nm, actls) -> translate_user_def_inst nm actls
@@ -46,14 +54,17 @@ and translate_access xpr mem =
 let translate_assign id xpr = match translate_expr xpr with
     | SExprInt _    -> (id, xpr)
     | SExprString _ -> (id, xpr)
-    | SExprBool _ -> (id, xpr)
-    | SExprFloat _ ->  (id, xpr)
+    | SExprBool _   -> (id, xpr)
+    | SExprFloat _  -> (id, xpr)
+    | SExprList _   -> (id, xpr)
     | SId _         -> (id, xpr)
     | _ -> raise UnsupportedExpressionType
 
 let translate_decl = function
     | (Int | String | Float | Bool) as t, id, i_xpr_opt ->
-            SDecl(t, (id, expr_option_map translate_expr i_xpr_opt))
+        SDecl(t, (id, expr_option_map translate_expr i_xpr_opt))
+    | ListType t, id, i_xpr_opt ->
+        SDecl(ListType t, (id, expr_option_map translate_expr i_xpr_opt))
     | t, _, _ -> raise(UnsupportedStatementTypeErr (Ast_printer.string_of_t t))
     | _ -> raise UnsupportedDeclType
 

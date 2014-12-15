@@ -28,6 +28,7 @@ exception TooFewArgsErr
 exception TooManyArgsErr
 exception InvalidBinaryOp
 exception BinOpTypeMismatchErr
+exception AmbiguousContextErr of string
 
 type allowed_types = AllTypes | NumberTypes
 
@@ -55,7 +56,7 @@ let rec check_arg_types = function
     | ([],[]) -> []
 
 
-let get_cast_side = function 
+let get_cast_side = function
     | (Int, Float) -> Left
     | (Float, Int) -> Right
     | (String, String) -> None
@@ -101,7 +102,7 @@ let check_user_def_inst ct t sactls =
     SUserDefInst (UserDef t, checked_sactuals)
 
 (* Takes a symbol table and sexpr and rewrites variable references to be typed *)
-let rec rewrite_sexpr st ct ft = function
+let rec rewrite_sexpr st ct ft ?t = function
     | SId id -> (
         match get_type id st with
         | Int -> SExprInt(SIntVar id)
@@ -109,11 +110,20 @@ let rec rewrite_sexpr st ct ft = function
         | Float -> SExprFloat(SFloatVar id)
         | Bool -> SExprBool(SBoolVar id)
         | UserDef cls -> SExprUserDef(SUserDefVar ((UserDef cls), id))
+        | ListType(ty) -> SExprList(SListVar(ty, id))
         | _ -> raise UnsupportedDatatypeErr)
     | SExprBool(SBoolCast e) -> SExprBool(SBoolCast(rewrite_cast st ct ft e AllTypes))
     | SExprInt(SIntCast e) -> SExprInt(SIntCast(rewrite_cast st ct ft e NumberTypes))
     | SExprFloat(SFloatCast e) -> SExprFloat(SFloatCast(rewrite_cast st ct ft e NumberTypes))
     | SExprString(SStringCast e) -> SExprString(SStringCast(rewrite_cast st ct ft e AllTypes))
+    | SExprList(SListExprLit(None, untyped_l)) ->
+        rewrite_sexpr_list st ct ft untyped_l t
+    | SExprList(SListAccess(xpr_l, xpr_r)) ->
+        let rewritten_l = rewrite_sexpr st ct ft xpr_l in
+        let rewritten_r = rewrite_sexpr st ct ft xpr_r in
+        (* Verify that index is an int *)
+        let () = check_t_sexpr Int rewritten_r in
+        SExprList(SListAccess(rewritten_l, rewritten_r))
     | SCall(id, xprs) ->
         let xprs = (List.map (rewrite_sexpr st ct ft) xprs) in
         let xprs = check_arg_types ((get_arg_types id ft), xprs) in
@@ -125,7 +135,7 @@ let rec rewrite_sexpr st ct ft = function
         let possible_ts = get_op_types o in
         if (List.mem rt possible_ts) && (List.mem lt possible_ts) then
             match o with
-            | Ast.Less | Ast.Greater | Ast.Leq | Ast.Geq | Ast.Equal | Ast.Neq -> 
+            | Ast.Less | Ast.Greater | Ast.Leq | Ast.Geq | Ast.Equal | Ast.Neq ->
                 let lhs, rhs =  binop_cast_floats lhs rhs (get_cast_side (lt, rt)) in
                 SExprBool(SBoolBinOp(lhs, o, rhs))(*bool exprs allow casting *)
             | Ast.And | Ast.Or -> if(rt = lt && lt = Bool)
@@ -134,9 +144,9 @@ let rec rewrite_sexpr st ct ft = function
             | _ -> if(rt = lt) then match lt with
                     | Int -> SExprInt(SIntBinOp(lhs, o, rhs))
                     | Float -> SExprFloat(SFloatBinOp(lhs, o, rhs))
-                else 
+                else
                     let lhs, rhs = binop_cast_floats lhs rhs (get_cast_side (lt, rt)) in
-                    SExprFloat(SFloatBinOp(lhs, o, rhs)) 
+                    SExprFloat(SFloatBinOp(lhs, o, rhs))
         else raise InvalidBinaryOp
     | SExprUserDef udf -> (
         match udf with
@@ -176,6 +186,24 @@ and binop_cast_floats lhs rhs = function
     | Left -> SExprFloat(SFloatCast(lhs)), rhs
     | Right -> lhs, SExprFloat(SFloatCast(rhs))
     | _ -> lhs, rhs
+
+(* typechecks a sexpr *)
+and rewrite_sexpr_list st ct ft untyped_l = function
+    | Some(ListType(child_type) as ty) ->
+        let typed_sexprs = List.map (
+            rewrite_sexpr st ct ft ~t:child_type
+        ) untyped_l in
+        let _ = List.map (fun child ->
+            let actual_type = sexpr_to_t child_type child in
+            if actual_type <> child_type
+                then
+                raise(InvalidTypeErr(Format.sprintf
+                    "Actual type %s did not match declared child type %s"
+                    (Ast_printer.string_of_t actual_type)
+                    (Ast_printer.string_of_t child_type)))
+        ) typed_sexprs in
+        SExprList(SListExprLit(Some(ty), typed_sexprs))
+    | None -> raise(AmbiguousContextErr("Type must be passed in for lists"))
 
 (* typechecks a sexpr *)
 let rewrite_sexpr_to_t st ct ft xpr t =
@@ -243,12 +271,13 @@ let rec scope_lv st = function
 (* Processes an unsafe SAST and returns a type checked SAST *)
 let rec var_analysis st ct ft = function
     | SDecl(t, (id, xpr)) :: tl ->
-        let expr = rewrite_sexpr st ct ft xpr in
+        let expr = rewrite_sexpr st ct ft xpr ~t:t in
         let st = add_sym t id st in
         let () = check_t_sexpr t expr in
             SDecl(t, (id, expr)) :: var_analysis st ct ft tl
     | SAssign(id, xpr) :: tl ->
-        let expr = rewrite_sexpr st ct ft xpr in
+        let t = get_type id st in
+        let expr = rewrite_sexpr st ct ft xpr ~t:t in
         let st = check_var_assign_use st id expr in
             SAssign(id, expr) :: (var_analysis st ct ft tl)
     | SOutput(so) :: tl ->

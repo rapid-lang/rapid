@@ -21,6 +21,7 @@ let rec sexpr_s = function
         (Ast_printer.string_of_t t)
     | SExprAccess (e, m) -> raise(UntypedAccess(
         "Accesses must be rewritten with type information"))
+    | SExprList l -> list_expr l
     | SId _ -> raise(UntypedVariableReference(
         "Variable references must be rewritten with type information"))
     | NullExpr -> "(NULL EXPR)"
@@ -80,6 +81,17 @@ and sattr_s = function
         (Ast_printer.string_of_t t)
     | _ -> raise UnsupportedSattr
 
+and list_expr = function
+    | SListExprLit(Some(t), l) -> sprintf "(Lit <%s> %s )"
+        (Ast_printer.string_of_t t)
+        (String.concat ", " (List.map sexpr_s l))
+    | SListExprLit(None, l) -> sprintf "(Lit <None> %s )"
+        (String.concat ", " (List.map sexpr_s l))
+    | SListAccess(xpr_l, xpr_r) -> sprintf "(List access %s at index %s)"
+        (sexpr_s xpr_l)
+        (sexpr_s xpr_r)
+    | SListVar(t, id) -> sprintf "(List Var <%s> %s)" id (Ast_printer.string_of_t t)
+    | SListNull -> "(List NULL)"
 
 let soutput_s = function
     | SPrintln xpr_l -> sprintf "(Println(%s))"
