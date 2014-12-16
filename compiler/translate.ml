@@ -93,6 +93,12 @@ let rec translate_statement = function
     | Ast.UserDefDecl udd -> translate_user_def_decl udd
     | Ast.FuncCall(vl, (id, exprs)) -> let(id, sexprs) = translate_fcall id exprs in
         SFuncCall((List.map translate_vars vl), id, sexprs)
+    | Ast.If(expr, ifstmts, []) -> let ifs = List.map translate_statement ifstmts in
+        SIf(translate_expr expr, ifs)
+    | Ast.If(expr, ifstmts, else_stmts) -> let ifs = List.map translate_statement ifstmts in
+        let es =  List.map translate_statement else_stmts in
+        SIfElse(translate_expr expr, ifs, es)
+    | Ast.While(expr, stmts) -> SWhile(translate_expr expr, (List.map translate_statement stmts))
     | Ast.For(t, id, xpr, stmts) ->
         let s_id = translate_expr (Ast.Id id) in
         let s_xpr = translate_expr xpr in

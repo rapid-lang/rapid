@@ -219,12 +219,30 @@ let rec grab_decls = function
     | _ :: tl -> grab_decls tl
     | [] -> []
 
-let rec sast_to_code = function
+type control_t = | IF | WHILE
+
+(*b is a bool that tells if an if or a for loop. true = if, false = while loop*)
+let rec control_code b expr stmts =
+    let tmps, exprs = sexpr_to_code expr in
+    let body = String.concat "\n" (List.map sast_to_code stmts) in
+    let decls = String.concat "\n" (grab_decls stmts) in 
+    match b with
+        |IF -> sprintf "%s\nif *(%s){%s\n%s}" tmps exprs decls body 
+        |WHILE -> sprintf "for{\n%s\nif !(*(%s)){\nbreak\n}\n%s\n%s}\n" tmps exprs decls body
+        
+and sast_to_code = function
     | SDecl(_, (id, xpr)) -> sassign_to_code (id, xpr)
     | SAssign a -> sassign_to_code a
     | SOutput p -> soutput_to_code p
     | SReturn xprs -> sreturn_to_code xprs
     | SFuncCall (lv, id, xprs) -> sfunccall_to_code lv id xprs
+    | SIf (expr, stmts) -> (control_code IF expr stmts) ^ "\n"
+    | SWhile (expr, stmts) -> control_code WHILE expr stmts
+    | SIfElse(expr, stmts, estmts) -> 
+        sprintf "%selse{\n%s\n%s}\n"
+        (control_code IF expr stmts)
+        (String.concat "\n" (grab_decls estmts))
+        (String.concat "\n" (List.map sast_to_code estmts))
     | SFor(t, SId(id), xpr, stmts) -> sfor_to_code t id xpr stmts
     | _ -> raise(UnsupportedSemanticStatementType)
 

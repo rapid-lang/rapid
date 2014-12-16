@@ -268,6 +268,19 @@ let rec scope_lv st = function
     | SFuncTypedId(_, _) :: tl -> scope_lv st tl
     | [] -> st
 
+(*
+Adds all var decls in a stmt list to the scope and returns the new scope
+This does not do any type checking, and ignores the optional expression
+*)
+let rec add_to_scope st = function
+    | SDecl(t, (id, xpr)) :: tl ->
+       let st = add_sym t id st in
+        add_to_scope st tl
+    | SFuncCall (lv, _, _) :: tl -> let st = scope_lv st lv in
+        add_to_scope st tl
+    | _ :: tl -> add_to_scope st tl
+    | [] -> st
+
 (* Processes an unsafe SAST and returns a type checked SAST *)
 let rec var_analysis st ct ft = function
     | SDecl(t, (id, xpr)) :: tl ->
@@ -303,6 +316,25 @@ let rec var_analysis st ct ft = function
         let st = add_sym t id st in
         let () = check_t_sexpr t expr in
             SUserDefDecl(cls, (id, xpr)) :: var_analysis st ct ft tl
+    | SIf(xpr, stmts) :: tl ->
+        let expr = rewrite_sexpr st ct ft xpr in
+        let () = check_t_sexpr Bool expr in
+        let new_scope = new_scope st in 
+        let stmts = var_analysis new_scope ct ft stmts in
+        SIf(expr, stmts) :: (var_analysis st ct ft tl)
+    | SIfElse(xpr, stmts, estmts) :: tl ->
+        let expr = rewrite_sexpr st ct ft xpr in
+        let () = check_t_sexpr Bool expr in
+        let if_scope = new_scope st in 
+        let stmts = var_analysis if_scope ct ft stmts in
+        let else_scope = new_scope st in
+        let estmts = var_analysis else_scope ct ft estmts in
+        SIfElse(expr, stmts, estmts) :: (var_analysis st ct ft tl)
+    | SWhile(xpr, stmts) :: tl -> 
+        let expr = rewrite_sexpr st ct ft xpr in
+        let () = check_t_sexpr Bool expr in
+        let stmts = var_analysis (new_scope st) ct ft stmts in
+        SWhile(expr, stmts) :: var_analysis st ct ft tl
     | SFor (t, SId(id), xpr, stmts) :: tl ->
         let scoped_st = new_scope st in
         let scoped_st = add_sym t id scoped_st in
@@ -311,18 +343,6 @@ let rec var_analysis st ct ft = function
         SFor(t, SId(id), xpr, for_body) :: (var_analysis st ct ft tl)
     | [] -> []
 
-(*
-Adds all var decls in a stmt list to the scope and returns the new scope
-This does not do any type checking, and ignores the optional expression
-*)
-let rec add_to_scope st = function
-    | SDecl(t, (id, xpr)) :: tl ->
-       let st = add_sym t id st in
-        add_to_scope st tl
-    | SFuncCall (lv, _, _) :: tl -> let st = scope_lv st lv in
-        add_to_scope st tl
-    | _ :: tl -> add_to_scope st tl
-    | [] -> st
 
 (*Called when we see an arg with default val, all the rest must have defaults*)
 let rec check_default_args = function

@@ -1,0 +1,15 @@
+boolean b = false;
+int q = 9 * 9 - 3;
+while(b)
+{
+	int a = 1;
+	int b = 3;
+	if((b-1) > a)
+	{
+	    b = b + a;
+	}
+	else
+	{
+		b = 4 - a * 2;
+	}
+}
