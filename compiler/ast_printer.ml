@@ -101,7 +101,6 @@ let rec stmt_s = function
         (concat "\n" (List.map stmt_s s1))
     | If(e, s1, s2 ) -> sprintf "(If (%s) -> (%s))(Else -> (%s))"
         (expr_s e)
-<<<<<<< HEAD
         (stmt_s s1)
         (stmt_s s2)
     | For(t, id, xpr, stmt_l) -> sprintf "(For (%s %s in %s)\n{(%s)})"
@@ -109,7 +108,6 @@ let rec stmt_s = function
         id
         (expr_s xpr)
         (String.concat "\n" (List.map stmt_s stmt_l))
-=======
         (concat "\n" (List.map stmt_s s1))
         (concat "\n" (List.map stmt_s s2))
     | For(e1, e2, e3, s) -> sprintf "(For ((%s); (%s); (%s))\n{(%s)})"
@@ -117,7 +115,6 @@ let rec stmt_s = function
         (expr_s e2)
         (expr_s e3)
         (stmt_s s)
->>>>>>> 910542b... parsing
     | While(e, s) -> sprintf "(While (%s)\n{(%s))0"
         (expr_s e)
         (concat "\n" (List.map stmt_s s))
