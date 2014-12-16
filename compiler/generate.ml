@@ -211,6 +211,14 @@ let sfunccall_to_code lv id xprs =
     if lhs = "" then sprintf "%s\n%s( %s )" tmps id refs
         else sprintf "%s\n%s = %s( %s )" tmps lhs id refs
 
+let rec grab_decls = function
+    | SDecl(t, (id, _)) :: tl ->
+        sprintf "var %s %s" id (go_type_from_type t) :: grab_decls tl
+    | SFuncCall(lv, _,_) :: tl ->
+        (String.concat "\n" (List.map decls_from_lv lv)) :: grab_decls tl
+    | _ :: tl -> grab_decls tl
+    | [] -> []
+
 let rec sast_to_code = function
     | SDecl(_, (id, xpr)) -> sassign_to_code (id, xpr)
     | SAssign a -> sassign_to_code a
@@ -223,10 +231,11 @@ let rec sast_to_code = function
 and sfor_to_code t id xpr stmts =
     let body = (List.map sast_to_code stmts) in
     let s_tmp, s_ref = sexpr_to_code xpr in
-    sprintf "%s\nfor _, %s := range *%s {\n%s\n}"
+    sprintf "%s\nfor _, %s := range *%s {\n%s\n%s\n}"
         s_tmp
         id
         s_ref
+        (String.concat "\n" (grab_decls stmts))
         (String.concat "\n" body)
 
 let arg_to_code = function
@@ -239,14 +248,6 @@ let defaults_to_code = function
         else sprintf "if %s == nil {\n %s\n}"
                 id
                 (sassign_to_code (id, xpr))
-
-let rec grab_decls = function
-    | SDecl(t, (id, _)) :: tl ->
-        sprintf "var %s %s" id (go_type_from_type t) :: grab_decls tl
-    | SFuncCall(lv, _,_) :: tl ->
-        (String.concat "\n" (List.map decls_from_lv lv)) :: grab_decls tl
-    | _ :: tl -> grab_decls tl
-    | [] -> []
 
 let func_to_code f =
     let (id, args, rets, body) = f in

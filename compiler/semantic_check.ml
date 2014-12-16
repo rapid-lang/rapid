@@ -306,7 +306,7 @@ let rec var_analysis st ct ft = function
     | SFor (t, SId(id), xpr, stmts) :: tl ->
         let scoped_st = new_scope st in
         let scoped_st = add_sym t id scoped_st in
-        let xpr = rewrite_sexpr scoped_st ct ft xpr ~t:t in
+        let xpr = rewrite_sexpr scoped_st ct ft xpr ~t:(ListType t) in
         let for_body = var_analysis scoped_st ct ft stmts in
         SFor(t, SId(id), xpr, for_body) :: (var_analysis st ct ft tl)
     | [] -> []

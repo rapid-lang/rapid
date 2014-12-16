@@ -121,7 +121,7 @@ func_stmt:
 
 stmt_list:
     | {[]}
-    | stmt_list stmt { $2 :: $1 }
+    | stmt stmt_list { $1 :: $2 }
 
 id_list:
     | id_list COMMA primtype ID { VDecl($3, $4, None) :: $1 }
