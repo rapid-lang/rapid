@@ -94,11 +94,9 @@ rule token = parse
 *)
 
 (* http related *)
-(*
 | "http"      { HTTP }
 | "param"     { PARAM }
 | "namespace" { NAMESPACE }
-*)
 
 (* switch statements *)
 (*

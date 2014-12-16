@@ -10,6 +10,7 @@
 %token RETURN IF ELSE FOR WHILE FUNC IN
 %token PRINTLN PRINTF // LOG
 %token CLASS NEW ACCESS OPTIONAL
+%token HTTP PARAM NAMESPACE
 // %token INT BOOL FLOAT STRING
 
 %token <string> ID TYPE STRING_LIT
@@ -149,7 +150,25 @@ stmt:
     | FOR LPAREN TYPE ID IN expr RPAREN LBRACE stmt_list RBRACE
         { For(Ast_printer.string_to_t $3, $4, $6, $9) }
     | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
+    | http_type_block    { HttpTree $1 }
 
+typed_param_list:
+    | TYPE ID           { [(Ast_printer.string_to_t $1, $2, None)] }
+    | typed_param_list COMMA TYPE ID
+        { (Ast_printer.string_to_t $3, $4, None) :: $1 }
+
+http_tree_list:
+    | http_type_block    { [$1] }
+    | http_tree_list http_type_block { $2 :: $1 }
+
+http_type_block:
+    | PARAM TYPE ID LBRACE http_tree_list RBRACE
+        { Param(Ast_printer.string_to_t $2, $3, $5) }
+    | NAMESPACE ID LBRACE http_tree_list RBRACE
+        { Namespace($2, $4) }
+    | HTTP ID LPAREN typed_param_list RPAREN expression_list
+        LBRACE fstmt_list RBRACE
+        { Endpoint($2, $4, $6, $8) }
 
 print:
     | PRINTLN LPAREN expression_list RPAREN { Println $3 }

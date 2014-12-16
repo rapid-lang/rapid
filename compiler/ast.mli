@@ -45,8 +45,17 @@ type stmt =
     | VarDecl of vdecl
     | UserDefDecl of user_def_decl
     | FuncCall of vars list * fcall
+    | HttpTree of http_tree
 
-type func_stmt =
+and http_tree =
+    (* typed route param, rest of tree *)
+    | Param of var_type * string * http_tree list
+    (* /route, rest of tree *)
+    | Namespace of string * http_tree list
+    (* /route, argument list, function body, return type *)
+    | Endpoint of string * vdecl list * expr list * func_stmt list
+
+and func_stmt =
     | FStmt of stmt
     | Return of expr list
 

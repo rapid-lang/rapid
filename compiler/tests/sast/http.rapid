@@ -1,0 +1,8 @@
+
+namespace test {
+    param int test_number {
+        http info(int date) string {
+            return 0;
+        }
+    }
+}
