@@ -222,13 +222,12 @@ attr_decl:
     | primtype ID ASSIGN lit  { NonOption($1 , $2, Some($4)) }
     | OPTIONAL primtype ID    { Optional($2, $3) }
 
-
-attribute_list:
-    | /* nothing */                 { [] }
-    | attribute_list attr_decl SEMI { $2 :: $1 }
-
+member_list:
+    | /* nothing */              { [] }
+    | member_list attr_decl SEMI { Attr($2) :: $1 }
+    | member_list func_decl      { ClassFunc($2) :: $1 }
 
 class_decl:
-    | CLASS ID LBRACE attribute_list RBRACE { $2, $4 }
+    | CLASS ID LBRACE member_list RBRACE { $2, List.rev $4 }
 
 %%

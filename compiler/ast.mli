@@ -60,7 +60,11 @@ type attr =
     | NonOption of var_type * string * expr option
     | Optional of var_type * string
 
-type class_decl = string * attr list
+type member =
+    | Attr of attr
+    | ClassFunc of func_decl
+
+type class_decl = string * member list
 
 (*
 type class_decl = string * attr list * func_decl list * route_decl list

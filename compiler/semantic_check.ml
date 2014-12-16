@@ -28,6 +28,7 @@ exception TooFewArgsErr
 exception TooManyArgsErr
 exception InvalidBinaryOp
 exception BinOpTypeMismatchErr
+exception AccessOnNonUserDef
 
 type allowed_types = AllTypes | NumberTypes
 
@@ -115,10 +116,15 @@ let rec rewrite_sexpr st ct ft = function
     | SExprFloat(SFloatCast e) -> SExprFloat(SFloatCast(rewrite_cast st ct ft e NumberTypes))
     | SExprString(SStringCast e) -> SExprString(SStringCast(rewrite_cast st ct ft e AllTypes))
     | SCall(c) -> (match c with
-        | SFCall(Some(xpr), id, xprs) ->
+        | SFCall(Some(xpr), fn_id, xprs) ->
+            let obj = rewrite_sexpr st ct ft xpr in
+            let class_id = (match sexpr_to_t Void obj with
+                | UserDef u -> u
+                | _         -> raise AccessOnNonUserDef) in
+            let id = (class_id  ^ "." ^ fn_id) in
             let xprs = (List.map (rewrite_sexpr st ct ft) xprs) in
             let xprs = check_arg_types ((get_arg_types id ft), xprs) in
-            SCallTyped((get_return_type id ft), SFCall(Some(xpr), id, xprs))
+            SCallTyped((get_return_type id ft), SFCall(Some(obj), id, xprs))
         | SFCall(None, id, xprs) ->
             let xprs = (List.map (rewrite_sexpr st ct ft) xprs) in
             let xprs = check_arg_types ((get_arg_types id ft), xprs) in
@@ -147,8 +153,8 @@ let rec rewrite_sexpr st ct ft = function
         match udf with
         | SUserDefInst(UserDef t, sactls) ->
             let rewritten_sactls = List.map (rewrite_sactl st ct ft) sactls in
-            let expr = check_user_def_inst ct t sactls in
-            SExprUserDef(SUserDefInst(UserDef t, rewritten_sactls))
+            let expr = check_user_def_inst ct t rewritten_sactls in
+            SExprUserDef(expr)
         | _ -> SExprUserDef udf)
     | SExprAccess(xpr, mem) ->
         let rewritten_sexpr = rewrite_sexpr st ct ft xpr in
@@ -262,7 +268,10 @@ let rec var_analysis st ct ft = function
     (*Return stmts are xpr lists, tranlslate all the expressions here*)
     | SReturn(s) :: tl -> let xprs = List.map (rewrite_sexpr st ct ft) s in
          SReturn(xprs) :: (var_analysis st ct ft tl)
-    | SFuncCall (lv, SFCall(None, id, xprs)) :: tl ->
+    | SFuncCall (lv, SFCall(xpr, id, xprs)) :: tl ->
+        let xpr = (match xpr with
+            | Some(e) -> Some(rewrite_sexpr st ct ft e)
+            | None    -> None) in
         let lv = (List.map (rewrite_lv st) lv) in
         let check_lv ft id = function
             | [] -> () (*ignoring return types so foo(); is always a valid stmnt*)
@@ -359,9 +368,9 @@ let rec class_analysis class_tbl = function
 
 
 let gen_class_stmts stmts =
-    let sclasses = List.map translate_class stmts in
+    let sclasses, sclass_funcs = translate_classes [] [] stmts in
     let (checked_sclasses, ct) = class_analysis class_table sclasses in
-    checked_sclasses, ct
+    checked_sclasses, ct, sclass_funcs
 
 (*The order of the checking and building of symbol tables may need to change
     to allow functions to be Hoisted*)
@@ -369,8 +378,9 @@ let gen_semantic_program stmts classes funcs =
     (* build an unsafe semantic AST *)
     let s_stmts = List.map translate_statement stmts in
     let s_funcs = List.map translate_function funcs in
+    let checked_classes, ct, sclass_funcs = gen_class_stmts classes in
+    let s_funcs = sclass_funcs @ s_funcs in
     let ft = build_function_table empty_function_table s_funcs in
-    let checked_classes, ct = gen_class_stmts classes in
     (* typecheck and reclassify all variable usage *)
     let checked_stmts = var_analysis symbol_table_list ct ft s_stmts in
     (*Add all the var decls to the global scope*)

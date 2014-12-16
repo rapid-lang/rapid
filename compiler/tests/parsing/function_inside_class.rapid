@@ -1,0 +1,11 @@
+
+class User {
+	int age;
+	string name;
+
+	func add(int a, int b) int {
+		return a + b;
+	}
+}
+
+

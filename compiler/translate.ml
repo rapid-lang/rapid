@@ -99,10 +99,6 @@ let translate_attr = function
     | Ast.NonOption (t, name, None) -> SNonOption(t, name, None)
     | Ast.Optional (t, name) -> SOptional(t, name)
 
-let translate_class (name, attrs) =
-    name,
-    (List.map translate_attr attrs)
-
 let translate_fstatement = function
     | Ast.FStmt stmt -> translate_statement stmt
     | Ast.Return expr -> SReturn(List.map translate_expr expr)
@@ -114,3 +110,27 @@ let translate_function (f : Ast.func_decl) =
         f.return,
         (List.map translate_fstatement f.body)
     )
+
+let rec translate_members class_id sattrs sclass_funcs = function
+    | (Ast.Attr a) :: tl ->
+        translate_members class_id ((translate_attr a) :: sattrs) sclass_funcs tl
+    | (Ast.ClassFunc f) :: tl ->
+        let func_name = (class_id ^ "." ^ f.fname) in
+        let sclass_func = (translate_function
+        ({
+            fname = func_name;
+            args = f.args;
+            return = f.return;
+            body = f.body
+        })) in
+        translate_members class_id sattrs (sclass_func :: sclass_funcs) tl
+    | [] -> (sattrs, sclass_funcs)
+
+let rec translate_classes sclasses sclass_funcs = function
+    | (name, members) :: tl ->
+        let sattrs, scfuncs = (translate_members name [] [] members) in
+        translate_classes
+            ((name, sattrs) :: sclasses)
+            (scfuncs @ sclass_funcs)
+            tl
+    | [] -> sclasses, sclass_funcs

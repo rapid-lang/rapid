@@ -16,7 +16,6 @@ let rec string_of_t = function
     | UserDef(s) -> sprintf "(USER_DEF %s)" s
     | Void -> "void"
     | Multi -> "multi return"
-    | Var -> "var"
 
 let bin_op_s = function
     | Add -> "+"
@@ -147,12 +146,16 @@ let attr_s = function
         id
         (string_of_t t)
 
+let member_s = function
+    | Attr a      -> attr_s a
+    | ClassFunc f -> func_decl_s f
 
-let class_s (name, attrs) =
+
+let class_s (name, members) =
     sprintf "(CLASS %s:\n%s)"
         name
         (concat "\n" (List.map (fun a -> "\t" ^ a)
-            (List.map attr_s attrs)))
+            (List.map member_s members)))
 
 
 let program_s (stmts, classes, funcs) = sprintf
