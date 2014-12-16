@@ -1,0 +1,8 @@
+
+
+for (int num in my_list) {
+    printf("%d ", num);
+    printf("%d ", num);
+};
+
+

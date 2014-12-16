@@ -132,6 +132,10 @@ func_call:
     | fcall                {FuncCall([], $1)}
     | LPAREN id_list RPAREN ASSIGN fcall { FuncCall(List.rev $2, $5) }
 
+stmt_list:
+    | stmt SEMI           { [$1] }
+    | stmt_list stmt SEMI { $2 :: $1 }
+
 stmt:
     | print          { Output $1 }
     | var_decl       { VarDecl $1 }
@@ -140,7 +144,8 @@ stmt:
     | ID ASSIGN expr { Assign($1, $3) }
     | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
     | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
-    | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
+    | FOR LPAREN TYPE ID IN expr RPAREN LBRACE stmt_list RBRACE
+        { For(Ast_printer.string_to_t $3, $4, $6, $9) }
 
 
 print:
