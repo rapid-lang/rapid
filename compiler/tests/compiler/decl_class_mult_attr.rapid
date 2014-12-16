@@ -1,10 +1,14 @@
 
 class User {
     string name;
-    int age;
-    float balance;
+    int age = 20;
+    optional float balance;
 }
 
-User u = new User(name="tester", age=20, balance=3.14);
+User a = new User(name="tester", age=20, balance=3.14);
+
+User b = new User(name="tester", balance=3.14);
+
+User c = new User(name="tester");
 
 

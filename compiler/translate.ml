@@ -44,7 +44,7 @@ and translate_cast xpr = function
     | Bool -> SExprBool(SBoolCast(translate_expr xpr))
     | String -> SExprString(SStringCast(translate_expr xpr))
 and translate_user_def_inst class_id actls =
-    SExprUserDef (SUserDefInst(UserDef class_id, (List.map translate_actual actls)))
+    SExprUserDef(SUserDefInst(UserDef class_id, (List.map translate_actual actls)))
 and translate_actual = function
     | Ast.Actual(nm, xpr) -> (nm, (translate_expr xpr))
 and translate_access xpr mem =

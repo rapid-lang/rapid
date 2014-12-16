@@ -158,8 +158,7 @@ let rec sexpr_to_t expected_t = function
     | SExprFloat _ -> Float
     | SExprBool _ -> Bool
     | SExprString _ -> String
-    | SExprUserDef(SUserDefInst(s, _) | SUserDefVar(s, _) | SUserDefNull(s)) ->
-        s
+    | SExprUserDef(SUserDefInst(s, _) | SUserDefVar(s, _) | SUserDefNull(s)) -> s
     | SExprAccess _ -> expected_t
     | NullExpr -> expected_t
     | SCallTyped(t, _) -> t
