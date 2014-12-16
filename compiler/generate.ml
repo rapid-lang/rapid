@@ -17,6 +17,7 @@ exception UnsupportedDeclType of string
 exception UnsupportedDatatypeErr
 exception InvalidClassInstantiation
 exception StringExpressionsRequired
+exception InvalidUserDefExpr
 
 
 let rand_var_gen _ = "tmp_" ^ Int64.to_string (Random.int64 Int64.max_int)
@@ -48,7 +49,8 @@ let get_string_literal_from_sexpr = function
 
 let op_to_code o = Ast_printer.bin_op_s o
 
-(* top level function for generating sexprs *)
+(* top level function for generating sexprs
+ * returns a tuple of (setup code, reference code) *)
 let rec sexpr_to_code = function
     | SExprInt i -> int_expr_to_code i
     | SExprString s -> string_expr_to_code s
@@ -56,6 +58,7 @@ let rec sexpr_to_code = function
     | SExprBool b -> bool_expr_to_code b
     | SExprList l -> list_expr_to_code l
     | SCallTyped(t, (id, args)) -> func_expr_to_code id args
+    | SExprUserDef u -> user_def_expr_to_code u
     | NullExpr -> "", "nil"
     | s -> raise(UnsupportedSExprType(Sast_printer.sexpr_s s))
 (* returns a reference to a string *)
@@ -166,6 +169,25 @@ and list_expr_to_code = function
             ref_l
             ref_r
     | _ -> raise UnsupportedListExprType
+(* translates a user_def_expr to code
+ * returns a tuple of (setup code, reference) *)
+and user_def_expr_to_code = function
+    | SUserDefInst(UserDef(class_id), act_list) ->
+        let expand (attr, xpr) =
+            let setup, ref = sexpr_to_code xpr in
+            setup, sprintf "%s: %s," attr ref in
+        let trans = List.map expand act_list in
+        (String.concat "\n" (List.map fst trans),
+         String.concat "\n" (List.map snd trans))
+    | SUserDefVar(_, id) ->
+        let tmp_var = rand_var_gen () in
+            sprintf "%s := *%s" tmp_var id,
+            sprintf "&%s" tmp_var
+    | _ -> raise(InvalidUserDefExpr)
+    (*
+    | SUserDefAcc  _
+    | SUserDefNull _ 
+    *)
 
 let sassign_to_code = function
     | (id, xpr) ->
@@ -214,23 +236,9 @@ let sfunccall_to_code lv id xprs =
         else sprintf "%s\n%s = %s( %s )" tmps lhs id refs
 
 let class_instantiate_to_code class_id (id, inst_xpr) =
-    let tmp_var = rand_var_gen () in
-    let get_actuals = function
-        | SExprUserDef(SUserDefInst(UserDef(class_id), act_list)) ->
-            let expand (attr, xpr) =
-                let setup, ref = sexpr_to_code xpr in
-                setup, sprintf "%s: %s,\n" attr ref in
-            let trans = List.map expand act_list in
-            (List.map fst trans, List.map snd trans)
-        | _ -> raise(InvalidClassInstantiation)
-    in
-    let setups, attrs = get_actuals inst_xpr in
+    let setups, attrs = user_def_expr_to_code inst_xpr in
     sprintf "%s\n%s := %s{\n%s\n}\n_ = %s"
-        (String.concat "\n" setups)
-        id
-        class_id
-        (String.concat "" attrs)
-        id
+        setups id class_id attrs id
 
 let stmt_to_code = function
     | SDecl(_, (id, xpr)) -> sassign_to_code (id, xpr)
@@ -238,7 +246,7 @@ let stmt_to_code = function
     | SOutput p -> soutput_to_code p
     | SReturn xprs -> sreturn_to_code xprs
     | SFuncCall(lv, id, xprs) -> sfunccall_to_code lv id xprs
-    | SUserDefDecl(class_id, xpr) -> class_instantiate_to_code class_id xpr
+    | SUserDefDecl(class_id, (id, SExprUserDef(xpr))) -> class_instantiate_to_code class_id (id, xpr)
     | _ -> raise(UnsupportedSemanticStatementType)
 
 let arg_to_code = function
