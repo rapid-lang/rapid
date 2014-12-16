@@ -52,8 +52,8 @@ and http_tree =
     | Param of var_type * string * http_tree list
     (* /route, rest of tree *)
     | Namespace of string * http_tree list
-    (* /route, argument list, function body, return type *)
-    | Endpoint of string * vdecl list * expr list * func_stmt list
+    (* /route, argument list, return type, function body *)
+    | Endpoint of string * vdecl list * var_type list * func_stmt list
 
 and func_stmt =
     | FStmt of stmt

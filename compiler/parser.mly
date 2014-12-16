@@ -158,16 +158,16 @@ typed_param_list:
         { (Ast_printer.string_to_t $3, $4, None) :: $1 }
 
 http_tree_list:
+    |                    { [] }
     | http_type_block    { [$1] }
     | http_tree_list http_type_block { $2 :: $1 }
 
 http_type_block:
-    | PARAM TYPE ID LBRACE http_tree_list RBRACE
-        { Param(Ast_printer.string_to_t $2, $3, $5) }
+    | PARAM primtype ID LBRACE http_tree_list RBRACE
+        { Param($2, $3, $5) }
     | NAMESPACE ID LBRACE http_tree_list RBRACE
         { Namespace($2, $4) }
-    | HTTP ID LPAREN typed_param_list RPAREN expression_list
-        LBRACE fstmt_list RBRACE
+    | HTTP ID LPAREN typed_param_list RPAREN return_type LBRACE fstmt_list RBRACE
         { Endpoint($2, $4, $6, $8) }
 
 print:

@@ -122,8 +122,21 @@ let rec stmt_s = function
     | FuncCall(s,f) -> sprintf "(FuncCall(%s = %s))"
         (concat ", " (List.map func_lvalue_s s))
         (fcall_s f)
-
-let fstmt_s = function
+    | HttpTree t ->  http_tree_s t
+and http_tree_s = function
+    | Param(t, id, tree) -> sprintf "(param (%s %s)\n%s\n)"
+        (string_of_t t)
+        id
+        (String.concat "\n"(List.map http_tree_s tree))
+    | Namespace(id, tree) -> sprintf "(namespace (%s)\n%s\n)"
+        id
+        (String.concat "\n"(List.map http_tree_s tree))
+    | Endpoint(id, args, ret_t, body) -> sprintf "(HTTP %s(%s)%s{\n%s\n)"
+        id
+        (String.concat "," (List.map string_of_vdecl args))
+        (String.concat "," (List.map string_of_t ret_t))
+        (String.concat "\n"(List.map fstmt_s body))
+and fstmt_s = function
     | Return e -> sprintf "(Return (%s))"
         (concat ", " (List.map expr_s e))
     | FStmt s -> stmt_s s
