@@ -118,7 +118,9 @@ ret_expr_list:
 func_stmt:
     | RETURN ret_expr_list SEMI { Return( List.rev $2) }
     | stmt SEMI        { FStmt($1) }
-
+stmt_list:
+    | {[]}
+    | stmt_list stmt SEMI { $2 :: $1 }
 id_list:
     | id_list COMMA primtype ID { VDecl($3, $4, None) :: $1 }
     | id_list COMMA ID          { ID($3) :: $1 }
@@ -142,10 +144,11 @@ stmt:
     | user_def_decl  { UserDefDecl $1 }
     | func_call      { $1 }
     | ID ASSIGN expr { Assign($1, $3) }
-    | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
-    | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
     | FOR LPAREN TYPE ID IN expr RPAREN LBRACE stmt_list RBRACE
         { For(Ast_printer.string_to_t $3, $4, $6, $9) }
+    | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE %prec NOELSE { If($3, $6, []) }
+    | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE { If($3, $6, $10) }
+    | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE { While($3, $6) }
 
 
 print:
