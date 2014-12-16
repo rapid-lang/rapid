@@ -86,13 +86,24 @@ let translate_fcall id exprs =
     let sxprs = (List.map translate_expr exprs) in
     (id, sxprs)
 
-let translate_statement = function
+let rec translate_statement = function
     | Ast.VarDecl vd -> translate_decl vd
     | Ast.Assign(id, xpr) -> SAssign(id, translate_expr xpr)
     | Ast.Output o -> SOutput(translate_output o)
     | Ast.UserDefDecl udd -> translate_user_def_decl udd
     | Ast.FuncCall(vl, (id, exprs)) -> let(id, sexprs) = translate_fcall id exprs in
         SFuncCall((List.map translate_vars vl), id, sexprs)
+    | Ast.If(expr, ifstmts, []) -> let ifs = List.map translate_statement ifstmts in
+        SIf(translate_expr expr, ifs)
+    | Ast.If(expr, ifstmts, else_stmts) -> let ifs = List.map translate_statement ifstmts in
+        let es =  List.map translate_statement else_stmts in
+        SIfElse(translate_expr expr, ifs, es)
+    | Ast.While(expr, stmts) -> SWhile(translate_expr expr, (List.map translate_statement stmts))
+    | Ast.For(t, id, xpr, stmts) ->
+        let s_id = translate_expr (Ast.Id id) in
+        let s_xpr = translate_expr xpr in
+        let s_stmts = List.map translate_statement stmts in
+        SFor(t, s_id, s_xpr, s_stmts)
     | _ -> raise(UnsupportedStatementTypeErr "type unknown")
 
 let translate_attr = function

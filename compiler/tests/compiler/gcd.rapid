@@ -1,0 +1,12 @@
+println(gcd(85125,25545));
+
+
+func gcd(int p, int q) int {
+    while (q != 0) 
+    {
+        int temp = q;
+        q = p % q;
+        p = temp;
+    }
+    return p;
+}

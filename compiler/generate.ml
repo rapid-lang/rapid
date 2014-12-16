@@ -239,14 +239,51 @@ let class_instantiate_to_code class_id (id, inst_xpr) =
     sprintf "%s\n%s := %s{\n%s\n}\n_ = %s"
         setups id class_id attrs id
 
-let stmt_to_code = function
+let rec grab_decls = function
+    | SDecl(t, (id, _)) :: tl ->
+        sprintf "var %s %s" id (go_type_from_type t) :: grab_decls tl
+    | SFuncCall(lv, _,_) :: tl ->
+        (String.concat "\n" (List.map decls_from_lv lv)) :: grab_decls tl
+    | _ :: tl -> grab_decls tl
+    | [] -> []
+
+type control_t = | IF | WHILE
+
+(*b is a bool that tells if an if or a for loop. true = if, false = while loop*)
+let rec control_code b expr stmts =
+    let tmps, exprs = sexpr_to_code expr in
+    let body = String.concat "\n" (List.map sast_to_code stmts) in
+    let decls = String.concat "\n" (grab_decls stmts) in 
+    match b with
+        |IF -> sprintf "%s\nif *(%s){%s\n%s}" tmps exprs decls body 
+        |WHILE -> sprintf "for{\n%s\nif !(*(%s)){\nbreak\n}\n%s\n%s}\n" tmps exprs decls body
+
+and sast_to_code = function
     | SDecl(_, (id, xpr)) -> sassign_to_code (id, xpr)
     | SAssign a -> sassign_to_code a
     | SOutput p -> soutput_to_code p
     | SReturn xprs -> sreturn_to_code xprs
     | SFuncCall(lv, id, xprs) -> sfunccall_to_code lv id xprs
     | SUserDefDecl(class_id, (id, SExprUserDef(xpr))) -> class_instantiate_to_code class_id (id, xpr)
+    | SIf(expr, stmts) -> (control_code IF expr stmts) ^ "\n"
+    | SWhile (expr, stmts) -> control_code WHILE expr stmts
+    | SIfElse(expr, stmts, estmts) -> 
+        sprintf "%selse{\n%s\n%s}\n"
+        (control_code IF expr stmts)
+        (String.concat "\n" (grab_decls estmts))
+        (String.concat "\n" (List.map sast_to_code estmts))
+    | SFor(t, SId(id), xpr, stmts) -> sfor_to_code t id xpr stmts
     | _ -> raise(UnsupportedSemanticStatementType)
+
+and sfor_to_code t id xpr stmts =
+    let body = (List.map sast_to_code stmts) in
+    let s_tmp, s_ref = sexpr_to_code xpr in
+    sprintf "%s\nfor _, %s := range *%s {\n%s\n%s\n}"
+        s_tmp
+        id
+        s_ref
+        (String.concat "\n" (grab_decls stmts))
+        (String.concat "\n" body)
 
 let arg_to_code = function
     | SDecl(t, (id, _) ) -> sprintf "%s %s"
@@ -259,14 +296,6 @@ let defaults_to_code = function
                 id
                 (sassign_to_code (id, xpr))
 
-let rec grab_decls = function
-    | SDecl(t, (id, _)) :: tl ->
-        sprintf "var %s %s" id (go_type_from_type t) :: grab_decls tl
-    | SFuncCall(lv, _,_) :: tl ->
-        (String.concat "\n" (List.map decls_from_lv lv)) :: grab_decls tl
-    | _ :: tl -> grab_decls tl
-    | [] -> []
-
 let func_to_code f =
     let (id, args, rets, body) = f in
     sprintf "func %s( %s ) (%s){\n%s\n%s\n%s\n}"
@@ -275,7 +304,7 @@ let func_to_code f =
         (String.concat ", " (List.map go_type_from_type rets))
         (String.concat "\n" (List.map defaults_to_code args))
         (String.concat "\n"  (grab_decls body))
-        (String.concat "\n" (List.map stmt_to_code body))
+        (String.concat "\n" (List.map sast_to_code body))
 
 
 let class_def_to_code (class_id, attr_list) =
@@ -293,7 +322,7 @@ let build_prog sast =
     (* Ignore classes for now *)
     let (stmts, classes, funcs) = sast in
     let decls = String.concat "\n" (grab_decls stmts) in
-    let code_lines = List.map stmt_to_code stmts in
+    let code_lines = List.map sast_to_code stmts in
     let stmt_code = String.concat "\n" code_lines in
     let func_code = String.concat "\n\n" (List.map func_to_code funcs) in
     let class_struct_defs = String.concat "\n\n" (List.map class_def_to_code classes) in

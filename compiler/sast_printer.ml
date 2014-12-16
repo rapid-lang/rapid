@@ -120,7 +120,7 @@ let lv_s = function
     | SFuncTypedId(_ , id) -> id
     | _ -> raise UnsupportedSOutput
 
-let semantic_stmt_s = function
+let rec semantic_stmt_s = function
     | SAssign a -> svar_assign_s a ^ "\n"
     | SDecl(t, vd) -> svar_decl_s t vd ^ "\n"
     | SOutput o -> sprintf "(Output %s)\n" (soutput_s o)
@@ -131,6 +131,9 @@ let semantic_stmt_s = function
         (String.concat ", " (List.map lv_s lv))
         id
         (String.concat ", " (List.map sexpr_s params))
+    | SWhile(expr, stmts) -> sprintf "(While(%s){\n%s\n})\n" 
+        (sexpr_s expr)
+        (String.concat "\n" (List.map semantic_stmt_s stmts))
     | _ -> "Unsupported statement"
 
 let semantic_func_s f =
