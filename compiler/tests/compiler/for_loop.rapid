@@ -1,0 +1,7 @@
+
+list<int> my_list = [1, 13, 5];
+
+for (int num in my_list) {
+    printf("%d ", num);
+    printf("%d ", num);
+}

@@ -105,11 +105,11 @@ let rec stmt_s = function
         (expr_s e)
         (stmt_s s1)
         (stmt_s s2)
-    | For(e1, e2, e3, s) -> sprintf "(For ((%s); (%s); (%s))\n{(%s)})"
-        (expr_s e1)
-        (expr_s e2)
-        (expr_s e3)
-        (stmt_s s)
+    | For(t, id, xpr, stmt_l) -> sprintf "(For (%s %s in %s)\n{(%s)})"
+        (string_of_t t)
+        id
+        (expr_s xpr)
+        (String.concat "\n" (List.map stmt_s stmt_l))
     | While(e, s) -> sprintf "(While (%s)\n{(%s))0"
         (expr_s e)
         (stmt_s s)
