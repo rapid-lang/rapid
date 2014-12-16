@@ -47,7 +47,7 @@ primtype:
  * TODO: Classes */
 program:
     | /* nothing */ { [], [], [] }
-    | program stmt SEMI {
+    | program stmt {
         let (statements, classes, functions) = $1 in
             ($2 :: statements), classes, functions }
     | program func_decl {
@@ -117,7 +117,11 @@ ret_expr_list:
 
 func_stmt:
     | RETURN ret_expr_list SEMI { Return( List.rev $2) }
-    | stmt SEMI        { FStmt($1) }
+    | stmt       { FStmt($1) }
+
+stmt_list:
+    | {[]}
+    | stmt stmt_list { $1 :: $2 }
 
 id_list:
     | id_list COMMA primtype ID { VDecl($3, $4, None) :: $1 }
@@ -132,14 +136,18 @@ func_call:
     | fcall                {FuncCall([], $1)}
     | LPAREN id_list RPAREN ASSIGN fcall { FuncCall(List.rev $2, $5) }
 
+stmt_list:
+    | stmt            { [$1] }
+    | stmt_list stmt { $2 :: $1 }
+
 stmt:
-    | print          { Output $1 }
-    | var_decl       { VarDecl $1 }
-    | user_def_decl  { UserDefDecl $1 }
-    | func_call      { $1 }
-    | ID ASSIGN expr { Assign($1, $3) }
-    | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
-    | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
+    | print SEMI        { Output $1 }
+    | var_decl SEMI     { VarDecl $1 }
+    | user_def_decl SEMI { UserDefDecl $1 }
+    | func_call SEMI     { $1 }
+    | ID ASSIGN expr SEMI { Assign($1, $3) }
+    | FOR LPAREN TYPE ID IN expr RPAREN LBRACE stmt_list RBRACE
+        { For(Ast_printer.string_to_t $3, $4, $6, $9) }
     | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
 
 
@@ -176,7 +184,7 @@ expr:
     | expr AND    expr { Binop($1, And, $3) }
     | expr OR    expr  { Binop($1, Or, $3 )}
     | expr MOD expr    { Binop($1, Mod, $3 )}
-    | expr CASTBOOL    { CastBool $1 }  
+    | expr CASTBOOL    { CastBool $1 }
     | primtype LPAREN expr RPAREN { Cast($1, $3) }
     | fcall            { Call $1 }
     | LPAREN expr RPAREN { $2 }

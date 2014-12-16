@@ -39,7 +39,7 @@ type stmt =
     | Assign of string * expr
     | Block of stmt list
     | If of expr * stmt * stmt
-    | For of expr * expr * expr * stmt
+    | For of var_type * string * expr * stmt list
     | While of expr * stmt
     | Output of print
     | VarDecl of vdecl
