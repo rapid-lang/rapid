@@ -15,6 +15,7 @@ exception UnsupportedBoolExprType
 exception UnsupportedListExprType
 exception UnsupportedDeclType of string
 exception UnsupportedDatatypeErr
+exception InvalidClassInstantiation
 exception StringExpressionsRequired
 
 
@@ -196,6 +197,7 @@ let sreturn_to_code xprs =
 let decls_from_lv = function
     | SFuncDecl(t, (id, _)) -> sprintf "var %s %s" id (go_type_from_type t)
     | _ -> ""
+
 let get_ids = function
     | SFuncDecl(_, (id, _ ) ) -> id
     | SFuncTypedId (_, id) -> id
@@ -211,12 +213,32 @@ let sfunccall_to_code lv id xprs =
     if lhs = "" then sprintf "%s\n%s( %s )" tmps id refs
         else sprintf "%s\n%s = %s( %s )" tmps lhs id refs
 
-let sast_to_code = function
+let class_instantiate_to_code class_id (id, inst_xpr) =
+    let tmp_var = rand_var_gen () in
+    let get_actuals = function
+        | SExprUserDef(SUserDefInst(UserDef(class_id), act_list)) ->
+            let expand (attr, xpr) =
+                let setup, ref = sexpr_to_code xpr in
+                setup, sprintf "%s: %s,\n" attr ref in
+            let trans = List.map expand act_list in
+            (List.map fst trans, List.map snd trans)
+        | _ -> raise(InvalidClassInstantiation)
+    in
+    let setups, attrs = get_actuals inst_xpr in
+    sprintf "%s\n%s := %s{\n%s\n}\n_ = %s"
+        (String.concat "\n" setups)
+        id
+        class_id
+        (String.concat "" attrs)
+        id
+
+let stmt_to_code = function
     | SDecl(_, (id, xpr)) -> sassign_to_code (id, xpr)
     | SAssign a -> sassign_to_code a
     | SOutput p -> soutput_to_code p
     | SReturn xprs -> sreturn_to_code xprs
-    | SFuncCall (lv, id, xprs) -> sfunccall_to_code lv id xprs
+    | SFuncCall(lv, id, xprs) -> sfunccall_to_code lv id xprs
+    | SUserDefDecl(class_id, xpr) -> class_instantiate_to_code class_id xpr
     | _ -> raise(UnsupportedSemanticStatementType)
 
 let arg_to_code = function
@@ -246,23 +268,27 @@ let func_to_code f =
         (String.concat ", " (List.map go_type_from_type rets))
         (String.concat "\n" (List.map defaults_to_code args))
         (String.concat "\n"  (grab_decls body))
-        (String.concat "\n" (List.map sast_to_code body))
+        (String.concat "\n" (List.map stmt_to_code body))
 
 
+let class_def_to_code (class_id, attr_list) =
+    let attr_to_code_attr = function
+        | SNonOption(t, id, _) | SOptional(t, id) -> sprintf "%s %s" id (go_type_from_type t) in
+    let attrs = List.map attr_to_code_attr attr_list in
+    sprintf "type %s struct{\n%s\n}" class_id (String.concat "\n" attrs)
 
-let skeleton decls main fns = "package main\nimport (\"fmt\")\n" ^
-    "var _ = fmt.Printf\n" ^ decls ^ "\nfunc main() {\n" ^
+
+let skeleton decls classes main fns = "package main\nimport (\"fmt\")\n" ^
+    "var _ = fmt.Printf\n" ^ classes ^ "\n\n" ^ decls ^ "\nfunc main() {\n" ^
     main ^ "\n}\n " ^ fns
-
-
 
 let build_prog sast =
     (* Ignore classes for now *)
-    let (stmts, _, funcs) = sast in
+    let (stmts, classes, funcs) = sast in
     let decls = String.concat "\n" (grab_decls stmts) in
-    let code_lines = List.map sast_to_code stmts in
-    let gen_code = String.concat "\n" code_lines in
-    let func_lines = List.map func_to_code funcs in
-    let func_code = String.concat "\n\n" func_lines in
-    skeleton decls gen_code func_code
+    let code_lines = List.map stmt_to_code stmts in
+    let stmt_code = String.concat "\n" code_lines in
+    let func_code = String.concat "\n\n" (List.map func_to_code funcs) in
+    let class_struct_defs = String.concat "\n\n" (List.map class_def_to_code classes) in
+    skeleton decls class_struct_defs stmt_code func_code
 

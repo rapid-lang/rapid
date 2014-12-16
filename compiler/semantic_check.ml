@@ -59,10 +59,7 @@ let rec check_arg_types = function
 let get_cast_side = function
     | (Int, Float) -> Left
     | (Float, Int) -> Right
-    | (String, String) -> None
-    | (Bool, Bool) -> None
-    | (Int, Int) -> None
-    | (Float, Float) -> None
+    | (l, r) when l = r -> None
     | _ -> raise BinOpTypeMismatchErr
 
 (* Takes a type and a typed sexpr and confirms it is the proper type *)
@@ -82,15 +79,15 @@ let check_attr sactuals_table = function
         if StringMap.mem name sactuals_table
             then let expr = StringMap.find name sactuals_table in
                 let () = check_t_sexpr t expr in
-                SActual(name, expr)
+                (name, expr)
             else raise( MissingRequiredArgument
                             (Format.sprintf "Argument %s is missing" name))
     | (name, (t, false, xpr)) ->
         if StringMap.mem name sactuals_table
             then let expr = StringMap.find name sactuals_table in
                 let () = check_t_sexpr t expr in
-                SActual(name, expr)
-            else SActual(name, xpr)
+                (name, expr)
+            else (name, xpr)
 
 (* Check that all of the actuals in the instantiation are valid. *)
 let check_user_def_inst ct t sactls =
@@ -173,7 +170,7 @@ let rec rewrite_sexpr st ct ft ?t = function
     (* TODO: add all new expressions that can contain variable references to be simplified *)
     | xpr -> xpr
 and rewrite_sactl st ct ft = function
-    | SActual(name, xpr) -> SActual(name, rewrite_sexpr st ct ft xpr)
+    | (name, xpr) -> (name, rewrite_sexpr st ct ft xpr)
 and rewrite_cast st ct ft xpr t_opt =
     let xpr = rewrite_sexpr st ct ft xpr in
     let t = sexpr_to_t Void xpr in
@@ -380,8 +377,6 @@ let rec class_analysis class_tbl = function
         let lst, class_tbl = class_analysis class_tbl tl in
         ((class_id, attrs) :: lst), class_tbl
     | [] -> [], class_tbl
-
-
 
 let gen_class_stmts stmts =
     let sclasses = List.map translate_class stmts in

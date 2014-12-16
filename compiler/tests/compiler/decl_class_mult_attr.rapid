@@ -1,0 +1,10 @@
+
+class User {
+    string name;
+    int age;
+    float balance;
+}
+
+User u = new User(name="tester", age=20, balance=3.14);
+
+

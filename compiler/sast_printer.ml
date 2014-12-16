@@ -58,7 +58,7 @@ and bool_expr_s = function
     | SBoolAcc(cls, mem) -> sprintf "(Bool Access: %s.%s)" cls mem
     | SBoolNull -> "(Bool NULL)"
 and sactual_s = function
-    | SActual(k,v) -> sprintf "(ACTUAL: %s=%s)" k (sexpr_s v)
+    | (k,v) -> sprintf "(ACTUAL: %s=%s)" k (sexpr_s v)
 and user_def_expr_s = function
     | SUserDefInst(UserDef cls, sactls) ->
         sprintf "(INSTANTIATE new UserDef %s(\n\t%s))"

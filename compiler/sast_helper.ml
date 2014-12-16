@@ -137,7 +137,7 @@ let get_attr_type class_id class_tbl id =
 
 (* Add the actuals into actl_tbl from an actuals list, verifying uniqueness *)
 let rec add_actls actl_tbl = function
-    | Sast.SActual(key, xpr) :: tl ->
+    | (key, xpr) :: tl ->
         if StringMap.mem key actl_tbl
             then raise ExistingActualErr
             else add_actls (StringMap.add key xpr actl_tbl) tl

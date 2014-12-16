@@ -56,8 +56,7 @@ and user_def_expr =
     | SUserDefVar of var_type * string (* class * variablename *)
     | SUserDefAcc of var_type * string * string (* class * var_id * member *)
     | SUserDefNull of var_type
-and sactual =
-    | SActual of string * sexpr
+and sactual = string * sexpr
 
 type soutput =
     | SPrintf of sexpr * sexpr list
@@ -75,15 +74,14 @@ type semantic_stmt =
     | SDecl of var_type * svar_assign
     | SOutput of soutput
     | SReturn of sexpr list
-    | SFuncCall of sfunc_lval list * string * sexpr list (*left hand of assing, fname, args*)
-    | SUserDefDecl of string * svar_assign
+    | SFuncCall of sfunc_lval list * string * sexpr list (* left hand of assing, fname, args *)
+    | SUserDefDecl of string * svar_assign (* class_id, (id, expr) *)
 
 type sattr =
     | SNonOption of var_type * string * sexpr option
     | SOptional of var_type * string
 
-type sclass =
-    | SClass of string * sattr list
+type sclass = string * sattr list
 
 (*this is the id, args, return types, body*)
 type semantic_function = string * semantic_stmt list * var_type list * semantic_stmt list

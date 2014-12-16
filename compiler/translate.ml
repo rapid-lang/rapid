@@ -37,17 +37,16 @@ let rec translate_expr = function
     | Ast.Binop(lhs, o, rhs) -> Sast.SBinop(translate_expr lhs, o, translate_expr rhs)
     | Ast.Nullxpr -> UntypedNullExpr
     | _ -> raise UnsupportedExpressionType
-    
+
 and translate_cast xpr = function
     | Int -> SExprInt(SIntCast(translate_expr xpr))
     | Float -> SExprFloat(SFloatCast(translate_expr xpr))
     | Bool -> SExprBool(SBoolCast(translate_expr xpr))
     | String -> SExprString(SStringCast(translate_expr xpr))
 and translate_user_def_inst class_id actls =
-    SExprUserDef (SUserDefInst
-        (UserDef class_id, (List.map translate_actual actls)))
+    SExprUserDef (SUserDefInst(UserDef class_id, (List.map translate_actual actls)))
 and translate_actual = function
-    | Ast.Actual(nm, xpr) -> SActual(nm, (translate_expr xpr))
+    | Ast.Actual(nm, xpr) -> (nm, (translate_expr xpr))
 and translate_access xpr mem =
     SExprAccess((translate_expr xpr), mem)
 
@@ -69,7 +68,8 @@ let translate_decl = function
     | _ -> raise UnsupportedDeclType
 
 let translate_user_def_decl = function
-    | class_id, id, xpr -> SUserDefDecl (class_id, (id, (expr_option_map translate_expr xpr)))
+    | class_id, id, xpr ->
+        SUserDefDecl(class_id, (id, (expr_option_map translate_expr xpr)))
 
 let translate_output = function
     | Ast.Println xpr_l -> SPrintln(List.map translate_expr xpr_l)
