@@ -326,7 +326,7 @@ let rec var_analysis st ct ft = function
         let if_scope = new_scope st in 
         let stmts = var_analysis if_scope ct ft stmts in
         let else_scope = new_scope st in
-        let estmts = var_analysis else_scope ct ft stmts in
+        let estmts = var_analysis else_scope ct ft estmts in
         SIfElse(expr, stmts, estmts) :: (var_analysis st ct ft tl)
     | SWhile(xpr, stmts) :: tl -> let expr = rewrite_sexpr st ct ft xpr in
         let () = check_t_sexpr Bool expr in

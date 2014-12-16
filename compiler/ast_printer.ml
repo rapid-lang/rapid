@@ -108,7 +108,7 @@ let rec stmt_s = function
         id
         (expr_s xpr)
         (String.concat "\n" (List.map stmt_s stmt_l))
-    | While(e, s) -> sprintf "(While (%s)\n{(%s))0"
+    | While(e, s) -> sprintf "(While (%s)\n{(%s))}"
         (expr_s e)
         (concat "\n" (List.map stmt_s s))
     | Output o -> sprintf "(Output (%s))"

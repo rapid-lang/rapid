@@ -211,12 +211,35 @@ let sfunccall_to_code lv id xprs =
     if lhs = "" then sprintf "%s\n%s( %s )" tmps id refs
         else sprintf "%s\n%s = %s( %s )" tmps lhs id refs
 
-let sast_to_code = function
+let rec grab_decls = function
+    | SDecl(t, (id, _)) :: tl ->
+        sprintf "var %s %s" id (go_type_from_type t) :: grab_decls tl
+    | SFuncCall(lv, _,_) :: tl ->
+        (String.concat "\n" (List.map decls_from_lv lv)) :: grab_decls tl
+    | _ :: tl -> grab_decls tl
+    | [] -> []
+
+(*b is a bool that tells if an if or a for loop. true = if, false = while loop*)
+let rec control_code b expr stmts =
+    let tmps, exprs = sexpr_to_code expr in
+    let body = String.concat "\n" (List.map sast_to_code stmts) in
+    let decls = String.concat "\n" (grab_decls stmts) in
+    if b then sprintf "%s\nif *(%s){%s\n%s}" tmps exprs decls body 
+    else sprintf "for{\n%s\nif !(*(%s)){\nbreak\n}%s\n%s}" tmps exprs decls body
+    
+
+and sast_to_code = function
     | SDecl(_, (id, xpr)) -> sassign_to_code (id, xpr)
     | SAssign a -> sassign_to_code a
     | SOutput p -> soutput_to_code p
     | SReturn xprs -> sreturn_to_code xprs
     | SFuncCall (lv, id, xprs) -> sfunccall_to_code lv id xprs
+    | SIf (expr, stmts) -> control_code true expr stmts
+    | SWhile (expr, stmts) -> control_code false expr stmts
+    | SIfElse(expr, stmts, estmts) -> sprintf "%selse{\n%s\n%s}"
+        (control_code true expr stmts)
+        (String.concat "\n" (grab_decls estmts))
+        (String.concat "\n" (List.map sast_to_code estmts))
     | _ -> raise(UnsupportedSemanticStatementType)
 
 let arg_to_code = function
@@ -230,13 +253,7 @@ let defaults_to_code = function
                 id
                 (sassign_to_code (id, xpr))
 
-let rec grab_decls = function
-    | SDecl(t, (id, _)) :: tl ->
-        sprintf "var %s %s" id (go_type_from_type t) :: grab_decls tl
-    | SFuncCall(lv, _,_) :: tl ->
-        (String.concat "\n" (List.map decls_from_lv lv)) :: grab_decls tl
-    | _ :: tl -> grab_decls tl
-    | [] -> []
+
 
 let func_to_code f =
     let (id, args, rets, body) = f in
