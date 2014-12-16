@@ -114,6 +114,13 @@ and insert_attr attr_id attr_tbl triple =
         then raise(ExistingAttributeErr(attr_id))
         else StringMap.add attr_id triple attr_tbl
 
+(* Hard coded error attributes *)
+let get_error_attr_table = 
+    let attr_table = [ (SNonOption (String, "name", Some(SExprString(SStringExprLit "Error"))));
+                        (SNonOption (Int, "code", Some(SExprInt(SIntExprLit 500))));
+                        (SNonOption (String, "message", Some(SExprString(SStringExprLit "An Error has been thrown"))))]
+    in add_attrs empty_attribute_table attr_table
+    
 (* Get the table of attributes for a specific class *)
 let get_attr_table class_id class_tbl =
     if StringMap.mem class_id class_tbl
@@ -159,6 +166,7 @@ let rec sexpr_to_t expected_t = function
     | SExprBool _ -> Bool
     | SExprString _ -> String
     | SExprUserDef(SUserDefInst(s, _) | SUserDefVar(s, _) | SUserDefNull(s)) -> s
+    | SExprError _ -> Error
     | SExprAccess _ -> expected_t
     | NullExpr -> expected_t
     | SCallTyped(t, _) -> t

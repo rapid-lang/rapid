@@ -42,6 +42,7 @@ and sexpr =
     | SExprString of string_expr
     | SExprFloat of float_expr
     | SExprBool of bool_expr
+    | SExprError of error_def_expr
     | SExprUserDef of user_def_expr
     | SExprAccess of sexpr * string
     | SExprList of list_expr
@@ -56,7 +57,13 @@ and user_def_expr =
     | SUserDefVar of var_type * string (* class * variablename *)
     | SUserDefNull of var_type
     | SUserDefAcc of var_type * user_def_expr * string (* class * var / instance * member *)
-and sactual = string * sexpr
+and error_def_expr = 
+    | SErrorInst of sactual list 
+    | SErrorDefVar of string
+    | SErrorDefAcc of string * string 
+    | SErrorDefNull 
+and sactual =
+    | SActual of string * sexpr
 
 type soutput =
     | SPrintf of sexpr * sexpr list

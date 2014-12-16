@@ -6,6 +6,7 @@ type var_type =
     | String
     | Bool
     | Float
+    | Error
     | UserDef of string
     | ListType of var_type
     | Void (*Used for funcions with no args or no rets*)

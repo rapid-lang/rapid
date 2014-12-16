@@ -15,6 +15,7 @@ let rec sexpr_s = function
     | SExprString s -> string_expr_s s
     | SExprFloat s -> float_expr_s s
     | SExprBool b -> bool_expr_s b
+    | SExprError e -> error_def_expr_s e
     | SExprUserDef u -> user_def_expr_s u
     | SCallTyped (t, (id, args)) -> sprintf "(Call %s) args = %s returns = %s"
         id
@@ -64,6 +65,14 @@ and bool_expr_s = function
     | SBoolNull -> "(Bool NULL)"
 and sactual_s = function
     | (k,v) -> sprintf "(ACTUAL: %s=%s)" k (sexpr_s v)
+and error_def_expr_s = function
+    | SErrorInst(sactls) ->
+        sprintf "(INSTANTIATE new Error(\n\t%s))"
+            (String.concat ",\n\t" (List.map sactual_s sactls))
+    | SErrorDefVar(id) -> sprintf "(Error %s)" id
+    | SErrorDefAcc(var, mem) -> sprintf "(Error Access: %s.%s)"
+        var mem
+    | SErrorDefNull -> sprintf "(Error NULL)" 
 and user_def_expr_s = function
     | SUserDefInst(UserDef cls, sactls) ->
         sprintf "(INSTANTIATE new UserDef %s(\n\t%s))"
@@ -112,6 +121,9 @@ let svar_assign_s (id, xpr) =
 let svar_decl_s t (id, xpr) =
     sprintf "(Declare %s (%s) to %s)" id (Ast_printer.string_of_t t) (sexpr_s xpr)
 
+let error_def_decl_s (id, xpr) =
+    sprintf "(Declare %s (%s) to Error)" id (sexpr_s xpr)
+
 let suser_def_decl_s cls (id, xpr) =
     sprintf "(Declare %s (%s) to %s)" id cls (sexpr_s xpr)
 
@@ -124,6 +136,7 @@ let rec semantic_stmt_s = function
     | SAssign a -> svar_assign_s a ^ "\n"
     | SDecl(t, vd) -> svar_decl_s t vd ^ "\n"
     | SOutput o -> sprintf "(Output %s)\n" (soutput_s o)
+    | SErrorDefDecl vd -> error_def_decl_s vd ^ "\n"
     | SUserDefDecl(cls, vd) -> suser_def_decl_s cls vd ^ "\n"
     | SReturn s -> sprintf("Return(%s)\n")
         (String.concat ", " (List.map sexpr_s s))

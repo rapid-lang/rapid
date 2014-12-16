@@ -1,0 +1,15 @@
+
+class User {
+	string username;
+	string full_name;
+	string password;
+	int age;
+}
+
+
+User bob = new User(
+    wrong="burgerbob",
+    full_name="cool",
+    password="burgersrock",
+    age=42
+);

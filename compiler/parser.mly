@@ -190,7 +190,7 @@ expr:
     | primtype LPAREN expr RPAREN { Cast($1, $3) }
     | fcall            { Call $1 }
     | LPAREN expr RPAREN { $2 }
-    | NEW ERROR LPAREN actuals_list_opt RPAREN { Error($4) }
+    | NEW ERROR LPAREN actuals_list_opt RPAREN { ErrorInst($4) }
     | NEW ID LPAREN actuals_list_opt RPAREN { UserDefInst($2, $4)}
     | expr ACCESS ID                        { Access($1, $3) }
     | LBRACKET expression_list_opt RBRACKET { ListLit $2 }

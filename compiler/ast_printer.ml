@@ -49,7 +49,7 @@ let rec expr_s = function
     | Cast(t, i) -> sprintf "(Cast (%s) to %s)" (expr_s i) (string_of_t t)
     | ListLit l -> sprintf "(List literal [%s])"
         (String.concat ", " (List.map expr_s l))
-    | Error(actls) -> sprintf "(INSTANTIATE new Error (%s))"
+    | ErrorInst(actls) -> sprintf "(INSTANTIATE new Error (%s))"
         ("\n\t" ^ (String.concat ",\n\t " (List.map actual_s actls)))
     | UserDefInst(id, actls) -> sprintf "(INSTANTIATE new UserDef %s(%s))"
         id
@@ -122,8 +122,8 @@ let rec stmt_s = function
         (output_s o)
     | VarDecl vd -> sprintf "(VarDecl (%s))"
         (string_of_vdecl vd)
-    | ErrorDecl ud -> sprintf "(ErrorDecl (%s))"
-        (string_of_error_decl ud)
+    | ErrorDecl e -> sprintf "(ErrorDecl (%s))"
+        (string_of_error_decl e)
     | UserDefDecl ud -> sprintf "(UserDefDecl (%s))"
         (string_of_user_def_decl ud)
     | FuncCall(s,f) -> sprintf "(FuncCall(%s = %s))"

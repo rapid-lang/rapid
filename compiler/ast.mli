@@ -13,6 +13,7 @@ type expr =
     | Cast of var_type * expr
     | CastBool of expr
     | ListLit of expr list
+    | ErrorInst of actual list
     | ListAccess of expr * expr
     | Error of actual list
     | UserDefInst of string * actual list

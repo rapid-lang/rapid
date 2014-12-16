@@ -30,6 +30,7 @@ exception BinOpTypeMismatchErr
 exception AmbiguousContextErr of string
 exception ClassAttrInClassErr
 exception UserDefinedTypNeeded
+exception NoSuchAttributeError of string
 
 type allowed_types = AllTypes | NumberTypes
 
@@ -90,6 +91,23 @@ let check_attr sactuals_table = function
                 (name, expr)
         else (name, xpr)
 
+
+let check_sactual attrs_table (id, expr) = 
+    if StringMap.mem id attrs_table 
+        then ()
+        else raise( MissingRequiredArgument
+                    (Format.sprintf "The attribute %s does not exist" id))
+
+let check_error_def_inst sactls =
+    let sactuals_table = add_actls empty_actuals_table sactls in
+    let attr_table = get_error_attr_table in
+    let checked_sactuals = List.map
+        (check_attr sactuals_table)
+        (StringMap.bindings attr_table) in
+    let () = List.iter (check_sactual attr_table)
+            (StringMap.bindings sactuals_table) in
+    SErrorInst checked_sactuals
+
 (* Check that all of the actuals in the instantiation are valid. *)
 let check_user_def_inst ct t sactls =
     (* build a table from the explicit actuals *)
@@ -98,6 +116,8 @@ let check_user_def_inst ct t sactls =
     let checked_sactuals = List.map
         (check_attr sactuals_table)
         (StringMap.bindings attr_table) in
+    let () = List.iter (check_sactual attr_table)
+            (StringMap.bindings sactuals_table) in
     SUserDefInst (UserDef t, checked_sactuals)
 
 (* Takes a symbol table and sexpr and rewrites variable references to be typed *)
@@ -147,6 +167,13 @@ let rec rewrite_sexpr st ct ft ?t = function
                     let lhs, rhs = binop_cast_floats lhs rhs (get_cast_side (lt, rt)) in
                     SExprFloat(SFloatBinOp(lhs, o, rhs))
         else raise InvalidBinaryOp
+    | SExprError edf -> (
+        match edf with
+        | SErrorInst(sactls) ->
+            let rewritten_sactls = List.map (rewrite_sactl st ct ft) sactls in
+            let expr = check_error_def_inst sactls in
+            SExprError(SErrorInst(rewritten_sactls))
+        | _ -> SExprError edf)
     | SExprUserDef udf -> (
         match udf with
         | SUserDefInst(UserDef t, sactls) ->
@@ -312,6 +339,12 @@ let rec var_analysis st ct ft = function
         let xprs = check_arg_types ((get_arg_types id ft), xprs) in
         let st = scope_lv st lv in
         SFuncCall(lv, id, xprs) :: (var_analysis st ct ft tl)
+    | SErrorDefDecl((id, xpr)) :: tl ->
+        let expr = rewrite_sexpr st ct ft xpr in
+        let t = Error in
+        let st = add_sym t id st in
+        let () = check_t_sexpr t expr in
+            SErrorDefDecl((id, xpr)) :: var_analysis st ct ft tl
     | SUserDefDecl(cls, (id, xpr)) :: tl ->
         let checked_expr = rewrite_sexpr st ct ft xpr in
         let t = UserDef cls in
