@@ -225,8 +225,7 @@ let rec control_code b expr stmts =
     let body = String.concat "\n" (List.map sast_to_code stmts) in
     let decls = String.concat "\n" (grab_decls stmts) in
     if b then sprintf "%s\nif *(%s){%s\n%s}" tmps exprs decls body 
-    else sprintf "for{\n%s\nif !(*(%s)){\nbreak\n}%s\n%s}" tmps exprs decls body
-    
+    else sprintf "for{\n%s\nif !(*(%s)){\nbreak\n}\n%s\n%s}\n" tmps exprs decls body
 
 and sast_to_code = function
     | SDecl(_, (id, xpr)) -> sassign_to_code (id, xpr)
@@ -234,9 +233,9 @@ and sast_to_code = function
     | SOutput p -> soutput_to_code p
     | SReturn xprs -> sreturn_to_code xprs
     | SFuncCall (lv, id, xprs) -> sfunccall_to_code lv id xprs
-    | SIf (expr, stmts) -> control_code true expr stmts
+    | SIf (expr, stmts) -> (control_code true expr stmts) ^ "\n"
     | SWhile (expr, stmts) -> control_code false expr stmts
-    | SIfElse(expr, stmts, estmts) -> sprintf "%selse{\n%s\n%s}"
+    | SIfElse(expr, stmts, estmts) -> sprintf "%selse{\n%s\n%s}\n"
         (control_code true expr stmts)
         (String.concat "\n" (grab_decls estmts))
         (String.concat "\n" (List.map sast_to_code estmts))
