@@ -98,11 +98,6 @@ let check_user_def_inst ct t sactls =
     let checked_sactuals = List.map
         (check_attr sactuals_table)
         (StringMap.bindings attr_table) in
-    (*
-    let _ = List.for_all
-        (fun a -> let () = print_endline(Sast_printer.sactual_s a) in true)
-        checked_sactuals in
-    *)
     SUserDefInst (UserDef t, checked_sactuals)
 
 (* Takes a symbol table and sexpr and rewrites variable references to be typed *)
