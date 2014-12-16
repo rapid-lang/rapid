@@ -99,6 +99,11 @@ let rec translate_statement = function
         let es =  List.map translate_statement else_stmts in
         SIfElse(translate_expr expr, ifs, es)
     | Ast.While(expr, stmts) -> SWhile(translate_expr expr, (List.map translate_statement stmts))
+    | Ast.For(t, id, xpr, stmts) ->
+        let s_id = translate_expr (Ast.Id id) in
+        let s_xpr = translate_expr xpr in
+        let s_stmts = List.map translate_statement stmts in
+        SFor(t, s_id, s_xpr, s_stmts)
     | _ -> raise(UnsupportedStatementTypeErr "type unknown")
 
 let translate_attr = function

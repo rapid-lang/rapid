@@ -239,7 +239,18 @@ and sast_to_code = function
         (control_code true expr stmts)
         (String.concat "\n" (grab_decls estmts))
         (String.concat "\n" (List.map sast_to_code estmts))
+    | SFor(t, SId(id), xpr, stmts) -> sfor_to_code t id xpr stmts
     | _ -> raise(UnsupportedSemanticStatementType)
+
+and sfor_to_code t id xpr stmts =
+    let body = (List.map sast_to_code stmts) in
+    let s_tmp, s_ref = sexpr_to_code xpr in
+    sprintf "%s\nfor _, %s := range *%s {\n%s\n%s\n}"
+        s_tmp
+        id
+        s_ref
+        (String.concat "\n" (grab_decls stmts))
+        (String.concat "\n" body)
 
 let arg_to_code = function
     | SDecl(t, (id, _) ) -> sprintf "%s %s"
@@ -251,8 +262,6 @@ let defaults_to_code = function
         else sprintf "if %s == nil {\n %s\n}"
                 id
                 (sassign_to_code (id, xpr))
-
-
 
 let func_to_code f =
     let (id, args, rets, body) = f in
