@@ -77,6 +77,9 @@ type semantic_stmt =
     | SReturn of sexpr list
     | SFuncCall of sfunc_lval list * string * sexpr list (*left hand of assing, fname, args*)
     | SUserDefDecl of string * svar_assign
+    | SIfElse of sexpr * semantic_stmt list * semantic_stmt list
+    | SIf of sexpr * semantic_stmt list
+    | SWhile of sexpr * semantic_stmt list 
 
 type sattr =
     | SNonOption of var_type * string * sexpr option
