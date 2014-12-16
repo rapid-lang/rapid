@@ -7,28 +7,28 @@ type string_expr =
     | SStringExprLit of string
     | SStringVar of string
     | SStringCast of sexpr
-    | SStringAcc of string * string
+    | SStringAcc of user_def_expr * string
     | SStringNull
 and int_expr =
     | SIntExprLit of int
     | SIntVar of string
     | SIntBinOp of sexpr * op * sexpr
     | SIntCast of sexpr
-    | SIntAcc of string * string
+    | SIntAcc of user_def_expr * string
     | SIntNull
 and float_expr =
     | SFloatExprLit of float
     | SFloatVar of string
     | SFloatBinOp of sexpr * op * sexpr
     | SFloatCast of sexpr
-    | SFloatAcc of string * string
+    | SFloatAcc of user_def_expr * string
     | SFloatNull
 and bool_expr =
     | SBoolExprLit of bool
     | SBoolVar of string
     | SBoolCast of sexpr
     | SBoolBinOp of sexpr * op * sexpr
-    | SBoolAcc of string * string
+    | SBoolAcc of user_def_expr * string
     | SBoolNull
 and func_call_expr = string * sexpr list
 and bin_expr = sexpr * op * sexpr
@@ -54,8 +54,8 @@ and sexpr =
 and user_def_expr =
     | SUserDefInst of var_type * sactual list (* class * actuals *)
     | SUserDefVar of var_type * string (* class * variablename *)
-    | SUserDefAcc of var_type * string * string (* class * var_id * member *)
     | SUserDefNull of var_type
+    | SUserDefAcc of var_type * user_def_expr * string (* class * var / instance * member *)
 and sactual = string * sexpr
 
 type soutput =

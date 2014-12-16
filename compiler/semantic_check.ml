@@ -28,6 +28,8 @@ exception TooManyArgsErr
 exception InvalidBinaryOp
 exception BinOpTypeMismatchErr
 exception AmbiguousContextErr of string
+exception ClassAttrInClassErr
+exception UserDefinedTypNeeded
 
 type allowed_types = AllTypes | NumberTypes
 
@@ -165,13 +167,16 @@ let rec rewrite_sexpr st ct ft ?t = function
                 | SUserDefVar(UserDef s, _)
                 | SUserDefNull(UserDef s)) -> s
             | _ -> raise InvalidTypeMemberAccess in
+        let class_var_expr = (match rewritten_sexpr with
+            | SExprUserDef(xpr) -> xpr
+            | _ -> raise UserDefinedTypNeeded) in
         let t = get_attr_type cls ct mem in
         (match t with
-            | Bool -> SExprBool(SBoolAcc(cls, mem))
-            | Int -> SExprInt(SIntAcc(cls, mem))
-            | Float -> SExprFloat(SFloatAcc(cls, mem))
-            | String -> SExprString(SStringAcc(cls, mem))
-            | UserDef ud -> SExprUserDef(SUserDefAcc(t, cls, mem)))
+            | Bool -> SExprBool(SBoolAcc(class_var_expr, mem))
+            | Int -> SExprInt(SIntAcc(class_var_expr, mem))
+            | Float -> SExprFloat(SFloatAcc(class_var_expr, mem))
+            | String -> SExprString(SStringAcc(class_var_expr, mem))
+            | _ -> raise ClassAttrInClassErr)
     (* TODO: add all new expressions that can contain variable references to be simplified *)
     | xpr -> xpr
 and rewrite_sactl st ct ft = function

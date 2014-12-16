@@ -71,6 +71,7 @@ and string_expr_to_code = function
         let tmp_var = rand_var_gen () in
             sprintf "%s := *%s" tmp_var id,
             sprintf "&%s" tmp_var
+    | SStringAcc(ud_xpr, attr) ->  ud_access_to_code ud_xpr attr
     | SStringCast c -> cast_to_code String c
     | SStringNull -> "", "nil"
     | _ -> raise UnsupportedStringExprType
@@ -85,6 +86,7 @@ and int_expr_to_code = function
             sprintf "%s := *%s" tmp_var id,
             sprintf "&%s" tmp_var
     | SIntBinOp(lhs, o, rhs) -> bin_op_to_code lhs o rhs
+    | SIntAcc(ud_xpr, attr) -> ud_access_to_code ud_xpr attr
     | SIntNull -> "", "nil"
     | SIntCast c -> cast_to_code Int c
     | _ -> raise UnsupportedIntExprType
@@ -100,6 +102,7 @@ and float_expr_to_code = function
             sprintf "&%s" tmp_var
     | SFloatBinOp(rhs, o, lhs) -> bin_op_to_code rhs o lhs
     | SFloatNull -> "", "nil"
+    | SFloatAcc(ud_xpr, attr) -> ud_access_to_code ud_xpr attr
     | SFloatCast c -> cast_to_code Float c
     | _ -> raise UnsupportedFloatExprType
 
@@ -113,8 +116,8 @@ and bool_expr_to_code = function
         let tmp_var = rand_var_gen () in
             sprintf "%s := *%s" tmp_var id,
             sprintf "&%s" tmp_var
+    | SBoolAcc(ud_xpr, attr) -> ud_access_to_code ud_xpr attr
     | SBoolCast c -> cast_to_code Bool c
-    (*once there is float expr to code then use that insdead of the first sexpr to code in 1rst 2 cases*)
     | SBoolBinOp(lhs, o, rhs) -> bin_op_to_code lhs o rhs
     | SBoolNull -> "", "nil"
     | _ -> raise UnsupportedBoolExprType
@@ -122,8 +125,8 @@ and bool_expr_to_code = function
 and cast_to_code t xpr =
     let src_type = go_type_from_sexpr xpr in
     let dest_type = go_type_from_type t in
-    let setup, var = sexpr_to_code xpr in
-    let cast = sprintf "%sTo%s(%s)" src_type dest_type var in
+    let setup, ref = sexpr_to_code xpr in
+    let cast = sprintf "%sTo%s(%s)" src_type dest_type ref in
     setup, cast
 and func_expr_to_code id arg_xrps =
     let (tmps, refs) = (list_of_sexpr_to_code "" arg_xrps) in
@@ -156,18 +159,12 @@ and list_expr_to_code = function
         sprintf "&%s" tmp_var
     | SListVar(t, id) ->
         let tmp_var = rand_var_gen () in
-            sprintf "%s := %s" tmp_var id,
-            sprintf "%s"
-                tmp_var
+            sprintf "%s := %s" tmp_var id, tmp_var
     | SListAccess(xpr_l, xpr_r) ->
         let setup_l, ref_l = sexpr_to_code xpr_l in
         let setup_r, ref_r = sexpr_to_code xpr_r in
-        sprintf "%s\n%s"
-            setup_l
-            setup_r,
-        sprintf "(*%s)[*%s]"
-            ref_l
-            ref_r
+        sprintf "%s\n%s" setup_l setup_r,
+        sprintf "(*%s)[*%s]" ref_l ref_r
     | _ -> raise UnsupportedListExprType
 (* translates a user_def_expr to code
  * returns a tuple of (setup code, reference) *)
@@ -181,13 +178,15 @@ and user_def_expr_to_code = function
          String.concat "\n" (List.map snd trans))
     | SUserDefVar(_, id) ->
         let tmp_var = rand_var_gen () in
-            sprintf "%s := *%s" tmp_var id,
-            sprintf "&%s" tmp_var
+        sprintf "%s := %s" tmp_var id, sprintf "%s" tmp_var
+    | SUserDefNull _ ->
+        "", "nil"
     | _ -> raise(InvalidUserDefExpr)
-    (*
-    | SUserDefAcc  _
-    | SUserDefNull _ 
-    *)
+and ud_access_to_code ud_expr attr_id =
+    let tmp_var = rand_var_gen () in
+    let setup, ref = user_def_expr_to_code ud_expr in
+        sprintf "%s\n%s := %s.%s\n" setup tmp_var ref attr_id,
+        tmp_var
 
 let sassign_to_code = function
     | (id, xpr) ->

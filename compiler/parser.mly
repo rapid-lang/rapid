@@ -176,7 +176,7 @@ expr:
     | expr AND    expr { Binop($1, And, $3) }
     | expr OR    expr  { Binop($1, Or, $3 )}
     | expr MOD expr    { Binop($1, Mod, $3 )}
-    | expr CASTBOOL    { CastBool $1 }  
+    | expr CASTBOOL    { CastBool $1 }
     | primtype LPAREN expr RPAREN { Cast($1, $3) }
     | fcall            { Call $1 }
     | LPAREN expr RPAREN { $2 }
