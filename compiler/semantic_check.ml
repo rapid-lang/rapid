@@ -316,19 +316,22 @@ let rec var_analysis st ct ft = function
         let st = add_sym t id st in
         let () = check_t_sexpr t expr in
             SUserDefDecl(cls, (id, xpr)) :: var_analysis st ct ft tl
-    | SIf(xpr, stmts) :: tl -> let expr = rewrite_sexpr st ct ft xpr in
+    | SIf(xpr, stmts) :: tl ->
+        let expr = rewrite_sexpr st ct ft xpr in
         let () = check_t_sexpr Bool expr in
         let new_scope = new_scope st in 
         let stmts = var_analysis new_scope ct ft stmts in
         SIf(expr, stmts) :: (var_analysis st ct ft tl)
-    | SIfElse(xpr, stmts, estmts) :: tl -> let expr = rewrite_sexpr st ct ft xpr in
+    | SIfElse(xpr, stmts, estmts) :: tl ->
+        let expr = rewrite_sexpr st ct ft xpr in
         let () = check_t_sexpr Bool expr in
         let if_scope = new_scope st in 
         let stmts = var_analysis if_scope ct ft stmts in
         let else_scope = new_scope st in
         let estmts = var_analysis else_scope ct ft estmts in
         SIfElse(expr, stmts, estmts) :: (var_analysis st ct ft tl)
-    | SWhile(xpr, stmts) :: tl -> let expr = rewrite_sexpr st ct ft xpr in
+    | SWhile(xpr, stmts) :: tl -> 
+        let expr = rewrite_sexpr st ct ft xpr in
         let () = check_t_sexpr Bool expr in
         let stmts = var_analysis (new_scope st) ct ft stmts in
         SWhile(expr, stmts) :: var_analysis st ct ft tl
