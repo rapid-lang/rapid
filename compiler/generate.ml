@@ -385,14 +385,13 @@ let endpoint_to_code (path, args, ret_type, body) =
             let xpr_setup, ref = sexpr_to_code default in
             sprintf "%s\n%s := &%s" xpr_setup name ref in
         sprintf "%s\n_ = %s" setup name in
-    sprintf "func HTTP%s(w http.ResponseWriter, r *http.Request, " ^
-        "XXX httprouter.Params){\n%s\n%s\n}\n"
-        (strip_path path)
-        (
-            (String.concat "\n" decl_vars) ^ "\n\n" ^
-            (String.concat "\n" (List.map grab_param args))
-        )
-        (String.concat "\n" (List.map http_fstmt_to_code body))
+    let func_start = sprintf "func HTTP%s(w http.ResponseWriter, r *http.Request, "
+        (strip_path path) in
+    let func_end = sprintf "XXX httprouter.Params){\n%s\n%s\n}\n"
+        ((String.concat "\n" decl_vars) ^ "\n\n" ^
+            (String.concat "\n" (List.map grab_param args)))
+        (String.concat "\n" (List.map http_fstmt_to_code body)) in
+    func_start ^ func_end
 
 
 let skeleton decls http_funcs classes main fns router =
