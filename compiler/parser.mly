@@ -8,7 +8,6 @@
 %token PLUS MINUS TIMES DIVIDE ASSIGN CASTBOOL
 %token EQ NEQ LT LEQ GT GEQ AND OR MOD
 %token RETURN IF ELSE FOR WHILE FUNC IN
-%token PRINTLN PRINTF // LOG
 %token CLASS NEW ACCESS OPTIONAL
 %token HTTP PARAM NAMESPACE
 // %token INT BOOL FLOAT STRING
@@ -168,10 +167,6 @@ http_type_block:
         { Namespace($2, $4) }
     | HTTP ID LPAREN typed_param_list RPAREN return_type LBRACE fstmt_list RBRACE
         { Endpoint($2, $4, $6, $8) }
-
-print:
-    | PRINTLN LPAREN expression_list RPAREN { Println $3 }
-    | PRINTF LPAREN expression_list RPAREN { Printf $3 }
 
 
 expr_opt:

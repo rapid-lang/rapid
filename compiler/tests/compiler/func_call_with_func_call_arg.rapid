@@ -2,9 +2,9 @@ int b = 1;
 
 b = foo(foo(b, "hi"), "bye");
 
-Println(b);
+println(b);
 
 func foo(int a, string b = "hi") int {
-    Println(b);
+    println(b);
     return a;
 }

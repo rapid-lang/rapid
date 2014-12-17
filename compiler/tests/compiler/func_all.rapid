@@ -4,8 +4,8 @@ string y;
 
 (x, y) = foo();
 
-Println(x); // 1
-Println(y); //wow
+println(x); // 1
+println(y); //wow
 
 blank(1);
 
@@ -15,19 +15,19 @@ func foo() int, string{
 
 func boo(int i, string s = "def") int {
     (int j, string q) = too(i, s);
-    Println(j);
-    Println(q);
-	Println(s);
-	Println(i);
+    println(j);
+    println(q);
+	println(s);
+	println(i);
 	return i;
 }
 
 func too(int n, string a) int, string{
-    Println(n);
-    Println(a);
+    println(n);
+    println(a);
 	return 2, "b";
 }
 func blank(int i){
-	Println(i);
+	println(i);
 	return;
 }

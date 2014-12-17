@@ -1,10 +1,10 @@
 int a = 5;
 int b = 2;
 
-Println(a == b);
-Println(a != b);
-Println(a > b);
-Println(a < b);
-Println(a >= b);
-Println(a <= b);
-Println((a == b) or (b == a));
+println(a == b);
+println(a != b);
+println(a > b);
+println(a < b);
+println(a >= b);
+println(a <= b);
+println((a == b) or (b == a));

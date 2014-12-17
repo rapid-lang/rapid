@@ -11,10 +11,10 @@ list<int> b = [1,2];
 
 func foo(list<int> q)
 {
-	Println(q[0]);
+	println(q[0]);
 }
 
 foo(b);
 
-Println(a[0][0]);
-Println(a[1][1]);
+println(a[0][0]);
+println(a[1][1]);

@@ -23,7 +23,7 @@ module  StringMap = Map.Make(String)
 let need_dereference_funcs = let sm = StringMap.empty in
     let sm = StringMap.add "append" true sm in 
     let sm = StringMap.add "len" true sm in
-    let sm = StringMap.add "Println" true sm in
+    let sm = StringMap.add "println" true sm in
     let sm = StringMap.add "Printf" true sm in
     sm
 
@@ -210,7 +210,7 @@ let sfunccall_to_code lv id xprs =
     let lhs = lv_to_code lv in
     let (tmps, refs) = list_of_sexpr_to_code "" xprs in
     let tmps = String.concat "\n" tmps in
-    let s, id = if StringMap.mem id (need_dereference_funcs) then "*", "fmt." ^ id 
+    let s, id = if StringMap.mem id (need_dereference_funcs) then "*", "" ^ id 
        else "", id in 
     let refs = List.map (fun str -> s ^ str ) refs in
     let refs = if s = "Println" then String.sub (List.hd refs) 1 ((String.length (List.hd refs)) - 1) :: (List.tl refs)

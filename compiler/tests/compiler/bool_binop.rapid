@@ -2,19 +2,19 @@ int a = 5;
 int b = 2;
 
 
-Println(a == b);
-Println(a != b);
-Println(a > b);
-Println(a < b);
-Println(a >= b);
-Println(a <= b);
-Println((a == b) or (b != a));
+println(a == b);
+println(a != b);
+println(a > b);
+println(a < b);
+println(a >= b);
+println(a <= b);
+println((a == b) or (b != a));
 
 string s =  "a";
 
-Println("a" == s);
+println("a" == s);
 
-Println(foo(b, a == b));
+println(foo(b, a == b));
 
 func foo(int a, boolean b, int c = 2) boolean{
 	return a == c and b;
@@ -22,6 +22,6 @@ func foo(int a, boolean b, int c = 2) boolean{
 
 float c = 3.14;
 int i = 3;
-Println (i < c);
-Println(a + b - 3 * 2);
-Println(3 + c * 1.1);
+println (i < c);
+println(a + b - 3 * 2);
+println(3 + c * 1.1);

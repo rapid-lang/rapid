@@ -53,7 +53,7 @@ let default_ft ft =
         []  in
     let ft = add_func ft "len"
         [ListType(AnyList), NullExpr] [Int] in
-    let ft = add_func ft "Println"
+    let ft = add_func ft "println"
         [(InfiniteArgs, NullExpr)]
         []  in
     ft

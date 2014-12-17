@@ -18,5 +18,5 @@ Printf("%t\n", f?);
 foo(f?);
 
 func foo(boolean i) {
-	Println(i);
+	println(i);
 }

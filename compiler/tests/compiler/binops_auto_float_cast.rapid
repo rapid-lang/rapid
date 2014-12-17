@@ -1,21 +1,21 @@
 float a = 3 + 5.5;
 float b = 6.5 - 5;
 
-Println(a);
-Println(b);
+println(a);
+println(b);
 
-Println(a > 1);
+println(a > 1);
 
 int c = int(5.5 + 3);
 
-Println(c % 3);
+println(c % 3);
 
-Println(c);
+println(c);
 
-Println(foo(b, c));
+println(foo(b, c));
 
 func foo(float f, int b) float{
 	float a = f + b;
-	Println(a);
+	println(a);
 	return a/b;
 }

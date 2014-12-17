@@ -3,7 +3,7 @@ float pi = 3.14;
 
 float x = pi;
 
-Println(pi);
-Println(x);
+println(pi);
+println(x);
 
 

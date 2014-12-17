@@ -1,12 +1,14 @@
  package main
 
 import "strconv"
-
+import "fmt"
 type Int *int
 type Float *float64
 type Bool *bool
 type String *string
 
+var println = fmt.Println
+var Printf = fmt.Printf
 /*
  * BOOLEANS
  */

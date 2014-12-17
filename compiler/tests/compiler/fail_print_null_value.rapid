@@ -1,7 +1,7 @@
 
 int x;
-Println(x);
+println(x);
 
 int y = x;
-Println(y);
+println(y);
 
