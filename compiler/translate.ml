@@ -99,12 +99,15 @@ let rec translate_statement = function
     | Ast.UserDefDecl udd -> translate_user_def_decl udd
     | Ast.FuncCall(vl, fc) -> let sfc = translate_fcall fc in
         SFuncCall((List.map translate_vars vl), sfc)
-    | Ast.If(expr, ifstmts, []) -> let ifs = List.map translate_statement ifstmts in
+    | Ast.If(expr, ifstmts, []) ->
+        let ifs = List.map translate_statement ifstmts in
         SIf(translate_expr expr, ifs)
-    | Ast.If(expr, ifstmts, else_stmts) -> let ifs = List.map translate_statement ifstmts in
+    | Ast.If(expr, ifstmts, else_stmts) ->
+        let ifs = List.map translate_statement ifstmts in
         let es =  List.map translate_statement else_stmts in
         SIfElse(translate_expr expr, ifs, es)
-    | Ast.While(expr, stmts) -> SWhile(translate_expr expr, (List.map translate_statement stmts))
+    | Ast.While(expr, stmts) ->
+        SWhile(translate_expr expr, (List.map translate_statement stmts))
     | Ast.For(t, string_id, xpr, stmts) ->
         let s_xpr = translate_expr xpr in
         let s_stmts = List.map translate_statement stmts in
@@ -112,7 +115,8 @@ let rec translate_statement = function
     | _ -> raise(UnsupportedStatementTypeErr "type unknown")
 
 let translate_attr = function
-    | Ast.NonOption (t, name, Some(xpr)) -> SNonOption(t, name, Some(translate_expr xpr))
+    | Ast.NonOption (t, name, Some(xpr)) ->
+        SNonOption(t, name, Some(translate_expr xpr))
     | Ast.NonOption (t, name, None) -> SNonOption(t, name, None)
     | Ast.Optional (t, name) -> SOptional(t, name)
 

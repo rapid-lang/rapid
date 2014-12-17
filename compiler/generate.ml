@@ -149,7 +149,8 @@ and func_expr_to_code = function
         let tmps, call = if StringMap.mem id (need_dereference_funcs) then
                 let tmp = rand_var_gen () in
                 let dots = if id = "append" then "..." else "" in
-                tmps @ [(sprintf "\n%s := %s(%s%s)" tmp id (String.concat ", " refs) dots )] , "&" ^ tmp
+                tmps @ [(sprintf "\n%s := %s(%s%s)" tmp id
+                    (String.concat ", " refs) dots )] , "&" ^ tmp
             else
                 tmps ,sprintf "%s(%s)" id (String.concat ", " refs) in
         (String.concat "\n" tmps), call
@@ -252,7 +253,9 @@ let sfunccall_to_code lv c =
         let s, id = if StringMap.mem id (need_dereference_funcs) then "*", "" ^ id
            else "", id in
         let refs = List.map (fun str -> s ^ str ) refs in
-        let refs = if s = "Println" then String.sub (List.hd refs) 1 ((String.length (List.hd refs)) - 1) :: (List.tl refs)
+        let refs = if s = "Println" then
+            String.sub (List.hd refs) 1
+                ((String.length (List.hd refs)) - 1) :: (List.tl refs)
             else refs in
         let refs = String.concat "," refs in
         if lhs = "" then sprintf "%s\n%s( %s )" tmps id refs
@@ -283,15 +286,18 @@ let rec control_code b expr stmts =
     let decls = String.concat "\n" (grab_decls stmts) in
     match b with
         |IF -> sprintf "%s\nif *(%s){%s\n%s}" tmps exprs decls body
-        |WHILE -> sprintf "for{\n%s\nif !(*(%s)){\nbreak\n}\n%s\n%s}\n" tmps exprs decls body
+        |WHILE -> sprintf "for{\n%s\nif !(*(%s)){\nbreak\n}\n%s\n%s}\n"
+            tmps exprs decls body
 
 and sast_to_code = function
     | SDecl(_, (id, xpr)) -> sassign_to_code (SLhsId id, xpr)
     | SAssign (lhs, xpr) -> sassign_to_code (lhs, xpr)
     | SReturn xprs -> sreturn_to_code xprs
     | SFuncCall (lv, c) -> sfunccall_to_code lv c
-    | SUserDefDecl(class_id, (id, SExprUserDef(xpr))) -> class_instantiate_to_code class_id (id, xpr)
-    | SUserDefDecl(class_id, (id, NullExpr)) -> sprintf "var %s %s\n_ = %s" id class_id id
+    | SUserDefDecl(class_id, (id, SExprUserDef(xpr))) ->
+        class_instantiate_to_code class_id (id, xpr)
+    | SUserDefDecl(class_id, (id, NullExpr)) ->
+        sprintf "var %s %s\n_ = %s" id class_id id
     | SIf(expr, stmts) -> (control_code IF expr stmts) ^ "\n"
     | SWhile (expr, stmts) -> control_code WHILE expr stmts
     | SIfElse(expr, stmts, estmts) ->
@@ -339,7 +345,8 @@ let func_to_code f =
 
 let class_def_to_code (class_id, attr_list) =
     let attr_to_code_attr = function
-        | SNonOption(t, id, _) | SOptional(t, id) -> sprintf "%s %s" id (go_type_from_type t) in
+        | SNonOption(t, id, _) | SOptional(t, id) ->
+            sprintf "%s %s" id (go_type_from_type t) in
     let attrs = List.map attr_to_code_attr attr_list in
     sprintf "type %s struct{\n%s\n}" class_id (String.concat "\n" attrs)
 
@@ -378,7 +385,8 @@ let endpoint_to_code (path, args, ret_type, body) =
             let xpr_setup, ref = sexpr_to_code default in
             sprintf "%s\n%s := &%s" xpr_setup name ref in
         sprintf "%s\n_ = %s" setup name in
-    sprintf "func HTTP%s(w http.ResponseWriter, r *http.Request, XXX httprouter.Params){\n%s\n%s\n}\n"
+    sprintf "func HTTP%s(w http.ResponseWriter, r *http.Request, " ^
+        "XXX httprouter.Params){\n%s\n%s\n}\n"
         (strip_path path)
         (
             (String.concat "\n" decl_vars) ^ "\n\n" ^
@@ -392,7 +400,8 @@ let skeleton decls http_funcs classes main fns router =
         ("net/http", "http.StatusOK") ::
         ("log", "log.Fatal") ::
         ("github.com/julienschmidt/httprouter", "httprouter.CleanPath") :: [] in
-    let processed = List.map (fun (p, ref) -> sprintf "\"%s\"" p, sprintf "var _ = %s" ref) packages in
+    let processed = List.map (fun (p, ref) ->
+        sprintf "\"%s\"" p, sprintf "var _ = %s" ref) packages in
     let imports, references = List.map fst processed, List.map snd processed in
     let imports = String.concat "\n" imports in
     let references = String.concat "\n" references in

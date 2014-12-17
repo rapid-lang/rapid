@@ -74,7 +74,8 @@ let rec check_arg_types lt = function
         param :: check_arg_types lt (tl, pl)
     | (((_, xpr) :: tl), ([])) -> if (is_not_default xpr)
             then raise TooFewArgsErr
-        else NullExpr :: check_arg_types lt (tl, []) (*This is the case where the user didn't enter some optional args*)
+        (*This is the case where the user didn't enter some optional args*)
+        else NullExpr :: check_arg_types lt (tl, [])
     | ([], (param :: pl)) -> raise TooManyArgsErr
     | ([],[]) -> []
 
@@ -124,10 +125,14 @@ let rec rewrite_sexpr st ct ft ?t = function
         | UserDef cls -> SExprUserDef(SUserDefVar ((UserDef cls), id))
         | ListType(ty) -> SExprList(SListVar(ty, id))
         | _ -> raise UnsupportedDatatypeErr)
-    | SExprBool(SBoolCast e) -> SExprBool(SBoolCast(rewrite_cast st ct ft e AllTypes))
-    | SExprInt(SIntCast e) -> SExprInt(SIntCast(rewrite_cast st ct ft e NumberTypes))
-    | SExprFloat(SFloatCast e) -> SExprFloat(SFloatCast(rewrite_cast st ct ft e NumberTypes))
-    | SExprString(SStringCast e) -> SExprString(SStringCast(rewrite_cast st ct ft e AllTypes))
+    | SExprBool(SBoolCast e) ->
+        SExprBool(SBoolCast(rewrite_cast st ct ft e AllTypes))
+    | SExprInt(SIntCast e) ->
+        SExprInt(SIntCast(rewrite_cast st ct ft e NumberTypes))
+    | SExprFloat(SFloatCast e) ->
+        SExprFloat(SFloatCast(rewrite_cast st ct ft e NumberTypes))
+    | SExprString(SStringCast e) ->
+        SExprString(SStringCast(rewrite_cast st ct ft e AllTypes))
     | SCall(c) -> (match c with
         | SFCall(Some(xpr), fn_id, xprs) ->
             let xpr = rewrite_sexpr st ct ft xpr in
@@ -203,7 +208,6 @@ let rec rewrite_sexpr st ct ft ?t = function
             | Float -> SExprFloat(SFloatAcc(class_var_expr, mem))
             | String -> SExprString(SStringAcc(class_var_expr, mem))
             | _ -> raise ClassAttrInClassErr)
-    (* TODO: add all new expressions that can contain variable references to be simplified *)
     | xpr -> xpr
 and rewrite_sactl st ct ft = function
     | (name, xpr) -> (name, rewrite_sexpr st ct ft xpr)
@@ -267,8 +271,9 @@ let rec check_returns r = function
     | hd :: tl -> hd :: check_returns r tl
     | [] -> []
 
-(*takes an sfunc_lval list * var_type list, gotten the return type list in the funciton table
-  this checks if the left hand side vars or var decls are the same types as the return types. *)
+(*takes an sfunc_lval list * var_type list, gotten the return type list
+ * in the funciton table this checks if the left hand side vars or var
+ * decls are the same types as the return types. *)
 let rec check_lv_types = function
     | (SFuncTypedId(t, _) :: tl), (expected_t :: types) -> if t = expected_t
             then check_lv_types  (tl, types)
