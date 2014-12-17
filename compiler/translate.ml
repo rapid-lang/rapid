@@ -72,7 +72,7 @@ let translate_decl = function
     | _ -> raise UnsupportedDeclType
 
 let translate_error_def_decl = function
-    | id, xpr -> SErrorDefDecl (id, (expr_option_map translate_expr xpr))
+    | id, xpr -> SErrorDecl (id, (expr_option_map translate_expr xpr))
 
 let translate_user_def_decl = function
     | class_id, id, xpr ->

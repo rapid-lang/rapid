@@ -339,12 +339,12 @@ let rec var_analysis st ct ft = function
         let xprs = check_arg_types ((get_arg_types id ft), xprs) in
         let st = scope_lv st lv in
         SFuncCall(lv, id, xprs) :: (var_analysis st ct ft tl)
-    | SErrorDefDecl((id, xpr)) :: tl ->
+    | SErrorDecl((id, xpr)) :: tl ->
         let expr = rewrite_sexpr st ct ft xpr in
         let t = Error in
         let st = add_sym t id st in
         let () = check_t_sexpr t expr in
-            SErrorDefDecl((id, xpr)) :: var_analysis st ct ft tl
+            SErrorDecl((id, xpr)) :: var_analysis st ct ft tl
     | SUserDefDecl(cls, (id, xpr)) :: tl ->
         let checked_expr = rewrite_sexpr st ct ft xpr in
         let t = UserDef cls in

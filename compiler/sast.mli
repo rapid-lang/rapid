@@ -62,8 +62,7 @@ and error_def_expr =
     | SErrorDefVar of string
     | SErrorDefAcc of string * string 
     | SErrorDefNull 
-and sactual =
-    | SActual of string * sexpr
+and sactual = string * sexpr
 
 type soutput =
     | SPrintf of sexpr * sexpr list
@@ -82,6 +81,7 @@ type semantic_stmt =
     | SOutput of soutput
     | SReturn of sexpr list
     | SFuncCall of sfunc_lval list * string * sexpr list (* left hand of assing, fname, args *)
+    | SErrorDecl of svar_assign
     | SUserDefDecl of string * svar_assign (* class_id, (id, expr) *)
     | SIfElse of sexpr * semantic_stmt list * semantic_stmt list
     | SIf of sexpr * semantic_stmt list

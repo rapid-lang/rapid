@@ -136,7 +136,7 @@ let rec semantic_stmt_s = function
     | SAssign a -> svar_assign_s a ^ "\n"
     | SDecl(t, vd) -> svar_decl_s t vd ^ "\n"
     | SOutput o -> sprintf "(Output %s)\n" (soutput_s o)
-    | SErrorDefDecl vd -> error_def_decl_s vd ^ "\n"
+    | SErrorDecl vd -> error_def_decl_s vd ^ "\n"
     | SUserDefDecl(cls, vd) -> suser_def_decl_s cls vd ^ "\n"
     | SReturn s -> sprintf("Return(%s)\n")
         (String.concat ", " (List.map sexpr_s s))
