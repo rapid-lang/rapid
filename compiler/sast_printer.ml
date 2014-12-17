@@ -71,8 +71,9 @@ and error_def_expr_s = function
             (String.concat ",\n\t" (List.map sactual_s sactls))
     | SErrorDefVar(id) -> sprintf "(Error %s)" id
     | SErrorDefAcc(var, mem) -> sprintf "(Error Access: %s.%s)"
-        var mem
-    | SErrorDefNull -> sprintf "(Error NULL)" 
+        (error_def_expr_s var)
+        mem
+    | SErrorDefNull -> sprintf "(Error NULL)"
 and user_def_expr_s = function
     | SUserDefInst(UserDef cls, sactls) ->
         sprintf "(INSTANTIATE new UserDef %s(\n\t%s))"
@@ -144,7 +145,7 @@ let rec semantic_stmt_s = function
         (String.concat ", " (List.map lv_s lv))
         id
         (String.concat ", " (List.map sexpr_s params))
-    | SWhile(expr, stmts) -> sprintf "(While(%s){\n%s\n})\n" 
+    | SWhile(expr, stmts) -> sprintf "(While(%s){\n%s\n})\n"
         (sexpr_s expr)
         (String.concat "\n" (List.map semantic_stmt_s stmts))
     | _ -> "Unsupported statement"

@@ -93,8 +93,8 @@ let check_attr sactuals_table = function
 
 
 (* Check for required attributes *)
-let check_sactual attrs_table (id, expr) = 
-    if StringMap.mem id attrs_table 
+let check_sactual attrs_table (id, expr) =
+    if StringMap.mem id attrs_table
         then ()
         else raise( MissingRequiredArgument
                     (Format.sprintf "The attribute %s does not exist" id))
@@ -130,6 +130,7 @@ let rec rewrite_sexpr st ct ft ?t = function
         | String -> SExprString(SStringVar id)
         | Float -> SExprFloat(SFloatVar id)
         | Bool -> SExprBool(SBoolVar id)
+        | Error -> SExprError(SErrorDefVar id)
         | UserDef cls -> SExprUserDef(SUserDefVar ((UserDef cls), id))
         | ListType(ty) -> SExprList(SListVar(ty, id))
         | _ -> raise UnsupportedDatatypeErr)
@@ -174,7 +175,7 @@ let rec rewrite_sexpr st ct ft ?t = function
         | SErrorInst(sactls) ->
             let rewritten_sactls = List.map (rewrite_sactl st ct ft) sactls in
             let expr = check_error_def_inst rewritten_sactls in
-            SExprError(expr) 
+            SExprError(expr)
         | _ -> SExprError edf)
     | SExprUserDef udf -> (
         match udf with
@@ -186,21 +187,28 @@ let rec rewrite_sexpr st ct ft ?t = function
     | SExprAccess(xpr, mem) ->
         let rewritten_sexpr = rewrite_sexpr st ct ft xpr in
         let cls = match rewritten_sexpr with
+            | SExprError _ -> "Error"
             | SExprUserDef(
                   SUserDefInst(UserDef s, _)
                 | SUserDefVar(UserDef s, _)
                 | SUserDefNull(UserDef s)) -> s
             | _ -> raise InvalidTypeMemberAccess in
-        let class_var_expr = (match rewritten_sexpr with
-            | SExprUserDef(xpr) -> xpr
-            | _ -> raise UserDefinedTypNeeded) in
-        let t = get_attr_type cls ct mem in
-        (match t with
-            | Bool -> SExprBool(SBoolAcc(class_var_expr, mem))
-            | Int -> SExprInt(SIntAcc(class_var_expr, mem))
-            | Float -> SExprFloat(SFloatAcc(class_var_expr, mem))
-            | String -> SExprString(SStringAcc(class_var_expr, mem))
-            | _ -> raise ClassAttrInClassErr)
+        (match rewritten_sexpr with
+            | SExprError(xpr) ->
+                let t = get_error_attr_type mem in
+                (match t with
+                    | Int -> SExprInt(SIntErrAcc(xpr, mem))
+                    | String -> SExprString(SStringErrAcc(xpr, mem))
+                    | _ -> raise ClassAttrInClassErr)
+            | SExprUserDef(xpr) ->
+                let t = get_attr_type cls ct mem in
+                (match t with
+                    | Bool -> SExprBool(SBoolAcc(xpr, mem))
+                    | Int -> SExprInt(SIntAcc(xpr, mem))
+                    | Float -> SExprFloat(SFloatAcc(xpr, mem))
+                    | String -> SExprString(SStringAcc(xpr, mem))
+                    | _ -> raise ClassAttrInClassErr)
+            | _ -> raise UserDefinedTypNeeded)
     (* TODO: add all new expressions that can contain variable references to be simplified *)
     | xpr -> xpr
 and rewrite_sactl st ct ft = function
@@ -356,18 +364,18 @@ let rec var_analysis st ct ft = function
     | SIf(xpr, stmts) :: tl ->
         let expr = rewrite_sexpr st ct ft xpr in
         let () = check_t_sexpr Bool expr in
-        let new_scope = new_scope st in 
+        let new_scope = new_scope st in
         let stmts = var_analysis new_scope ct ft stmts in
         SIf(expr, stmts) :: (var_analysis st ct ft tl)
     | SIfElse(xpr, stmts, estmts) :: tl ->
         let expr = rewrite_sexpr st ct ft xpr in
         let () = check_t_sexpr Bool expr in
-        let if_scope = new_scope st in 
+        let if_scope = new_scope st in
         let stmts = var_analysis if_scope ct ft stmts in
         let else_scope = new_scope st in
         let estmts = var_analysis else_scope ct ft estmts in
         SIfElse(expr, stmts, estmts) :: (var_analysis st ct ft tl)
-    | SWhile(xpr, stmts) :: tl -> 
+    | SWhile(xpr, stmts) :: tl ->
         let expr = rewrite_sexpr st ct ft xpr in
         let () = check_t_sexpr Bool expr in
         let stmts = var_analysis (new_scope st) ct ft stmts in

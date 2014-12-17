@@ -18,6 +18,7 @@ exception UnsupportedDatatypeErr
 exception InvalidClassInstantiation
 exception StringExpressionsRequired
 exception InvalidUserDefExpr
+exception InvalidErrorExpr
 
 
 let rand_var_gen _ = "tmp_" ^ Int64.to_string (Random.int64 Int64.max_int)
@@ -58,6 +59,7 @@ let rec sexpr_to_code = function
     | SExprBool b -> bool_expr_to_code b
     | SExprList l -> list_expr_to_code l
     | SCallTyped(t, (id, args)) -> func_expr_to_code id args
+    | SExprError e -> error_expr_to_code e 
     | SExprUserDef u -> user_def_expr_to_code u
     | NullExpr -> "", "nil"
     | s -> raise(UnsupportedSExprType(Sast_printer.sexpr_s s))
@@ -166,6 +168,20 @@ and list_expr_to_code = function
         sprintf "%s\n%s" setup_l setup_r,
         sprintf "(*%s)[*%s]" ref_l ref_r
     | _ -> raise UnsupportedListExprType
+and error_expr_to_code = function
+    | SErrorInst act_list ->
+        let expand (attr, xpr) =
+            let setup, ref = sexpr_to_code xpr in
+            setup, sprintf "%s: %s," attr ref in
+        let trans = List.map expand act_list in
+        (String.concat "\n" (List.map fst trans),
+         sprintf "error{\n%s\n}\n" (String.concat "\n" (List.map snd trans)))
+    | SErrorDefVar id ->
+        let tmp_var = rand_var_gen () in
+        sprintf "%s := %s" tmp_var id, sprintf "%s" tmp_var
+    | SErrorDefNull _ ->
+        "", "nil"
+    | _ -> raise(InvalidErrorExpr)
 (* translates a user_def_expr to code
  * returns a tuple of (setup code, reference) *)
 and user_def_expr_to_code = function
@@ -234,6 +250,10 @@ let sfunccall_to_code lv id xprs =
     if lhs = "" then sprintf "%s\n%s( %s )" tmps id refs
         else sprintf "%s\n%s = %s( %s )" tmps lhs id refs
 
+let error_instantiate_to_code (id, inst_xpr) = 
+    let setups, attrs = error_expr_to_code inst_xpr in
+    sprintf "%s\n%s := %s\n_ = %s" setups id attrs id
+
 let class_instantiate_to_code class_id (id, inst_xpr) =
     let setups, attrs = user_def_expr_to_code inst_xpr in
     sprintf "%s\n%s := %s\n_ = %s" setups id attrs id
@@ -263,6 +283,7 @@ and sast_to_code = function
     | SOutput p -> soutput_to_code p
     | SReturn xprs -> sreturn_to_code xprs
     | SFuncCall(lv, id, xprs) -> sfunccall_to_code lv id xprs
+    | SErrorDecl(id, SExprError(xpr)) -> error_instantiate_to_code (id, xpr)
     | SUserDefDecl(class_id, (id, SExprUserDef(xpr))) -> class_instantiate_to_code class_id (id, xpr)
     | SUserDefDecl(class_id, (id, NullExpr)) -> sprintf "var %s %s\n_ = %s" id class_id id
     | SIf(expr, stmts) -> (control_code IF expr stmts) ^ "\n"
@@ -312,6 +333,7 @@ let class_def_to_code (class_id, attr_list) =
         | SNonOption(t, id, _) | SOptional(t, id) -> sprintf "%s %s" id (go_type_from_type t) in
     let attrs = List.map attr_to_code_attr attr_list in
     sprintf "type %s struct{\n%s\n}" class_id (String.concat "\n" attrs)
+
 
 
 let skeleton decls classes main fns = "package main\nimport (\"fmt\")\n" ^

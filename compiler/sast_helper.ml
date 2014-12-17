@@ -16,6 +16,7 @@ exception ClassNotDefinedErr of string
 exception AttributeNotDefinedErr of string
 exception MissingActualErr of string
 exception ExistingFuncErr
+exception IncorrectAccessType
 
 
 (* Maps a function to a expr option if it is defined, otherwise return NullExpr *)
@@ -115,12 +116,12 @@ and insert_attr attr_id attr_tbl triple =
         else StringMap.add attr_id triple attr_tbl
 
 (* Hard coded error attributes *)
-let get_error_attr_table = 
+let get_error_attr_table =
     let attr_table = [ (SNonOption (String, "name", Some(SExprString(SStringExprLit "Error"))));
                         (SNonOption (Int, "code", Some(SExprInt(SIntExprLit 500))));
                         (SNonOption (String, "message", Some(SExprString(SStringExprLit "An Error has been thrown"))))]
     in add_attrs empty_attribute_table attr_table
-    
+
 (* Get the table of attributes for a specific class *)
 let get_attr_table class_id class_tbl =
     if StringMap.mem class_id class_tbl
@@ -136,6 +137,13 @@ let get_attr class_id class_tbl id =
         else raise(AttributeNotDefinedErr(Format.sprintf
                 "%s is not an attribute on the class %s"
                 id class_id))
+
+let get_error_attr_type = function
+    | "name" -> String
+    | "message" -> String
+    | "code" -> Int
+    | _ -> raise IncorrectAccessType
+
 
 (* gets the type of the attribute called id on the class called class_id *)
 let get_attr_type class_id class_tbl id =
