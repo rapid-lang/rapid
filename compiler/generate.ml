@@ -337,13 +337,15 @@ let generate_route_registrations routes =
            "\nlog.Fatal(http.ListenAndServe(\":8080\", router))\n"
 
 let endpoint_to_code (path, args, ret_type, body) =
+    (* grabs the parameters from the request and instantiates the variables *)
     let grab_param (t, name, default) =
-        let value = if default = NullExpr then
-            sprintf "XXX.ByName(\"%s\")" name
+        let setup = if default = NullExpr then
+            let tmp = rand_var_gen () in
+            sprintf "%s := XXX.ByName(\"%s\")\n%s := &%s" tmp name name tmp
         else
-            let setup, ref = sexpr_to_code default in
-            sprintf "%s\n%s = %s" setup name ref in
-        sprintf "%s := %s\n_ = %s" name value name in
+            let xpr_setup, ref = sexpr_to_code default in
+            sprintf "%s\n%s := &%s" xpr_setup name ref in
+        sprintf "%s\n_ = %s" setup name in
 
     sprintf "func HTTP%s(w http.ResponseWriter, r *http.Request, XXX httprouter.Params){\n%s\n%s\n}\n"
         (strip_path path)
@@ -370,8 +372,8 @@ let skeleton decls http_funcs classes main fns router =
     router ^ "\n" ^
     "}\n " ^ fns
 
+
 let build_prog sast =
-    (* Ignore classes for now *)
     let (stmts, classes, funcs, route_list) = sast in
     let decls = String.concat "\n" (grab_decls stmts) in
     let code_lines = List.map sast_to_code stmts in

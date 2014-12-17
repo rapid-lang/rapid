@@ -415,22 +415,26 @@ let gen_class_stmts stmts =
     let (checked_sclasses, ct) = class_analysis class_table sclasses in
     checked_sclasses, ct
 
+let rec populate_http_symbol_table st = function
+    | (t, id, xpr) :: tl -> populate_http_symbol_table (add_sym t id st) tl
+    | [] -> st
+
 (*
  * rt: route table
  *)
-let rec validate_http_tree path params rt = function
+let rec validate_http_tree path params rt ctx = function
     | SParam(t, id, tree) :: tl ->
-        let rest, rt = validate_http_tree path params rt tl in
+        let rest, rt = validate_http_tree path params rt ctx tl in
         let params = (t, id) :: params in
         let path = Format.sprintf "%s/:%s" path id in
         let rt = add_route path rt in
-        let sub_tree, rt = validate_http_tree path params rt tree in
+        let sub_tree, rt = validate_http_tree path params rt ctx tree in
         (rest @ sub_tree), rt
     | SNamespace(name, tree) :: tl ->
-        let rest, rt = validate_http_tree path params rt tl in
+        let rest, rt = validate_http_tree path params rt ctx tl in
         let path = Format.sprintf "%s/%s" path name in
         let rt = add_route path rt in
-        let sub_tree, rt = validate_http_tree path params rt tree in
+        let sub_tree, rt = validate_http_tree path params rt ctx tree in
         (rest @ sub_tree), rt
     | SEndpoint(name, args, ret_t, body) :: tl ->
         (* takes arguments and path params and confirms they all exist *)
@@ -442,8 +446,11 @@ let rec validate_http_tree path params rt = function
             | x, []  -> ()
             | [], x -> raise UnusedParamArgument) in
         let () = check_args (args, params) in
-        let rest, rt = validate_http_tree path params rt tl in
+        let rest, rt = validate_http_tree path params rt ctx tl in
         let path = Format.sprintf "%s/%s" path name in
+        let st, ct, ft = ctx in
+        let st = populate_http_symbol_table st args in
+        let body = var_analysis st ct ft body in
         (path, args, ret_t, body) :: rest, rt
     | [] -> [], rt
 
@@ -467,8 +474,9 @@ let gen_semantic_program stmts classes funcs h_tree =
     (*Add all the var decls to the global scope*)
     let st = add_to_scope symbol_table_list s_stmts in
     (*typecheck all the functions (including args and returns)*)
+    let ctx = (new_scope symbol_table_list, ct, ft) in
     let checked_funcs = check_funcs st ct ft s_funcs in
-    let route_list, _ = validate_http_tree "" [] empty_route_table s_http_tree in
+    let route_list, _ = validate_http_tree "" [] empty_route_table ctx s_http_tree in
     (checked_stmts, checked_classes, checked_funcs, route_list)
 
 
