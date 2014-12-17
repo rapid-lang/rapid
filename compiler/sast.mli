@@ -97,9 +97,10 @@ type sattr =
 type self_ref =
     | SelfRef of string * string (* classname * varname *)
 
+type sclass = string * sattr list
+
 (*this is the id, args, return types, body*)
 type semantic_function = string * self_ref option * (var_type * svar_assign) list * var_type list * semantic_stmt list
 type semantic_program = semantic_stmt list * sclass list * semantic_function list * s_http_tree
 
-type sclass = string * sattr list
 
