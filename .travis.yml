@@ -5,6 +5,7 @@ notifications:
     email:
         - rapidlang@googlegroups.com
 before_script:
+    - go get "github.com/julienschmidt/httprouter"
     - bash -ex config/travis_install.sh
     - sudo apt-get install golang
 script:
