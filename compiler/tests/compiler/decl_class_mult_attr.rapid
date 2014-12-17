@@ -14,3 +14,5 @@ println(a.age);
 User c = new User(name="tester");
 println(c.balance?);
 
+println(a.age + b.age + c.age);
+
