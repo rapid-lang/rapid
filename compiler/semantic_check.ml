@@ -1,7 +1,6 @@
 open Sast
 open Sast_helper
 open Sast_printer
-open Format
 open Datatypes
 open Translate
 
@@ -29,6 +28,8 @@ exception TooManyArgsErr
 exception InvalidBinaryOp
 exception BinOpTypeMismatchErr
 exception AmbiguousContextErr of string
+exception ClassAttrInClassErr
+exception UserDefinedTypNeeded
 
 type allowed_types = AllTypes | NumberTypes
 
@@ -59,10 +60,7 @@ let rec check_arg_types = function
 let get_cast_side = function
     | (Int, Float) -> Left
     | (Float, Int) -> Right
-    | (String, String) -> None
-    | (Bool, Bool) -> None
-    | (Int, Int) -> None
-    | (Float, Float) -> None
+    | (l, r) when l = r -> None
     | _ -> raise BinOpTypeMismatchErr
 
 (* Takes a type and a typed sexpr and confirms it is the proper type *)
@@ -82,18 +80,19 @@ let check_attr sactuals_table = function
         if StringMap.mem name sactuals_table
             then let expr = StringMap.find name sactuals_table in
                 let () = check_t_sexpr t expr in
-                SActual(name, expr)
-            else raise( MissingRequiredArgument
-                            (Format.sprintf "Argument %s is missing" name))
+                (name, expr)
+            else raise(MissingRequiredArgument
+                (Format.sprintf "Argument %s is missing" name))
     | (name, (t, false, xpr)) ->
         if StringMap.mem name sactuals_table
             then let expr = StringMap.find name sactuals_table in
                 let () = check_t_sexpr t expr in
-                SActual(name, expr)
-            else SActual(name, xpr)
+                (name, expr)
+        else (name, xpr)
 
 (* Check that all of the actuals in the instantiation are valid. *)
 let check_user_def_inst ct t sactls =
+    (* build a table from the explicit actuals *)
     let sactuals_table = add_actls empty_actuals_table sactls in
     let attr_table = get_attr_table t ct in
     let checked_sactuals = List.map
@@ -152,8 +151,8 @@ let rec rewrite_sexpr st ct ft ?t = function
         match udf with
         | SUserDefInst(UserDef t, sactls) ->
             let rewritten_sactls = List.map (rewrite_sactl st ct ft) sactls in
-            let expr = check_user_def_inst ct t sactls in
-            SExprUserDef(SUserDefInst(UserDef t, rewritten_sactls))
+            let expr = check_user_def_inst ct t rewritten_sactls in
+            SExprUserDef(expr)
         | _ -> SExprUserDef udf)
     | SExprAccess(xpr, mem) ->
         let rewritten_sexpr = rewrite_sexpr st ct ft xpr in
@@ -163,24 +162,27 @@ let rec rewrite_sexpr st ct ft ?t = function
                 | SUserDefVar(UserDef s, _)
                 | SUserDefNull(UserDef s)) -> s
             | _ -> raise InvalidTypeMemberAccess in
+        let class_var_expr = (match rewritten_sexpr with
+            | SExprUserDef(xpr) -> xpr
+            | _ -> raise UserDefinedTypNeeded) in
         let t = get_attr_type cls ct mem in
         (match t with
-            | Bool -> SExprBool(SBoolAcc(cls, mem))
-            | Int -> SExprInt(SIntAcc(cls, mem))
-            | Float -> SExprFloat(SFloatAcc(cls, mem))
-            | String -> SExprString(SStringAcc(cls, mem))
-            | UserDef ud -> SExprUserDef(SUserDefAcc(t, cls, mem)))
+            | Bool -> SExprBool(SBoolAcc(class_var_expr, mem))
+            | Int -> SExprInt(SIntAcc(class_var_expr, mem))
+            | Float -> SExprFloat(SFloatAcc(class_var_expr, mem))
+            | String -> SExprString(SStringAcc(class_var_expr, mem))
+            | _ -> raise ClassAttrInClassErr)
     (* TODO: add all new expressions that can contain variable references to be simplified *)
     | xpr -> xpr
 and rewrite_sactl st ct ft = function
-    | SActual(name, xpr) -> SActual(name, rewrite_sexpr st ct ft xpr)
+    | (name, xpr) -> (name, rewrite_sexpr st ct ft xpr)
 and rewrite_cast st ct ft xpr t_opt =
     let xpr = rewrite_sexpr st ct ft xpr in
     let t = sexpr_to_t Void xpr in
     match (t_opt, t) with
         | (AllTypes, (Int | Float | String | Bool)) -> xpr
         | (NumberTypes, (Int | Float)) -> xpr
-        | _ -> raise(InvalidTypeErr(sprintf
+        | _ -> raise(InvalidTypeErr(Format.sprintf
             "Cast cannot use %s expression" (Ast_printer.string_of_t t)))
 and binop_cast_floats lhs rhs = function
     | Left -> SExprFloat(SFloatCast(lhs)), rhs
@@ -296,7 +298,7 @@ let rec var_analysis st ct ft = function
     | SOutput(so) :: tl ->
         let so = check_s_output st ct ft so in
             SOutput(so) :: (var_analysis st ct ft tl)
-    (*Return stmts are xpr lists, tranlslate all the expressions here*)
+    (* Return stmts are xpr lists, tranlslate all the expressions here *)
     | SReturn(s) :: tl -> let xprs = List.map (rewrite_sexpr st ct ft) s in
          SReturn(xprs) :: (var_analysis st ct ft tl)
     | SFuncCall (lv, id, xprs) :: tl ->
@@ -311,11 +313,11 @@ let rec var_analysis st ct ft = function
         let st = scope_lv st lv in
         SFuncCall(lv, id, xprs) :: (var_analysis st ct ft tl)
     | SUserDefDecl(cls, (id, xpr)) :: tl ->
-        let expr = rewrite_sexpr st ct ft xpr in
+        let checked_expr = rewrite_sexpr st ct ft xpr in
         let t = UserDef cls in
         let st = add_sym t id st in
-        let () = check_t_sexpr t expr in
-            SUserDefDecl(cls, (id, xpr)) :: var_analysis st ct ft tl
+        let () = check_t_sexpr t checked_expr in
+            SUserDefDecl(cls, (id, checked_expr)) :: var_analysis st ct ft tl
     | SIf(xpr, stmts) :: tl ->
         let expr = rewrite_sexpr st ct ft xpr in
         let () = check_t_sexpr Bool expr in
@@ -406,8 +408,6 @@ let rec class_analysis class_tbl = function
         let lst, class_tbl = class_analysis class_tbl tl in
         ((class_id, attrs) :: lst), class_tbl
     | [] -> [], class_tbl
-
-
 
 let gen_class_stmts stmts =
     let sclasses = List.map translate_class stmts in

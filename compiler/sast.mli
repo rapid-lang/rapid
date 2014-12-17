@@ -7,28 +7,28 @@ type string_expr =
     | SStringExprLit of string
     | SStringVar of string
     | SStringCast of sexpr
-    | SStringAcc of string * string
+    | SStringAcc of user_def_expr * string
     | SStringNull
 and int_expr =
     | SIntExprLit of int
     | SIntVar of string
     | SIntBinOp of sexpr * op * sexpr
     | SIntCast of sexpr
-    | SIntAcc of string * string
+    | SIntAcc of user_def_expr * string
     | SIntNull
 and float_expr =
     | SFloatExprLit of float
     | SFloatVar of string
     | SFloatBinOp of sexpr * op * sexpr
     | SFloatCast of sexpr
-    | SFloatAcc of string * string
+    | SFloatAcc of user_def_expr * string
     | SFloatNull
 and bool_expr =
     | SBoolExprLit of bool
     | SBoolVar of string
     | SBoolCast of sexpr
     | SBoolBinOp of sexpr * op * sexpr
-    | SBoolAcc of string * string
+    | SBoolAcc of user_def_expr * string
     | SBoolNull
 and func_call_expr = string * sexpr list
 and bin_expr = sexpr * op * sexpr
@@ -54,10 +54,9 @@ and sexpr =
 and user_def_expr =
     | SUserDefInst of var_type * sactual list (* class * actuals *)
     | SUserDefVar of var_type * string (* class * variablename *)
-    | SUserDefAcc of var_type * string * string (* class * var_id * member *)
     | SUserDefNull of var_type
-and sactual =
-    | SActual of string * sexpr
+    | SUserDefAcc of var_type * user_def_expr * string (* class * var / instance * member *)
+and sactual = string * sexpr
 
 type soutput =
     | SPrintf of sexpr * sexpr list
@@ -75,8 +74,8 @@ type semantic_stmt =
     | SDecl of var_type * svar_assign
     | SOutput of soutput
     | SReturn of sexpr list
-    | SFuncCall of sfunc_lval list * string * sexpr list (*left hand of assing, fname, args*)
-    | SUserDefDecl of string * svar_assign
+    | SFuncCall of sfunc_lval list * string * sexpr list (* left hand of assing, fname, args *)
+    | SUserDefDecl of string * svar_assign (* class_id, (id, expr) *)
     | SIfElse of sexpr * semantic_stmt list * semantic_stmt list
     | SIf of sexpr * semantic_stmt list
     | SWhile of sexpr * semantic_stmt list 
@@ -86,8 +85,7 @@ type sattr =
     | SNonOption of var_type * string * sexpr option
     | SOptional of var_type * string
 
-type sclass =
-    | SClass of string * sattr list
+type sclass = string * sattr list
 
 (*this is the id, args, return types, body*)
 type semantic_function = string * semantic_stmt list * var_type list * semantic_stmt list
