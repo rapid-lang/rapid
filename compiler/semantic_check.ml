@@ -443,6 +443,7 @@ let rec validate_http_tree path params rt = function
             | [], x -> raise UnusedParamArgument) in
         let () = check_args (args, params) in
         let rest, rt = validate_http_tree path params rt tl in
+        let path = Format.sprintf "%s/%s" path name in
         (path, args, ret_t, body) :: rest, rt
     | [] -> [], rt
 

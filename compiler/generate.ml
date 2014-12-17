@@ -314,6 +314,7 @@ let class_def_to_code (class_id, attr_list) =
     sprintf "type %s struct{\n%s\n}" class_id (String.concat "\n" attrs)
 
 
+(* rewrites returns as writes to the connection *)
 let http_fstmt_to_code = function
     | SReturn(xpr :: _) ->
         let setup, ref  = cast_to_code String xpr in
@@ -322,10 +323,20 @@ let http_fstmt_to_code = function
             ref
     | s -> sast_to_code s
 
+let strip_route_re = Str.regexp "[:/]"
+let strip_path s = Str.global_replace strip_route_re "" s
+
+let generate_route_registrations routes =
+    let routes = List.map (fun (r, _, _, _) ->
+        let fname = strip_path r in
+        sprintf "router.GET(\"%s\", HTTP%s)" r fname) routes in
+    let regs = (String.concat "\n" routes) in
+    if regs = ""
+        then ""
+        else  "router := httprouter.New()\n" ^ regs ^
+           "\nlog.Fatal(http.ListenAndServe(\":8080\", router))\n"
 
 let endpoint_to_code (path, args, ret_type, body) =
-    let strip_route_re = Str.regexp "[:/]" in
-    let strip_path s = Str.global_replace strip_route_re "" s in
     let grab_param (t, name, default) =
         let value = if default = NullExpr then
             sprintf "XXX.ByName(\"%s\")" name
@@ -340,7 +351,7 @@ let endpoint_to_code (path, args, ret_type, body) =
         (String.concat "\n" (List.map http_fstmt_to_code body))
 
 
-let skeleton decls http_funcs classes main fns =
+let skeleton decls http_funcs classes main fns router =
     let packages = ("fmt", "fmt.Printf") ::
         ("net/http", "http.StatusOK") ::
         ("github.com/julienschmidt/httprouter", "httprouter.CleanPath") :: [] in
@@ -355,7 +366,9 @@ let skeleton decls http_funcs classes main fns =
     classes ^ "\n\n" ^
     decls ^
     "\nfunc main() {\n" ^
-    main ^ "\n}\n " ^ fns
+    main ^ "\n\n" ^
+    router ^ "\n" ^
+    "}\n " ^ fns
 
 let build_prog sast =
     (* Ignore classes for now *)
@@ -366,5 +379,6 @@ let build_prog sast =
     let func_code = String.concat "\n\n" (List.map func_to_code funcs) in
     let class_struct_defs = String.concat "\n\n" (List.map class_def_to_code classes) in
     let http_funcs = String.concat "\n" (List.map endpoint_to_code route_list) in
-    skeleton decls http_funcs class_struct_defs stmt_code func_code
+    let router_reg = generate_route_registrations route_list in
+    skeleton decls http_funcs class_struct_defs stmt_code func_code router_reg
 
