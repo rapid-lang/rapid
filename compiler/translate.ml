@@ -29,6 +29,7 @@ let rec translate_expr = function
         SExprList(SListAccess(sxpr_l, sxpr_r))
     | Ast.CastBool c  -> SExprBool(SBoolCast (translate_expr c))
     | Ast.Cast(t, xpr) -> translate_cast xpr t
+    | Ast.ErrorInst(actls) -> translate_error_def_inst actls
     | Ast.UserDefInst(nm, actls) -> translate_user_def_inst nm actls
     | Ast.Access(e, mem)         -> translate_access e mem
     (* we put a placeholder with the ID in and check after and reclassify *)
@@ -43,6 +44,9 @@ and translate_cast xpr = function
     | Float -> SExprFloat(SFloatCast(translate_expr xpr))
     | Bool -> SExprBool(SBoolCast(translate_expr xpr))
     | String -> SExprString(SStringCast(translate_expr xpr))
+and translate_error_def_inst actls =
+    SExprError (SErrorInst
+        (List.map translate_actual actls))
 and translate_user_def_inst class_id actls =
     SExprUserDef(SUserDefInst(UserDef class_id, (List.map translate_actual actls)))
 and translate_actual = function
@@ -75,6 +79,9 @@ let translate_decl = function
     | t, _, _ -> raise(UnsupportedStatementTypeErr (Ast_printer.string_of_t t))
     | _ -> raise UnsupportedDeclType
 
+let translate_error_def_decl = function
+    | id, xpr -> SErrorDecl (id, (expr_option_map translate_expr xpr))
+
 let translate_user_def_decl = function
     | class_id, id, xpr ->
         SUserDefDecl(class_id, (id, (expr_option_map translate_expr xpr)))
@@ -95,6 +102,7 @@ let translate_fcall = function
 
 let rec translate_statement = function
     | Ast.VarDecl vd -> translate_decl vd
+    | Ast.ErrorDecl e -> translate_error_def_decl e
     | Ast.Assign(lhs, xpr) -> SAssign(translate_lhs lhs, translate_expr xpr)
     | Ast.UserDefDecl udd -> translate_user_def_decl udd
     | Ast.FuncCall(vl, fc) -> let sfc = translate_fcall fc in

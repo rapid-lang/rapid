@@ -18,6 +18,7 @@ exception UnsupportedDatatypeErr
 exception InvalidClassInstantiation
 exception StringExpressionsRequired
 exception InvalidUserDefExpr
+exception InvalidErrorExpr
 
 module  StringMap = Map.Make(String)
 
@@ -69,6 +70,11 @@ let rec sexpr_to_code = function
     | SExprBool b -> bool_expr_to_code b
     | SCallTyped(t, c) -> func_expr_to_code c
     | SExprList l -> list_expr_to_code l
+<<<<<<< HEAD
+    | SCallTyped(t, (id, args)) -> func_expr_to_code id args
+    | SExprError e -> error_expr_to_code e
+=======
+>>>>>>> master
     | SExprUserDef u -> user_def_expr_to_code u
     | NullExpr -> "", "nil"
     | s -> raise(UnsupportedSExprType(Sast_printer.sexpr_s s))
@@ -83,6 +89,7 @@ and string_expr_to_code = function
             sprintf "%s := *%s" tmp_var id,
             sprintf "&%s" tmp_var
     | SStringAcc(ud_xpr, attr) ->  ud_access_to_code ud_xpr attr
+    | SStringErrAcc(er_xpr, attr) -> error_access_to_code er_xpr attr
     | SStringCast c -> cast_to_code String c
     | SStringNull -> "", "nil"
     | _ -> raise UnsupportedStringExprType
@@ -98,6 +105,7 @@ and int_expr_to_code = function
             sprintf "&%s" tmp_var
     | SIntBinOp(lhs, o, rhs) -> bin_op_to_code lhs o rhs
     | SIntAcc(ud_xpr, attr) -> ud_access_to_code ud_xpr attr
+    | SIntErrAcc(er_xpr, attr) -> error_access_to_code er_xpr attr
     | SIntNull -> "", "nil"
     | SIntCast c -> cast_to_code Int c
     | _ -> raise UnsupportedIntExprType
@@ -193,6 +201,20 @@ and list_expr_to_code = function
         sprintf "%s\n%s" setup_l setup_r,
         sprintf "(*%s)[*%s]" ref_l ref_r
     | _ -> raise UnsupportedListExprType
+and error_expr_to_code = function
+    | SErrorInst act_list ->
+        let expand (attr, xpr) =
+            let setup, ref = sexpr_to_code xpr in
+            setup, sprintf "%s: %s," attr ref in
+        let trans = List.map expand act_list in
+        (String.concat "\n" (List.map fst trans),
+         sprintf "Error{\n%s\n}\n" (String.concat "\n" (List.map snd trans)))
+    | SErrorDefVar id ->
+        let tmp_var = rand_var_gen () in
+        sprintf "%s := %s" tmp_var id, sprintf "%s" tmp_var
+    | SErrorDefNull _ ->
+        "", "nil"
+    | _ -> raise(InvalidErrorExpr)
 (* translates a user_def_expr to code
  * returns a tuple of (setup code, reference) *)
 and user_def_expr_to_code = function
@@ -212,6 +234,11 @@ and user_def_expr_to_code = function
 and ud_access_to_code ud_expr attr_id =
     let tmp_var = rand_var_gen () in
     let setup, ref = user_def_expr_to_code ud_expr in
+        sprintf "%s\n%s := %s.%s\n" setup tmp_var ref attr_id,
+        tmp_var
+and error_access_to_code er_expr attr_id =
+    let tmp_var = rand_var_gen () in
+    let setup, ref = error_expr_to_code er_expr in
         sprintf "%s\n%s := %s.%s\n" setup tmp_var ref attr_id,
         tmp_var
 
@@ -262,6 +289,10 @@ let sfunccall_to_code lv c =
         if lhs = "" then sprintf "%s\n%s" setup call
             else sprintf "%s\n%s = %s" setup lhs call
 
+let error_instantiate_to_code (id, inst_xpr) =
+    let setups, attrs = error_expr_to_code inst_xpr in
+    sprintf "%s\n%s := %s\n_ = %s" setups id attrs id
+
 let class_instantiate_to_code class_id (id, inst_xpr) =
     let setups, attrs = user_def_expr_to_code inst_xpr in
     sprintf "%s\n%s := %s\n_ = %s" setups id attrs id
@@ -289,7 +320,12 @@ and sast_to_code = function
     | SDecl(_, (id, xpr)) -> sassign_to_code (SLhsId id, xpr)
     | SAssign (lhs, xpr) -> sassign_to_code (lhs, xpr)
     | SReturn xprs -> sreturn_to_code xprs
+<<<<<<< HEAD
+    | SFuncCall(lv, id, xprs) -> sfunccall_to_code lv id xprs
+    | SErrorDecl(id, SExprError(xpr)) -> error_instantiate_to_code (id, xpr)
+=======
     | SFuncCall (lv, c) -> sfunccall_to_code lv c
+>>>>>>> master
     | SUserDefDecl(class_id, (id, SExprUserDef(xpr))) -> class_instantiate_to_code class_id (id, xpr)
     | SUserDefDecl(class_id, (id, NullExpr)) -> sprintf "var %s %s\n_ = %s" id class_id id
     | SIf(expr, stmts) -> (control_code IF expr stmts) ^ "\n"
@@ -344,6 +380,12 @@ let class_def_to_code (class_id, attr_list) =
     sprintf "type %s struct{\n%s\n}" class_id (String.concat "\n" attrs)
 
 
+<<<<<<< HEAD
+
+let skeleton decls classes main fns = "package main\nimport (\"fmt\")\n" ^
+    "var _ = fmt.Printf\n" ^ classes ^ "\n\n" ^ decls ^ "\nfunc main() {\n" ^
+    main ^ "\n}\n " ^ fns
+=======
 (* rewrites returns as writes to the connection *)
 let http_fstmt_to_code = function
     | SReturn(xpr :: _) ->
@@ -407,6 +449,7 @@ let skeleton decls http_funcs classes main fns router =
     router ^ "\n" ^
     "}\n " ^ fns
 
+>>>>>>> master
 
 let build_prog sast =
     let (stmts, classes, funcs, route_list) = sast in

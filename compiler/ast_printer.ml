@@ -53,6 +53,8 @@ let rec expr_s = function
     | Cast(t, i) -> sprintf "(Cast (%s) to %s)" (expr_s i) (string_of_t t)
     | ListLit l -> sprintf "(List literal [%s])"
         (String.concat ", " (List.map expr_s l))
+    | ErrorInst(actls) -> sprintf "(INSTANTIATE new Error (%s))"
+        ("\n\t" ^ (String.concat ",\n\t " (List.map actual_s actls)))
     | UserDefInst(id, actls) -> sprintf "(INSTANTIATE new UserDef %s(%s))"
         id
         ("\n\t" ^ (String.concat ",\n\t " (List.map actual_s actls)))
@@ -93,6 +95,12 @@ let string_of_user_def_decl (cls, nm, e) = sprintf "%s %s %s"
         | Some xpr -> sprintf "= %s" (expr_s xpr)
         | None     -> "(Not assigned)")
 
+let string_of_error_decl (nm, e) = sprintf "%s %s"
+    nm
+    (match e with
+        | Some xpr -> sprintf "= %s" (expr_s xpr)
+        | None     -> "(Not assigned)")
+
 (* Prettyprint statements *)
 let func_lvalue_s = function
     | ID(i) -> i
@@ -119,6 +127,8 @@ let rec stmt_s = function
         (concat "\n" (List.map stmt_s s))
     | VarDecl vd -> sprintf "(VarDecl (%s))"
         (string_of_vdecl vd)
+    | ErrorDecl e -> sprintf "(ErrorDecl (%s))"
+        (string_of_error_decl e)
     | UserDefDecl ud -> sprintf "(UserDefDecl (%s))"
         (string_of_user_def_decl ud)
     | FuncCall(s,f) -> sprintf "(FuncCall(%s = %s))"

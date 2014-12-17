@@ -309,6 +309,8 @@ error e = error(message="There was an error with that Request.",
                 name="RequestError")
 ```
 
+All error properties must be specified upon error instantiation. 
+
 Unsafe operations return an error as the last return value:
 
 ```

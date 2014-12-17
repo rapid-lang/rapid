@@ -8,6 +8,7 @@ type string_expr =
     | SStringVar of string
     | SStringCast of sexpr
     | SStringAcc of user_def_expr * string
+    | SStringErrAcc of error_def_expr * string
     | SStringNull
 and int_expr =
     | SIntExprLit of int
@@ -15,6 +16,7 @@ and int_expr =
     | SIntBinOp of sexpr * op * sexpr
     | SIntCast of sexpr
     | SIntAcc of user_def_expr * string
+    | SIntErrAcc of error_def_expr * string
     | SIntNull
 and float_expr =
     | SFloatExprLit of float
@@ -43,6 +45,7 @@ and sexpr =
     | SExprString of string_expr
     | SExprFloat of float_expr
     | SExprBool of bool_expr
+    | SExprError of error_def_expr
     | SExprUserDef of user_def_expr
     | SExprAccess of sexpr * string
     | SExprList of list_expr
@@ -57,6 +60,11 @@ and user_def_expr =
     | SUserDefVar of var_type * string (* class * variablename *)
     | SUserDefNull of var_type
     | SUserDefAcc of var_type * user_def_expr * string (* class * var / instance * member *)
+and error_def_expr =
+    | SErrorInst of sactual list
+    | SErrorDefVar of string
+    | SErrorDefAcc of error_def_expr * string
+    | SErrorDefNull
 and slhs =
     | SLhsId of string (* varname *)
     | SLhsAcc of sexpr * string (* sexpr.membername *)
@@ -73,6 +81,7 @@ type semantic_stmt =
     | SAssign of slhs * sexpr
     | SDecl of var_type * svar_assign
     | SReturn of sexpr list
+    | SErrorDecl of svar_assign
     | SFuncCall of sfunc_lval list * func_call_expr (* left hand of assing, rhs *)
     | SUserDefDecl of string * svar_assign (* class_id, (id, expr) *)
     | SIfElse of sexpr * semantic_stmt list * semantic_stmt list

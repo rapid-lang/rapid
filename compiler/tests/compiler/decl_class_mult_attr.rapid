@@ -1,4 +1,3 @@
-
 class User {
     string name;
     int age = 20;
@@ -19,4 +18,3 @@ println(a.age + b.age + c.age);
 User d;
 
 d = new User(name="tester2");
-

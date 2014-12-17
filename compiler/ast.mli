@@ -13,7 +13,9 @@ type expr =
     | Cast of var_type * expr
     | CastBool of expr
     | ListLit of expr list
+    | ErrorInst of actual list
     | ListAccess of expr * expr
+    | Error of actual list
     | UserDefInst of string * actual list
     | Access of expr * string
     | Noexpr
@@ -25,6 +27,8 @@ and actual =
 type vdecl = var_type * string * expr option
 
 type user_def_decl = string * string * expr option
+
+type error_def_decl = string * expr option
 
 type print =
     | Printf of expr list
@@ -46,6 +50,7 @@ type stmt =
     | While of expr * stmt list
     | Output of print
     | VarDecl of vdecl
+    | ErrorDecl of error_def_decl
     | UserDefDecl of user_def_decl
     | FuncCall of vars list * fcall
     | HttpTree of http_tree

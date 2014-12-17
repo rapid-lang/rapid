@@ -1,0 +1,9 @@
+Error e;
+
+e = new Error(name="goodError", code=200, message="OH NO");
+
+Error generic = new Error();
+
+Error partial = new Error(name="justName");
+
+

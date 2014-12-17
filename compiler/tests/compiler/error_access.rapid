@@ -1,0 +1,5 @@
+Error e = new Error(name="test", code=123, message="testmessage");
+
+println(e.name);
+println(e.code);
+println(e.message);

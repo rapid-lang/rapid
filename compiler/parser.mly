@@ -8,6 +8,7 @@
 %token PLUS MINUS TIMES DIVIDE ASSIGN CASTBOOL
 %token EQ NEQ LT LEQ GT GEQ AND OR MOD
 %token RETURN IF ELSE FOR WHILE FUNC IN
+%token ERROR
 %token CLASS NEW ACCESS OPTIONAL INSTANCE
 %token HTTP PARAM NAMESPACE
 
@@ -39,7 +40,7 @@
 primtype:
     | TYPE { string_to_t $1 }
     | LIST LT primtype GT { ListType $3 }
-    /* todo: add arrays, dicts to primtype */
+
 
 anytype:
     | ID         { string_to_t $1 }
@@ -108,11 +109,13 @@ var_decl:
     | primtype ID             { ($1 , $2, None) }
     | primtype ID ASSIGN expr { ($1 , $2, Some($4)) }
 
+error_decl:
+    | ERROR ID                      { ($2,  None) }
+    | ERROR ID ASSIGN expr    { ($2,  Some($4)) }
 
 user_def_decl:
     | ID ID             { ($1, $2, None) }
     | ID ID ASSIGN expr { ($1, $2, Some($4)) }
-
 
 fstmt_list:
     | /* nothing */         { [] }
@@ -154,6 +157,7 @@ stmt:
     | var_decl SEMI     { VarDecl $1 }
     | user_def_decl SEMI { UserDefDecl $1 }
     | func_call SEMI     { $1 }
+    | error_decl SEMI    { ErrorDecl $1   }
     | lhs ASSIGN expr SEMI { Assign($1, $3) }
     | http_type_block    { HttpTree $1 }
     | FOR LPAREN anytype ID IN expr RPAREN LBRACE stmt_list RBRACE
@@ -215,6 +219,7 @@ expr:
     | primtype LPAREN expr RPAREN { Cast($1, $3) }
     | fcall            { Call $1 }
     | LPAREN expr RPAREN { $2 }
+    | NEW ERROR LPAREN actuals_list_opt RPAREN { ErrorInst($4) }
     | NEW ID LPAREN actuals_list_opt RPAREN { UserDefInst($2, $4)}
     | expr ACCESS ID                        { Access($1, $3) }
     | LBRACKET expression_list_opt RBRACKET { ListLit $2 }
@@ -231,7 +236,6 @@ instance_block_opt:
 
 expression_list:
     | expression_list_internal    { List.rev $1 }
-
 
 expression_list_opt:
     | /* nothing */    { [] }

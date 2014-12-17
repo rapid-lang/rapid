@@ -1,0 +1,7 @@
+Error e;
+
+e = new Error(name="EpicFail", code=666, message="OH NO");
+
+Error generic = new Error();
+
+Error partial = new Error(name="justName");

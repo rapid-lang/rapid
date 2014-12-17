@@ -1,0 +1,1 @@
+Error e = new Error(name="cow", code=666, message="moo");
