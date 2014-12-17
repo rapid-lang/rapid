@@ -1,0 +1,12 @@
+class Math {
+    param int a {
+        param int b {
+            http add(int a, int b) int {
+            	return a + b
+			}
+        }
+        http square(int a) int {
+        	return a*a
+        }
+    }
+}

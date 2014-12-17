@@ -1,0 +1,31 @@
+class User {
+    int age;
+    string name = "Stephen";
+    optional int height;
+
+    instance my {
+        func is_old() boolean {
+            return (my.age >= 30);
+        }
+        func make_older() {
+           my.age = my.age + 1;
+        }
+    }
+}
+
+User stephen = new User(age=29);
+println(stephen.age);
+stephen.height = 73;
+println(stephen.height);
+
+if (stephen.is_old()) {
+   println("Stephen is old");
+}
+else {
+    println("Stephen is young");
+}
+stephen.make_older();
+if (stephen.is_old()) {
+   println("Stephen is old");
+}
+
