@@ -1,5 +1,3 @@
 
-http () string {
-    return "hello world";
-}
+println("Hello world");
 
