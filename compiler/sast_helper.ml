@@ -44,6 +44,15 @@ let add_func ft id arg_ts ret_ts =
         let v = (arg_ts, ret_ts) in
         StringMap.add id v ft
 
+let default_ft ft =
+    let ft = add_func ft "append" 
+        (ListType(AnyList) :: ListType(Void) :: [])
+        (ListType(AnyList) :: [])  in
+    let ft = add_func ft "println"
+        (String :: InfiniteArgs :: [])
+        []  in
+    ft
+
 let empty_symbol_table = StringMap.empty
 let symbol_table_list = StringMap.empty :: []
 

@@ -1,0 +1,9 @@
+list<int> a = [1,2,3];
+list<int> b = [3,4];
+
+a = append(a, b);
+
+for(int i in a)
+{
+	println(i);
+}
