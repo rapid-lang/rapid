@@ -99,6 +99,7 @@ let check_sactual attrs_table (id, expr) =
         else raise( MissingRequiredArgument
                     (Format.sprintf "The attribute %s does not exist" id))
 
+(* Fill default arguments if they aren't given *)
 let check_error_def_inst sactls =
     let sactuals_table = add_actls empty_actuals_table sactls in
     let attr_table = get_error_attr_table in
