@@ -8,7 +8,6 @@ type var_type =
     | Float
     | UserDef of string
     | ListType of var_type
-    | Var
     | Void (*Used for funcions with no args or no rets*)
     | Multi(*Used for funcs with multiple rets*)
     | InfiniteArgs

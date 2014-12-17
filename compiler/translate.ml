@@ -37,17 +37,16 @@ let rec translate_expr = function
     | Ast.Binop(lhs, o, rhs) -> Sast.SBinop(translate_expr lhs, o, translate_expr rhs)
     | Ast.Nullxpr -> UntypedNullExpr
     | _ -> raise UnsupportedExpressionType
-    
+
 and translate_cast xpr = function
     | Int -> SExprInt(SIntCast(translate_expr xpr))
     | Float -> SExprFloat(SFloatCast(translate_expr xpr))
     | Bool -> SExprBool(SBoolCast(translate_expr xpr))
     | String -> SExprString(SStringCast(translate_expr xpr))
 and translate_user_def_inst class_id actls =
-    SExprUserDef (SUserDefInst
-        (UserDef class_id, (List.map translate_actual actls)))
+    SExprUserDef(SUserDefInst(UserDef class_id, (List.map translate_actual actls)))
 and translate_actual = function
-    | Ast.Actual(nm, xpr) -> SActual(nm, (translate_expr xpr))
+    | Ast.Actual(nm, xpr) -> (nm, (translate_expr xpr))
 and translate_access xpr mem =
     SExprAccess((translate_expr xpr), mem)
 
@@ -69,7 +68,8 @@ let translate_decl = function
     | _ -> raise UnsupportedDeclType
 
 let translate_user_def_decl = function
-    | class_id, id, xpr -> SUserDefDecl (class_id, (id, (expr_option_map translate_expr xpr)))
+    | class_id, id, xpr ->
+        SUserDefDecl(class_id, (id, (expr_option_map translate_expr xpr)))
 
 let translate_vars = function
     | Ast.ID(s) -> SFuncId(s)
@@ -87,6 +87,12 @@ let rec translate_statement = function
     | Ast.UserDefDecl udd -> translate_user_def_decl udd
     | Ast.FuncCall(vl, (id, exprs)) -> let(id, sexprs) = translate_fcall id exprs in
         SFuncCall((List.map translate_vars vl), id, sexprs)
+    | Ast.If(expr, ifstmts, []) -> let ifs = List.map translate_statement ifstmts in
+        SIf(translate_expr expr, ifs)
+    | Ast.If(expr, ifstmts, else_stmts) -> let ifs = List.map translate_statement ifstmts in
+        let es =  List.map translate_statement else_stmts in
+        SIfElse(translate_expr expr, ifs, es)
+    | Ast.While(expr, stmts) -> SWhile(translate_expr expr, (List.map translate_statement stmts))
     | Ast.For(t, id, xpr, stmts) ->
         let s_id = translate_expr (Ast.Id id) in
         let s_xpr = translate_expr xpr in

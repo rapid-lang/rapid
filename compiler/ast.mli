@@ -37,10 +37,10 @@ type vars =
 
 type stmt =
     | Assign of string * expr
-    | Block of stmt list
-    | If of expr * stmt * stmt
     | For of var_type * string * expr * stmt list
-    | While of expr * stmt
+    | If of expr * stmt list * stmt list
+    | While of expr * stmt list
+    | Output of print
     | VarDecl of vdecl
     | UserDefDecl of user_def_decl
     | FuncCall of vars list * fcall

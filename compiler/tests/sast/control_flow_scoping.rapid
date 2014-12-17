@@ -1,0 +1,21 @@
+int a = 0;
+
+while(a == 0)
+{ 
+boolean a = false;
+    
+	if(a)
+	{
+		float a = 02.3;
+	}
+	else
+	{
+	    a = true;
+	    float b = 3.3;
+	    if(3.33 > b/2)
+	    {
+	    	println(b);
+	    }
+	}	
+   
+}

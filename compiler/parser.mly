@@ -119,10 +119,6 @@ func_stmt:
     | RETURN ret_expr_list SEMI { Return( List.rev $2) }
     | stmt       { FStmt($1) }
 
-stmt_list:
-    | {[]}
-    | stmt stmt_list { $1 :: $2 }
-
 id_list:
     | id_list COMMA primtype ID { VDecl($3, $4, None) :: $1 }
     | id_list COMMA ID          { ID($3) :: $1 }
@@ -137,6 +133,7 @@ func_call:
     | LPAREN id_list RPAREN ASSIGN fcall { FuncCall(List.rev $2, $5) }
 
 stmt_list:
+    | {[]}
     | stmt            { [$1] }
     | stmt_list stmt { $2 :: $1 }
 
@@ -146,9 +143,11 @@ stmt:
     | func_call SEMI     { $1 }
     | ID ASSIGN expr SEMI { Assign($1, $3) }
     | FOR LPAREN TYPE ID IN expr RPAREN LBRACE stmt_list RBRACE
-        { For(Ast_printer.string_to_t $3, $4, $6, $9) }
-    | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
-    | http_type_block    { HttpTree $1 }
+        { For(Ast_printer.string_to_t $3, $4, $6, List.rev $9) }
+    | http_type_block    { HttpTree $1 }  
+    | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE %prec NOELSE { If($3, List.rev $6, []) }
+    | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE { If($3, List.rev $6, List.rev $10) }
+    | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE { While($3, List.rev $6) }
 
 typed_param_list:
     | TYPE ID           { [(Ast_printer.string_to_t $1, $2, None)] }
@@ -167,6 +166,7 @@ http_type_block:
         { Namespace($2, $4) }
     | HTTP ID LPAREN typed_param_list RPAREN return_type LBRACE fstmt_list RBRACE
         { Endpoint($2, $4, $6, $8) }
+      
 
 
 expr_opt:

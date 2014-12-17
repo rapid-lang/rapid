@@ -16,7 +16,6 @@ let rec string_of_t = function
     | UserDef(s) -> sprintf "(USER_DEF %s)" s
     | Void -> "void"
     | Multi -> "multi return"
-    | Var -> "var"
 
 let bin_op_s = function
     | Add -> "+"
@@ -91,23 +90,21 @@ let rec stmt_s = function
     | Assign(v, e) -> sprintf "(Assign %s (%s))"
         v
         (expr_s e)
-    | Block ss -> sprintf "(Block {\n%s\n})"
-        (concat "\n" (List.map (fun s -> sprintf "(%s)" (stmt_s s)) ss))
-    | If(e, s1, Ast.Block([])) -> sprintf "(If (%s) -> (%s))"
+    | If(e, s1, [] ) -> sprintf "(If (%s) -> (%s))"
         (expr_s e)
-        (stmt_s s1)
-    | If(e, s1, s2) -> sprintf "(If (%s)\n(%s) else (%s))"
+        (concat "\n" (List.map stmt_s s1))
+    | If(e, s1, s2 ) -> sprintf "(If (%s) -> (%s))(Else -> (%s))"
         (expr_s e)
-        (stmt_s s1)
-        (stmt_s s2)
+        (concat "\n" (List.map stmt_s s1))
+        (concat "\n" (List.map stmt_s s2))
     | For(t, id, xpr, stmt_l) -> sprintf "(For (%s %s in %s)\n{(%s)})"
         (string_of_t t)
         id
         (expr_s xpr)
         (String.concat "\n" (List.map stmt_s stmt_l))
-    | While(e, s) -> sprintf "(While (%s)\n{(%s))0"
+    | While(e, s) -> sprintf "(While (%s)\n{(%s))}"
         (expr_s e)
-        (stmt_s s)
+        (concat "\n" (List.map stmt_s s))
     | VarDecl vd -> sprintf "(VarDecl (%s))"
         (string_of_vdecl vd)
     | UserDefDecl ud -> sprintf "(UserDefDecl (%s))"
