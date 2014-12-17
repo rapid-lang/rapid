@@ -35,6 +35,8 @@ and string_expr_s = function
     | SStringCast xpr -> sprintf "String Cast (%s)" (sexpr_s xpr)
     | SStringAcc(v, mem) -> sprintf "(String Access: %s.%s)"
         (user_def_expr_s v) mem
+    | SStringErrAcc(v, mem) -> sprintf "(Error Access: %s.%s)"
+        (error_def_expr_s v) mem
     | SStringNull -> "(String NULL)"
 and int_expr_s = function
     | SIntExprLit i -> sprintf "(Int Lit: %d)" i
@@ -44,6 +46,8 @@ and int_expr_s = function
         (sexpr_s lhs) (Ast_printer.bin_op_s o) (sexpr_s rhs)
     | SIntAcc(v, mem) -> sprintf "(Int Access: %s.%s)"
         (user_def_expr_s v) mem
+    | SIntErrAcc(v, mem) -> sprintf "(Error Access: %s.%s)"
+        (error_def_expr_s v) mem
     | SIntNull -> "(Int NULL)"
 and float_expr_s = function
     | SFloatExprLit f -> sprintf "(Lit %f)" f
