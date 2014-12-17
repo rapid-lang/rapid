@@ -16,6 +16,8 @@ let rec string_of_t = function
     | UserDef(s) -> sprintf "(USER_DEF %s)" s
     | Void -> "void"
     | Multi -> "multi return"
+    | InfiniteArgs -> "InfiniteArgs"
+    | AnyList -> "AnyList"
 
 let bin_op_s = function
     | Add -> "+"
@@ -75,12 +77,6 @@ and lhs_s = function
     | LhsId(id) -> id
     | LhsAcc(xpr, id) -> sprintf "(%s.%s)" (expr_s xpr) id
 
-let output_s = function
-    | Printf el -> sprintf "(Printf(%s))"
-        (String.concat ", " (List.map expr_s el))
-    | Println el -> sprintf "(Println(%s))"
-        (String.concat ", " (List.map expr_s el))
-
 let string_of_vdecl (t, nm, e) = sprintf "%s %s %s"
     (string_of_t t)
     nm
@@ -119,8 +115,6 @@ let rec stmt_s = function
     | While(e, s) -> sprintf "(While (%s)\n{(%s))}"
         (expr_s e)
         (concat "\n" (List.map stmt_s s))
-    | Output o -> sprintf "(Output (%s))"
-        (output_s o)
     | VarDecl vd -> sprintf "(VarDecl (%s))"
         (string_of_vdecl vd)
     | UserDefDecl ud -> sprintf "(UserDefDecl (%s))"
@@ -128,8 +122,21 @@ let rec stmt_s = function
     | FuncCall(s,f) -> sprintf "(FuncCall(%s = %s))"
         (concat ", " (List.map func_lvalue_s s))
         (fcall_s f)
-
-let fstmt_s = function
+    | HttpTree t ->  http_tree_s t
+and http_tree_s = function
+    | Param(t, id, tree) -> sprintf "(param (%s %s)\n%s\n)"
+        (string_of_t t)
+        id
+        (String.concat "\n"(List.map http_tree_s tree))
+    | Namespace(id, tree) -> sprintf "(namespace (%s)\n%s\n)"
+        id
+        (String.concat "\n"(List.map http_tree_s tree))
+    | Endpoint(id, args, ret_t, body) -> sprintf "(HTTP %s(%s)%s{\n%s\n)"
+        id
+        (String.concat "," (List.map string_of_vdecl args))
+        (String.concat "," (List.map string_of_t ret_t))
+        (String.concat "\n"(List.map fstmt_s body))
+and fstmt_s = function
     | Return e -> sprintf "(Return (%s))"
         (concat ", " (List.map expr_s e))
     | FStmt s -> stmt_s s

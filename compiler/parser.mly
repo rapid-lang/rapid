@@ -8,8 +8,8 @@
 %token PLUS MINUS TIMES DIVIDE ASSIGN CASTBOOL
 %token EQ NEQ LT LEQ GT GEQ AND OR MOD
 %token RETURN IF ELSE FOR WHILE FUNC IN
-%token PRINTLN PRINTF // LOG
 %token CLASS NEW ACCESS OPTIONAL INSTANCE
+%token HTTP PARAM NAMESPACE
 // %token INT BOOL FLOAT STRING
 
 %token <string> ID TYPE STRING_LIT
@@ -149,22 +149,34 @@ stmt_list:
     | stmt_list stmt { $2 :: $1 }
 
 stmt:
-    | print SEMI        { Output $1 }
     | var_decl SEMI     { VarDecl $1 }
     | user_def_decl SEMI { UserDefDecl $1 }
     | func_call SEMI     { $1 }
     | lhs ASSIGN expr SEMI { Assign($1, $3) }
+    | http_type_block    { HttpTree $1 }
     | FOR LPAREN anytype ID IN expr RPAREN LBRACE stmt_list RBRACE
         { For($3, $4, $6, List.rev $9) }
     | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE %prec NOELSE { If($3, List.rev $6, []) }
     | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE { If($3, List.rev $6, List.rev $10) }
     | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE { While($3, List.rev $6) }
 
+typed_param_list:
+    | TYPE ID           { [(Datatypes.string_to_t $1, $2, None)] }
+    | typed_param_list COMMA TYPE ID
+        { (Datatypes.string_to_t $3, $4, None) :: $1 }
 
-print:
-    | PRINTLN LPAREN expression_list RPAREN { Println $3 }
-    | PRINTF LPAREN expression_list RPAREN { Printf $3 }
+http_tree_list:
+    |                    { [] }
+    | http_type_block    { [$1] }
+    | http_tree_list http_type_block { $2 :: $1 }
 
+http_type_block:
+    | PARAM primtype ID LBRACE http_tree_list RBRACE
+        { Param($2, $3, $5) }
+    | NAMESPACE ID LBRACE http_tree_list RBRACE
+        { Namespace($2, $4) }
+    | HTTP ID LPAREN typed_param_list RPAREN return_type LBRACE fstmt_list RBRACE
+        { Endpoint($2, $4, $6, $8) }
 
 expr_opt:
     | /* nothing */ { Noexpr }

@@ -107,13 +107,6 @@ and list_expr = function
     | SListVar(t, id) -> sprintf "(List Var <%s> %s)" id (Ast_printer.string_of_t t)
     | SListNull -> "(List NULL)"
 
-let soutput_s = function
-    | SPrintln xpr_l -> sprintf "(Println(%s))"
-        (String.concat ", " (List.map sexpr_s xpr_l))
-    | SPrintf(s, xpr_l) -> sprintf "(Printf(%s, %s))"
-        (sexpr_s s)
-        (String.concat ", " (List.map sexpr_s xpr_l))
-    | _ -> raise UnsupportedSOutput
 
 let slhs_s = function
     | SLhsId id -> id
@@ -147,7 +140,6 @@ let sfcall_s = function
 let rec semantic_stmt_s = function
     | SAssign (lhs, xpr) -> svar_assign_s (lhs, xpr) ^ "\n"
     | SDecl(t, vd) -> svar_decl_s t vd ^ "\n"
-    | SOutput o -> sprintf "(Output %s)\n" (soutput_s o)
     | SUserDefDecl(cls, vd) -> suser_def_decl_s cls vd ^ "\n"
     | SReturn s -> sprintf("Return(%s)\n")
         (String.concat ", " (List.map sexpr_s s))

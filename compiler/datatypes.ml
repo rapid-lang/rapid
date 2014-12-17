@@ -10,6 +10,9 @@ type var_type =
     | ListType of var_type
     | Void (*Used for funcions with no args or no rets*)
     | Multi(*Used for funcs with multiple rets*)
+    | InfiniteArgs
+    | AnyList
+
 
 
 (* Converts a string to a datatype *)
