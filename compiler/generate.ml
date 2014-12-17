@@ -70,11 +70,7 @@ let rec sexpr_to_code = function
     | SExprBool b -> bool_expr_to_code b
     | SCallTyped(t, c) -> func_expr_to_code c
     | SExprList l -> list_expr_to_code l
-<<<<<<< HEAD
-    | SCallTyped(t, (id, args)) -> func_expr_to_code id args
     | SExprError e -> error_expr_to_code e
-=======
->>>>>>> master
     | SExprUserDef u -> user_def_expr_to_code u
     | NullExpr -> "", "nil"
     | s -> raise(UnsupportedSExprType(Sast_printer.sexpr_s s))
@@ -320,12 +316,8 @@ and sast_to_code = function
     | SDecl(_, (id, xpr)) -> sassign_to_code (SLhsId id, xpr)
     | SAssign (lhs, xpr) -> sassign_to_code (lhs, xpr)
     | SReturn xprs -> sreturn_to_code xprs
-<<<<<<< HEAD
-    | SFuncCall(lv, id, xprs) -> sfunccall_to_code lv id xprs
     | SErrorDecl(id, SExprError(xpr)) -> error_instantiate_to_code (id, xpr)
-=======
     | SFuncCall (lv, c) -> sfunccall_to_code lv c
->>>>>>> master
     | SUserDefDecl(class_id, (id, SExprUserDef(xpr))) -> class_instantiate_to_code class_id (id, xpr)
     | SUserDefDecl(class_id, (id, NullExpr)) -> sprintf "var %s %s\n_ = %s" id class_id id
     | SIf(expr, stmts) -> (control_code IF expr stmts) ^ "\n"
@@ -380,12 +372,6 @@ let class_def_to_code (class_id, attr_list) =
     sprintf "type %s struct{\n%s\n}" class_id (String.concat "\n" attrs)
 
 
-<<<<<<< HEAD
-
-let skeleton decls classes main fns = "package main\nimport (\"fmt\")\n" ^
-    "var _ = fmt.Printf\n" ^ classes ^ "\n\n" ^ decls ^ "\nfunc main() {\n" ^
-    main ^ "\n}\n " ^ fns
-=======
 (* rewrites returns as writes to the connection *)
 let http_fstmt_to_code = function
     | SReturn(xpr :: _) ->
@@ -449,7 +435,6 @@ let skeleton decls http_funcs classes main fns router =
     router ^ "\n" ^
     "}\n " ^ fns
 
->>>>>>> master
 
 let build_prog sast =
     let (stmts, classes, funcs, route_list) = sast in
