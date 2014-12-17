@@ -1,5 +1,6 @@
 open Sast
 open Format
+open Datatypes
 
 
 exception UnsupportedSexpr
@@ -18,6 +19,7 @@ let rec sexpr_s = function
     | SCallTyped (t, c) -> scall_typed_s (t, c)
     | SExprAccess (e, m) -> raise(UntypedAccess(
         "Accesses must be rewritten with type information"))
+    | SExprList l -> list_expr l
     | SId _ -> raise(UntypedVariableReference(
         "Variable references must be rewritten with type information"))
     | NullExpr -> "(NULL EXPR)"
@@ -27,7 +29,8 @@ and string_expr_s = function
     | SStringExprLit s -> sprintf "(String Lit: %s)" s
     | SStringVar id -> sprintf "(String Var: %s)" id
     | SStringCast xpr -> sprintf "String Cast (%s)" (sexpr_s xpr)
-    | SStringAcc(cls, mem) -> sprintf "(String Access: %s.%s)" cls mem
+    | SStringAcc(v, mem) -> sprintf "(String Access: %s.%s)"
+        (user_def_expr_s v) mem
     | SStringNull -> "(String NULL)"
 and int_expr_s = function
     | SIntExprLit i -> sprintf "(Int Lit: %d)" i
@@ -35,12 +38,14 @@ and int_expr_s = function
     | SIntCast e -> sprintf "(Cast (%s) to int)" (sexpr_s e)
     | SIntBinOp(lhs, o, rhs) -> sprintf "(%s %s %s)"
         (sexpr_s lhs) (Ast_printer.bin_op_s o) (sexpr_s rhs)
-    | SIntAcc(cls, mem) -> sprintf "(Int Access: %s.%s)" cls mem
+    | SIntAcc(v, mem) -> sprintf "(Int Access: %s.%s)"
+        (user_def_expr_s v) mem
     | SIntNull -> "(Int NULL)"
 and float_expr_s = function
     | SFloatExprLit f -> sprintf "(Lit %f)" f
     | SFloatVar id -> sprintf "(Float Var %s)" id
-    | SFloatAcc(cls, mem) -> sprintf "(Float Access: %s.%s)" cls mem
+    | SFloatAcc(v, mem) -> sprintf "(Float Access: %s.%s)"
+        (user_def_expr_s v) mem
     | SFloatCast e -> sprintf "(Cast (%s) to float)" (sexpr_s e)
     | SFloatBinOp(lhs, o, rhs) -> sprintf "(%s %s %s)"
         (sexpr_s lhs) (Ast_printer.bin_op_s o) (sexpr_s rhs)
@@ -51,7 +56,8 @@ and bool_expr_s = function
     | SBoolCast e -> sprintf "(Cast (%s) to boolean)" (sexpr_s e)
     | SBoolBinOp(lhs, o, rhs) -> sprintf "(%s %s %s)"
         (sexpr_s lhs) (Ast_printer.bin_op_s o) (sexpr_s rhs)
-    | SBoolAcc(cls, mem) -> sprintf "(Bool Access: %s.%s)" cls mem
+    | SBoolAcc(v, mem) -> sprintf "(Bool Access: %s.%s)"
+        (user_def_expr_s v) mem
     | SBoolNull -> "(Bool NULL)"
 and scall_typed_s = function
     | (t, SFCall(None, id, args)) -> sprintf
@@ -66,7 +72,7 @@ and scall_typed_s = function
         (String.concat ", " (List.map sexpr_s args))
         (Ast_printer.string_of_t t)
 and sactual_s = function
-    | SActual(k,v) -> sprintf "(ACTUAL: %s=%s)" k (sexpr_s v)
+    | (k,v) -> sprintf "(ACTUAL: %s=%s)" k (sexpr_s v)
 and user_def_expr_s = function
     | SUserDefInst(UserDef cls, sactls) ->
         sprintf "(INSTANTIATE new UserDef %s(\n\t%s))"
@@ -74,7 +80,7 @@ and user_def_expr_s = function
             (String.concat ",\n\t" (List.map sactual_s sactls))
     | SUserDefVar(UserDef cls, id) -> sprintf "(UserDef %s %s)" cls id
     | SUserDefAcc(UserDef cls, var, mem) -> sprintf "(UserDef %s Access: %s.%s)"
-        cls var mem
+        cls (user_def_expr_s var) mem
     | SUserDefNull(UserDef cls) -> sprintf "(UserDef %s NULL)" cls
 and sattr_s = function
     | SNonOption(t, id, Some(xpr)) -> sprintf "\n\t(ATTR %s of %s = %s)"
@@ -89,6 +95,17 @@ and sattr_s = function
         (Ast_printer.string_of_t t)
     | _ -> raise UnsupportedSattr
 
+and list_expr = function
+    | SListExprLit(Some(t), l) -> sprintf "(Lit <%s> %s )"
+        (Ast_printer.string_of_t t)
+        (String.concat ", " (List.map sexpr_s l))
+    | SListExprLit(None, l) -> sprintf "(Lit <None> %s )"
+        (String.concat ", " (List.map sexpr_s l))
+    | SListAccess(xpr_l, xpr_r) -> sprintf "(List access %s at index %s)"
+        (sexpr_s xpr_l)
+        (sexpr_s xpr_r)
+    | SListVar(t, id) -> sprintf "(List Var <%s> %s)" id (Ast_printer.string_of_t t)
+    | SListNull -> "(List NULL)"
 
 let soutput_s = function
     | SPrintln xpr_l -> sprintf "(Println(%s))"
@@ -127,16 +144,20 @@ let sfcall_s = function
         id
         (String.concat ", " (List.map sexpr_s args))
 
-let semantic_stmt_s = function
+let rec semantic_stmt_s = function
     | SAssign (lhs, xpr) -> svar_assign_s (lhs, xpr) ^ "\n"
+    | SAssign a -> svar_assign_s a ^ "\n"
     | SDecl(t, vd) -> svar_decl_s t vd ^ "\n"
-    | SOutput o -> sprintf "(Output %s)" (soutput_s o)
+    | SOutput o -> sprintf "(Output %s)\n" (soutput_s o)
     | SUserDefDecl(cls, vd) -> suser_def_decl_s cls vd ^ "\n"
-    | SReturn s -> sprintf("Return(%s)")
+    | SReturn s -> sprintf("Return(%s)\n")
         (String.concat ", " (List.map sexpr_s s))
     | SFuncCall(lv, sfc) -> sprintf "Assign(%s) to %s"
         (String.concat ", " (List.map lv_s lv))
         (sfcall_s sfc)
+    | SWhile(expr, stmts) -> sprintf "(While(%s){\n%s\n})\n"
+        (sexpr_s expr)
+        (String.concat "\n" (List.map semantic_stmt_s stmts))
     | _ -> "Unsupported statement"
 
 let semantic_func_s f =

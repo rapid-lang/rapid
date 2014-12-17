@@ -53,6 +53,9 @@ let rec expr_s = function
         id
         ("\n\t" ^ (String.concat ",\n\t " (List.map actual_s actls)))
     | Access(e, mem) -> sprintf "(ACCESS %s.%s)" (expr_s e) mem
+    | ListAccess(xpr_l, xpr_r) -> sprintf "(List access %s at index %s)"
+        (expr_s xpr_l)
+        (expr_s xpr_r)
     | Noexpr -> "( NOEXPR )"
     | Nullxpr -> "(Null)"
 
@@ -101,23 +104,21 @@ let rec stmt_s = function
     | Assign(lhs, e) -> sprintf "(Assign %s (%s))"
         (lhs_s lhs)
         (expr_s e)
-    | Block ss -> sprintf "(Block {\n%s\n})"
-        (concat "\n" (List.map (fun s -> sprintf "(%s)" (stmt_s s)) ss))
-    | If(e, s1, Ast.Block([])) -> sprintf "(If (%s) -> (%s))"
+    | If(e, s1, [] ) -> sprintf "(If (%s) -> (%s))"
         (expr_s e)
-        (stmt_s s1)
-    | If(e, s1, s2) -> sprintf "(If (%s)\n(%s) else (%s))"
+        (concat "\n" (List.map stmt_s s1))
+    | If(e, s1, s2 ) -> sprintf "(If (%s) -> (%s))(Else -> (%s))"
         (expr_s e)
-        (stmt_s s1)
-        (stmt_s s2)
-    | For(e1, e2, e3, s) -> sprintf "(For ((%s); (%s); (%s))\n{(%s)})"
-        (expr_s e1)
-        (expr_s e2)
-        (expr_s e3)
-        (stmt_s s)
-    | While(e, s) -> sprintf "(While (%s)\n{(%s))0"
+        (concat "\n" (List.map stmt_s s1))
+        (concat "\n" (List.map stmt_s s2))
+    | For(t, id, xpr, stmt_l) -> sprintf "(For (%s %s in %s)\n{(%s)})"
+        (string_of_t t)
+        id
+        (expr_s xpr)
+        (String.concat "\n" (List.map stmt_s stmt_l))
+    | While(e, s) -> sprintf "(While (%s)\n{(%s))}"
         (expr_s e)
-        (stmt_s s)
+        (concat "\n" (List.map stmt_s s))
     | Output o -> sprintf "(Output (%s))"
         (output_s o)
     | VarDecl vd -> sprintf "(VarDecl (%s))"

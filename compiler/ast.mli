@@ -13,6 +13,7 @@ type expr =
     | Cast of var_type * expr
     | CastBool of expr
     | ListLit of expr list
+    | ListAccess of expr * expr
     | UserDefInst of string * actual list
     | Access of expr * string
     | Noexpr
@@ -40,10 +41,9 @@ type lhs =
 
 type stmt =
     | Assign of lhs * expr
-    | Block of stmt list
-    | If of expr * stmt * stmt
-    | For of expr * expr * expr * stmt
-    | While of expr * stmt
+    | For of var_type * string * expr * stmt list
+    | If of expr * stmt list * stmt list
+    | While of expr * stmt list
     | Output of print
     | VarDecl of vdecl
     | UserDefDecl of user_def_decl
