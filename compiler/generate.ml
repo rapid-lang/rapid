@@ -59,7 +59,7 @@ let rec sexpr_to_code = function
     | SExprBool b -> bool_expr_to_code b
     | SExprList l -> list_expr_to_code l
     | SCallTyped(t, (id, args)) -> func_expr_to_code id args
-    | SExprError e -> error_expr_to_code e 
+    | SExprError e -> error_expr_to_code e
     | SExprUserDef u -> user_def_expr_to_code u
     | NullExpr -> "", "nil"
     | s -> raise(UnsupportedSExprType(Sast_printer.sexpr_s s))
@@ -74,6 +74,7 @@ and string_expr_to_code = function
             sprintf "%s := *%s" tmp_var id,
             sprintf "&%s" tmp_var
     | SStringAcc(ud_xpr, attr) ->  ud_access_to_code ud_xpr attr
+    | SStringErrAcc(er_xpr, attr) -> error_access_to_code er_xpr attr
     | SStringCast c -> cast_to_code String c
     | SStringNull -> "", "nil"
     | _ -> raise UnsupportedStringExprType
@@ -89,6 +90,7 @@ and int_expr_to_code = function
             sprintf "&%s" tmp_var
     | SIntBinOp(lhs, o, rhs) -> bin_op_to_code lhs o rhs
     | SIntAcc(ud_xpr, attr) -> ud_access_to_code ud_xpr attr
+    | SIntErrAcc(er_xpr, attr) -> error_access_to_code er_xpr attr
     | SIntNull -> "", "nil"
     | SIntCast c -> cast_to_code Int c
     | _ -> raise UnsupportedIntExprType
@@ -175,7 +177,7 @@ and error_expr_to_code = function
             setup, sprintf "%s: %s," attr ref in
         let trans = List.map expand act_list in
         (String.concat "\n" (List.map fst trans),
-         sprintf "error{\n%s\n}\n" (String.concat "\n" (List.map snd trans)))
+         sprintf "Error{\n%s\n}\n" (String.concat "\n" (List.map snd trans)))
     | SErrorDefVar id ->
         let tmp_var = rand_var_gen () in
         sprintf "%s := %s" tmp_var id, sprintf "%s" tmp_var
@@ -201,6 +203,11 @@ and user_def_expr_to_code = function
 and ud_access_to_code ud_expr attr_id =
     let tmp_var = rand_var_gen () in
     let setup, ref = user_def_expr_to_code ud_expr in
+        sprintf "%s\n%s := %s.%s\n" setup tmp_var ref attr_id,
+        tmp_var
+and error_access_to_code er_expr attr_id =
+    let tmp_var = rand_var_gen () in
+    let setup, ref = error_expr_to_code er_expr in
         sprintf "%s\n%s := %s.%s\n" setup tmp_var ref attr_id,
         tmp_var
 
@@ -250,7 +257,7 @@ let sfunccall_to_code lv id xprs =
     if lhs = "" then sprintf "%s\n%s( %s )" tmps id refs
         else sprintf "%s\n%s = %s( %s )" tmps lhs id refs
 
-let error_instantiate_to_code (id, inst_xpr) = 
+let error_instantiate_to_code (id, inst_xpr) =
     let setups, attrs = error_expr_to_code inst_xpr in
     sprintf "%s\n%s := %s\n_ = %s" setups id attrs id
 
@@ -272,9 +279,9 @@ type control_t = | IF | WHILE
 let rec control_code b expr stmts =
     let tmps, exprs = sexpr_to_code expr in
     let body = String.concat "\n" (List.map sast_to_code stmts) in
-    let decls = String.concat "\n" (grab_decls stmts) in 
+    let decls = String.concat "\n" (grab_decls stmts) in
     match b with
-        |IF -> sprintf "%s\nif *(%s){%s\n%s}" tmps exprs decls body 
+        |IF -> sprintf "%s\nif *(%s){%s\n%s}" tmps exprs decls body
         |WHILE -> sprintf "for{\n%s\nif !(*(%s)){\nbreak\n}\n%s\n%s}\n" tmps exprs decls body
 
 and sast_to_code = function
@@ -288,7 +295,7 @@ and sast_to_code = function
     | SUserDefDecl(class_id, (id, NullExpr)) -> sprintf "var %s %s\n_ = %s" id class_id id
     | SIf(expr, stmts) -> (control_code IF expr stmts) ^ "\n"
     | SWhile (expr, stmts) -> control_code WHILE expr stmts
-    | SIfElse(expr, stmts, estmts) -> 
+    | SIfElse(expr, stmts, estmts) ->
         sprintf "%selse{\n%s\n%s}\n"
         (control_code IF expr stmts)
         (String.concat "\n" (grab_decls estmts))
