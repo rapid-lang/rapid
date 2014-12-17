@@ -64,8 +64,13 @@ and fcall_s = function
         (expr_s xpr)
         f
         (concat ", " (List.map (fun e -> sprintf "(%s)" (expr_s e)) es))
+
 and actual_s = function
     | Actual(id, e) -> sprintf "(ACTUAL: %s=%s)" id (expr_s e)
+
+and lhs_s = function
+    | LhsId(id) -> id
+    | LhsAcc(xpr, id) -> sprintf "(%s.%s)" (expr_s xpr) id
 
 let output_s = function
     | Printf el -> sprintf "(Printf(%s))"
@@ -93,8 +98,8 @@ let func_lvalue_s = function
     | VDecl(t, id, x) -> string_of_vdecl (t,id,x)
 
 let rec stmt_s = function
-    | Assign(v, e) -> sprintf "(Assign %s (%s))"
-        v
+    | Assign(lhs, e) -> sprintf "(Assign %s (%s))"
+        (lhs_s lhs)
         (expr_s e)
     | Block ss -> sprintf "(Block {\n%s\n})"
         (concat "\n" (List.map (fun s -> sprintf "(%s)" (stmt_s s)) ss))
@@ -151,9 +156,17 @@ let member_s = function
     | ClassFunc f -> func_decl_s f
 
 
-let class_s (name, members) =
-    sprintf "(CLASS %s:\n%s)"
+let instance_block_s = function
+    | Some(InstanceBlock(id, fns)) -> sprintf "(INSTANCE %s {\n\t%s}"
+        id
+        (concat "\n\t" (List.map func_decl_s fns))
+    | None -> "(NO INSTANCE BLOCK)"
+
+
+let class_s (name, members, instance_block) =
+    sprintf "(CLASS %s:\n%s\n%s)"
         name
+        (instance_block_s instance_block)
         (concat "\n" (List.map (fun a -> "\t" ^ a)
             (List.map member_s members)))
 

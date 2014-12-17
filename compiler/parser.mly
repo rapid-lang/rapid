@@ -9,7 +9,7 @@
 %token EQ NEQ LT LEQ GT GEQ AND OR MOD
 %token RETURN IF ELSE FOR WHILE FUNC IN
 %token PRINTLN PRINTF // LOG
-%token CLASS NEW ACCESS OPTIONAL
+%token CLASS NEW ACCESS OPTIONAL INSTANCE
 // %token INT BOOL FLOAT STRING
 
 %token <string> ID TYPE STRING_LIT
@@ -81,6 +81,9 @@ func_decl:
     }}
     /* TODO: unsafe functions */
 
+func_decl_list:
+    | /* nothing */            { [] }
+    | func_decl_list func_decl { $2 :: $1 }
 
 arguments:
     | /* nothing */ { [] }
@@ -133,15 +136,20 @@ func_call:
     | fcall                {FuncCall([], $1)}
     | LPAREN id_list RPAREN ASSIGN fcall { FuncCall(List.rev $2, $5) }
 
+lhs:
+    | ID             { LhsId($1) }
+    | expr ACCESS ID { LhsAcc($1, $3) }
+
 stmt:
     | print          { Output $1 }
     | var_decl       { VarDecl $1 }
     | user_def_decl  { UserDefDecl $1 }
     | func_call      { $1 }
-    | ID ASSIGN expr { Assign($1, $3) }
+    | lhs ASSIGN expr { Assign($1, $3) }
     | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
     | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
     | WHILE LPAREN expr RPAREN stmt { While($3, $5) }
+
 
 
 print:
@@ -185,6 +193,14 @@ expr:
     | expr ACCESS ID                        { Access($1, $3) }
     | LBRACKET expression_list_opt RBRACKET { ListLit $2 }
 
+instance_block:
+    | INSTANCE ID LBRACE func_decl_list RBRACE { InstanceBlock($2, $4) }
+
+
+instance_block_opt:
+    | /* nothing */  { None }
+    | instance_block { Some($1) }
+
 
 expression_list:
     | expression_list_internal    { List.rev $1 }
@@ -222,12 +238,15 @@ attr_decl:
     | primtype ID ASSIGN lit  { NonOption($1 , $2, Some($4)) }
     | OPTIONAL primtype ID    { Optional($2, $3) }
 
+
 member_list:
     | /* nothing */              { [] }
     | member_list attr_decl SEMI { Attr($2) :: $1 }
     | member_list func_decl      { ClassFunc($2) :: $1 }
 
+
 class_decl:
-    | CLASS ID LBRACE member_list RBRACE { $2, List.rev $4 }
+    | CLASS ID LBRACE member_list instance_block_opt member_list RBRACE
+        { $2, List.rev ($6 @ $4), $5 }
 
 %%

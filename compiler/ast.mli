@@ -34,8 +34,12 @@ type vars =
     | ID of string
     | VDecl of vdecl
 
+type lhs =
+    | LhsId of string
+    | LhsAcc of expr * string
+
 type stmt =
-    | Assign of string * expr
+    | Assign of lhs * expr
     | Block of stmt list
     | If of expr * stmt * stmt
     | For of expr * expr * expr * stmt
@@ -64,7 +68,10 @@ type member =
     | Attr of attr
     | ClassFunc of func_decl
 
-type class_decl = string * member list
+type instance_block =
+    | InstanceBlock of string * func_decl list
+
+type class_decl = string * member list * instance_block option
 
 (*
 type class_decl = string * attr list * func_decl list * route_decl list

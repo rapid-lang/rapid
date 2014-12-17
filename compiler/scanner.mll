@@ -89,9 +89,7 @@ rule token = parse
 | '.'        { ACCESS }
 | "new"      { NEW }
 | "optional" { OPTIONAL }
-(*
 | "instance" { INSTANCE }
-*)
 
 (* http related *)
 (*

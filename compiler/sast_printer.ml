@@ -98,8 +98,12 @@ let soutput_s = function
         (String.concat ", " (List.map sexpr_s xpr_l))
     | _ -> raise UnsupportedSOutput
 
-let svar_assign_s (id, xpr) =
-    sprintf "(Assign (%s) to %s)" id (sexpr_s xpr)
+let slhs_s = function
+    | SLhsId id -> id
+    | SLhsAcc (xpr, mem) -> sprintf "%s.%s" (sexpr_s xpr) mem
+
+let svar_assign_s (lhs, xpr) =
+    sprintf "(Assign (%s) to %s)" (slhs_s lhs) (sexpr_s xpr)
 
 let svar_decl_s t (id, xpr) =
     sprintf "(Declare %s (%s) to %s)" id (Ast_printer.string_of_t t) (sexpr_s xpr)
@@ -124,7 +128,7 @@ let sfcall_s = function
         (String.concat ", " (List.map sexpr_s args))
 
 let semantic_stmt_s = function
-    | SAssign a -> svar_assign_s a ^ "\n"
+    | SAssign (lhs, xpr) -> svar_assign_s (lhs, xpr) ^ "\n"
     | SDecl(t, vd) -> svar_decl_s t vd ^ "\n"
     | SOutput o -> sprintf "(Output %s)" (soutput_s o)
     | SUserDefDecl(cls, vd) -> suser_def_decl_s cls vd ^ "\n"
@@ -136,11 +140,14 @@ let semantic_stmt_s = function
     | _ -> "Unsupported statement"
 
 let semantic_func_s f =
-    let (id, args, rets, body) = f in
+    let (id, selfref_opt, args, rets, body) = f in
     let args_strings = (List.map semantic_stmt_s args) in
     let ret_strings = (List.map Ast_printer.string_of_t rets) in
     let body_strings = (List.map semantic_stmt_s body) in
-    sprintf "(func %s(%s) %s{\n %s \n})"
+    sprintf "(func %s%s(%s) %s{\n %s \n})"
+        (match selfref_opt with
+            | Some(SelfRef(class_id, id)) -> sprintf "(%s %s) " class_id id
+            | None -> "")
         id
         (String.concat "," args_strings)
         (String.concat ", " ret_strings)

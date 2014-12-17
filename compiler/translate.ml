@@ -48,6 +48,9 @@ and translate_call = function
         (None, id, (List.map translate_expr exprs)))
     | (Some(xpr), id, exprs) -> SCall(SFCall
         (Some(translate_expr xpr), id, (List.map translate_expr exprs)))
+and translate_lhs = function
+    | Ast.LhsId(id) -> SLhsId id
+    | Ast.LhsAcc(xpr, id) -> SLhsAcc (translate_expr xpr, id)
 
 let translate_assign id xpr = match translate_expr xpr with
     | SExprInt _    -> (id, xpr)
@@ -87,7 +90,7 @@ let translate_fcall = function
 
 let translate_statement = function
     | Ast.VarDecl vd -> translate_decl vd
-    | Ast.Assign(id, xpr) -> SAssign(id, translate_expr xpr)
+    | Ast.Assign(lhs, xpr) -> SAssign(translate_lhs lhs, translate_expr xpr)
     | Ast.Output o -> SOutput(translate_output o)
     | Ast.UserDefDecl udd -> translate_user_def_decl udd
     | Ast.FuncCall(vl, fc) -> let sfc = translate_fcall fc in
@@ -103,9 +106,10 @@ let translate_fstatement = function
     | Ast.FStmt stmt -> translate_statement stmt
     | Ast.Return expr -> SReturn(List.map translate_expr expr)
 
-let translate_function (f : Ast.func_decl) =
+let translate_function class_opt (f : Ast.func_decl) =
     (
         f.fname,
+        class_opt,
         (List.map translate_decl f.args),
         f.return,
         (List.map translate_fstatement f.body)
@@ -115,8 +119,8 @@ let rec translate_members class_id sattrs sclass_funcs = function
     | (Ast.Attr a) :: tl ->
         translate_members class_id ((translate_attr a) :: sattrs) sclass_funcs tl
     | (Ast.ClassFunc f) :: tl ->
-        let func_name = (class_id ^ "." ^ f.fname) in
-        let sclass_func = (translate_function
+        let func_name = (class_id ^ "__" ^ f.fname) in
+        let sclass_func = (translate_function None
         ({
             fname = func_name;
             args = f.args;
@@ -126,11 +130,31 @@ let rec translate_members class_id sattrs sclass_funcs = function
         translate_members class_id sattrs (sclass_func :: sclass_funcs) tl
     | [] -> (sattrs, sclass_funcs)
 
+
+let translate_instance_fn class_id id (f: Ast.func_decl) =
+    let func_name = (class_id ^ "__" ^ f.fname) in
+    (translate_function (Some (SelfRef (class_id, id)))
+        ({
+            fname = func_name;
+            args = f.args;
+            return = f.return;
+            body = f.body
+        }))
+let translate_instance_block class_id (id, fns) =
+    (List.map (translate_instance_fn class_id id) fns)
+
 let rec translate_classes sclasses sclass_funcs = function
-    | (name, members) :: tl ->
-        let sattrs, scfuncs = (translate_members name [] [] members) in
+    | (name, members, Some(Ast.InstanceBlock (id, fns))) :: tl ->
+        let sattrs, sclass_fns = translate_members name [] [] members in
+        let sinst_fns = translate_instance_block name (id, fns) in
         translate_classes
             ((name, sattrs) :: sclasses)
-            (scfuncs @ sclass_funcs)
+            (sinst_fns @ sclass_fns @ sclass_funcs)
+            tl
+    | (name, members, None) :: tl ->
+        let sattrs, sclass_fns = translate_members name [] [] members in
+        translate_classes
+            ((name, sattrs) :: sclasses)
+            (sclass_fns @ sclass_funcs)
             tl
     | [] -> sclasses, sclass_funcs

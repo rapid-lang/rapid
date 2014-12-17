@@ -1,7 +1,7 @@
 open Ast
 open Datatypes
 
-type cast_side = | Left | Right | None
+type cast_side = | Left | Right | Neither
 
 type string_expr =
     | SStringExprLit of string
@@ -53,6 +53,9 @@ and user_def_expr =
     | SUserDefNull of var_type
 and sactual =
     | SActual of string * sexpr
+and slhs =
+    | SLhsId of string (* varname *)
+    | SLhsAcc of sexpr * string (* sexpr.membername *)
 
 type soutput =
     | SPrintf of sexpr * sexpr list
@@ -66,7 +69,7 @@ type sfunc_lval =
     | SFuncTypedId of var_type * string (*After second pass*)
 
 type semantic_stmt =
-    | SAssign of svar_assign
+    | SAssign of slhs * sexpr
     | SDecl of var_type * svar_assign
     | SOutput of soutput
     | SReturn of sexpr list
@@ -77,11 +80,15 @@ type sattr =
     | SNonOption of var_type * string * sexpr option
     | SOptional of var_type * string
 
+type self_ref =
+    | SelfRef of string * string (* classname * varname *)
+
+(*this is the id, args, return types, body*)
+type semantic_function = string * self_ref option * semantic_stmt list * var_type list * semantic_stmt list
+
 type sclass =
     | SClass of string * sattr list
 
-(*this is the id, args, return types, body*)
-type semantic_function = string * semantic_stmt list * var_type list * semantic_stmt list
 (* TODO: Add HTTP routes or something similar in the future *)
 (* TODO: add functions so we allow more than just scripts *)
 type semantic_program = semantic_stmt list * sclass list * semantic_function list

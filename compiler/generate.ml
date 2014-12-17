@@ -131,9 +131,13 @@ and bin_op_to_code lhs o rhs  =
     (setup1 ^ "\n" ^ setup2 ^ "\n" ^ new_tmps) , (sprintf "&%s" tmp_var)
 
 let sassign_to_code = function
-    | (id, xpr) ->
+    | (SLhsId id, xpr) ->
         let setup, ref = sexpr_to_code xpr in
         sprintf "%s\n%s = %s" setup id ref
+    | (SLhsAcc(e, mem), xpr) ->
+        let setup, ref = sexpr_to_code xpr in
+        let lhs_setup, lhs_ref = sexpr_to_code e in
+        sprintf "%s\n%s.%s = %s" (setup ^ lhs_setup) lhs_ref mem ref
     | a -> raise(UnsupportedSemanticExpressionType(
         sprintf "Assignment expression not yet supported -> %s"
         (svar_assign_s a)))
@@ -176,8 +180,8 @@ let sfunccall_to_code lv id xprs =
         else sprintf "%s\n%s = %s( %s )" tmps lhs id refs
 
 let sast_to_code = function
-    | SDecl(_, (id, xpr)) -> sassign_to_code (id, xpr)
-    | SAssign a -> sassign_to_code a
+    | SDecl(_, (id, xpr)) -> sassign_to_code (SLhsId id, xpr)
+    | SAssign (lhs, xpr) -> sassign_to_code (lhs, xpr)
     | SOutput p -> soutput_to_code p
     | SReturn xprs -> sreturn_to_code xprs
     | SFuncCall (lv, SFCall(None, id, xprs)) -> sfunccall_to_code lv id xprs
@@ -192,7 +196,7 @@ let defaults_to_code = function
     | SDecl(_, (id, xpr)) -> if xpr = NullExpr then ""
         else sprintf "if %s == nil {\n %s\n}"
                 id
-                (sassign_to_code (id, xpr))
+                (sassign_to_code (SLhsId id, xpr))
 
 let rec grab_decls = function
     | SDecl(t, (id, _)) :: tl ->
@@ -203,8 +207,11 @@ let rec grab_decls = function
     | [] -> []
 
 let func_to_code f =
-    let (id, args, rets, body) = f in
-    sprintf "func %s( %s ) (%s){\n%s\n%s\n%s\n}"
+    let (id, selfref_opt, args, rets, body) = f in
+    sprintf "func %s%s( %s ) (%s){\n%s\n%s\n%s\n}"
+        (match selfref_opt with
+            | Some(SelfRef(class_id, id)) -> sprintf "(%s %s) " class_id id
+            | None -> "")
         id
         (String.concat "," (List.map arg_to_code args))
         (String.concat ", " (List.map go_type_from_type rets))

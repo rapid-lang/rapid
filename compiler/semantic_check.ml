@@ -59,10 +59,10 @@ let rec check_arg_types = function
 let get_cast_side = function
     | (Int, Float) -> Left
     | (Float, Int) -> Right
-    | (String, String) -> None
-    | (Bool, Bool) -> None
-    | (Int, Int) -> None
-    | (Float, Float) -> None
+    | (String, String) -> Neither
+    | (Bool, Bool) -> Neither
+    | (Int, Int) -> Neither
+    | (Float, Float) -> Neither
     | _ -> raise BinOpTypeMismatchErr
 
 (* Takes a type and a typed sexpr and confirms it is the proper type *)
@@ -121,7 +121,7 @@ let rec rewrite_sexpr st ct ft = function
             let class_id = (match sexpr_to_t Void obj with
                 | UserDef u -> u
                 | _         -> raise AccessOnNonUserDef) in
-            let id = (class_id  ^ "." ^ fn_id) in
+            let id = (class_id  ^ "__" ^ fn_id) in
             let xprs = (List.map (rewrite_sexpr st ct ft) xprs) in
             let xprs = check_arg_types ((get_arg_types id ft), xprs) in
             SCallTyped((get_return_type id ft), SFCall(Some(obj), id, xprs))
@@ -258,10 +258,19 @@ let rec var_analysis st ct ft = function
         let st = add_sym t id st in
         let () = check_t_sexpr t expr in
             SDecl(t, (id, expr)) :: var_analysis st ct ft tl
-    | SAssign(id, xpr) :: tl ->
+    | SAssign(SLhsId(id), xpr) :: tl ->
         let expr = rewrite_sexpr st ct ft xpr in
         let st = check_var_assign_use st id expr in
-            SAssign(id, expr) :: (var_analysis st ct ft tl)
+            SAssign(SLhsId id, expr) :: (var_analysis st ct ft tl)
+    | SAssign(SLhsAcc(x, mem), xpr) :: tl ->
+        let x = rewrite_sexpr st ct ft x in
+        let xpr = rewrite_sexpr st ct ft xpr in
+        let lhs_class_id = (match sexpr_to_t Void x with
+            | UserDef u -> u
+            | _         -> raise AccessOnNonUserDef) in
+        let lhs_t = get_attr_type lhs_class_id ct mem in
+        let () = check_t_sexpr lhs_t xpr in
+            SAssign(SLhsAcc(x, mem), xpr) :: (var_analysis st ct ft tl)
     | SOutput(so) :: tl ->
         let so = check_s_output st ct ft so in
             SOutput(so) :: (var_analysis st ct ft tl)
@@ -269,9 +278,19 @@ let rec var_analysis st ct ft = function
     | SReturn(s) :: tl -> let xprs = List.map (rewrite_sexpr st ct ft) s in
          SReturn(xprs) :: (var_analysis st ct ft tl)
     | SFuncCall (lv, SFCall(xpr, id, xprs)) :: tl ->
-        let xpr = (match xpr with
-            | Some(e) -> Some(rewrite_sexpr st ct ft e)
-            | None    -> None) in
+        let xpr, class_id__ = (
+            match xpr with
+            | Some(e) ->
+                let e = rewrite_sexpr st ct ft e in
+                let c_id__ = (
+                    match sexpr_to_t Void e with
+                    | UserDef u -> u ^ "__"
+                    | _         -> raise AccessOnNonUserDef
+                ) in
+                Some(e), c_id__
+            | None    -> None, ""
+        ) in
+        let id = (class_id__ ^ id) in
         let lv = (List.map (rewrite_lv st) lv) in
         let check_lv ft id = function
             | [] -> () (*ignoring return types so foo(); is always a valid stmnt*)
@@ -280,6 +299,7 @@ let rec var_analysis st ct ft = function
         let () = check_lv ft id lv in
         let xprs = (List.map (rewrite_sexpr st ct ft) xprs) in
         let xprs = check_arg_types ((get_arg_types id ft), xprs) in
+
         let st = scope_lv st lv in
         SFuncCall(lv, SFCall(None, id, xprs)) :: (var_analysis st ct ft tl)
     | SUserDefDecl(cls, (id, xpr)) :: tl ->
@@ -287,7 +307,7 @@ let rec var_analysis st ct ft = function
         let t = UserDef cls in
         let st = add_sym t id st in
         let () = check_t_sexpr t expr in
-            SUserDefDecl(cls, (id, xpr)) :: var_analysis st ct ft tl
+            SUserDefDecl(cls, (id, expr)) :: var_analysis st ct ft tl
     | [] -> []
 
 (*
@@ -328,26 +348,32 @@ let check_for_return body =
         | _ -> raise NoReturnErr
 
 let rec check_funcs st ct ft = function
-    | (fname, args, rets, body) :: tl ->
+    | (fname, class_opt, args, rets, body) :: tl ->
         let _ = check_arg_order args in
         let scoped_st = new_scope st in
         let targs = var_analysis scoped_st ct ft args in
         (*args are added to function scope*)
         let scoped_st = add_to_scope scoped_st args in
+        (* Add the reference to self to the symbol table, if there is one *)
+        let scoped_st = (match class_opt with
+            | Some(SelfRef (class_id, id)) ->
+                add_sym (UserDef class_id) id scoped_st
+            | None -> scoped_st) in
         (*typecheck the body and rewrite vars to have type*)
         let tbody = var_analysis scoped_st ct ft body in
         (*check the return type matches the return statement*)
         let _  = check_returns rets tbody in
         (*if no return types then don't worry, else find a return stmnt*)
         if rets = [] then
-            (fname, targs, rets, tbody) :: check_funcs st ct ft tl
+            (fname, class_opt, targs, rets, tbody) :: check_funcs st ct ft tl
         else
             let () = check_for_return tbody in
-            (fname, targs, rets, tbody) :: check_funcs st ct ft tl
+            let qq = (fname, class_opt, targs, rets, tbody) :: check_funcs st ct ft tl in
+            qq
     | [] -> []
 
 let rec build_function_table ft = function
-    | (fname, args, rets, body) :: tl ->
+    | (fname, class_opt, args, rets, body) :: tl ->
         let args_to_type = function
             | SDecl(t, (id, xpr)) -> (t, xpr)
             | _ -> raise InvalidArgErr
@@ -368,16 +394,16 @@ let rec class_analysis class_tbl = function
 
 
 let gen_class_stmts stmts =
-    let sclasses, sclass_funcs = translate_classes [] [] stmts in
+    let sclasses, sclass_fns = translate_classes [] [] stmts in
     let (checked_sclasses, ct) = class_analysis class_table sclasses in
-    checked_sclasses, ct, sclass_funcs
+    checked_sclasses, ct, sclass_fns
 
 (*The order of the checking and building of symbol tables may need to change
     to allow functions to be Hoisted*)
 let gen_semantic_program stmts classes funcs =
     (* build an unsafe semantic AST *)
     let s_stmts = List.map translate_statement stmts in
-    let s_funcs = List.map translate_function funcs in
+    let s_funcs = List.map (translate_function None) funcs in
     let checked_classes, ct, sclass_funcs = gen_class_stmts classes in
     let s_funcs = sclass_funcs @ s_funcs in
     let ft = build_function_table empty_function_table s_funcs in
