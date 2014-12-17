@@ -74,8 +74,6 @@ rule token = parse
 | "list" { LIST }
 
 
-| "printf"  { PRINTF }
-| "println" { PRINTLN }
 (* functions *)
 | "func"   { FUNC }
 | "return" { RETURN }
@@ -93,11 +91,9 @@ rule token = parse
 *)
 
 (* http related *)
-(*
 | "http"      { HTTP }
 | "param"     { PARAM }
 | "namespace" { NAMESPACE }
-*)
 
 (* switch statements *)
 (*

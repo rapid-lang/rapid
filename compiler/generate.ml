@@ -19,6 +19,15 @@ exception InvalidClassInstantiation
 exception StringExpressionsRequired
 exception InvalidUserDefExpr
 
+module  StringMap = Map.Make(String)
+
+
+let need_dereference_funcs = let sm = StringMap.empty in
+    let sm = StringMap.add "append" true sm in
+    let sm = StringMap.add "len" true sm in
+    let sm = StringMap.add "println" true sm in
+    let sm = StringMap.add "printf" true sm in
+    sm
 
 let rand_var_gen _ = "tmp_" ^ Int64.to_string (Random.int64 Int64.max_int)
 
@@ -131,7 +140,15 @@ and cast_to_code t xpr =
     setup, cast
 and func_expr_to_code id arg_xrps =
     let (tmps, refs) = (list_of_sexpr_to_code "" arg_xrps) in
-    let call = sprintf "%s(%s)" id (String.concat ", " refs) in
+    let s = if StringMap.mem id (need_dereference_funcs) then "*"
+       else "" in
+    let refs = List.map (fun str -> s ^ str ) refs in
+    let tmps, call = if StringMap.mem id (need_dereference_funcs) then
+            let tmp = rand_var_gen () in
+            let dots = if id = "append" then "..." else "" in
+            tmps @ [(sprintf "\n%s := %s(%s%s)" tmp id (String.concat ", " refs) dots )] , "&" ^ tmp
+        else
+            tmps ,sprintf "%s(%s)" id (String.concat ", " refs) in
     (String.concat "\n" tmps), call
 (* Helper function that turns a list of expressions into code *)
 and list_of_sexpr_to_code deref_string xpr_l =
@@ -197,20 +214,6 @@ let sassign_to_code = function
         sprintf "Assignment expression not yet supported -> %s"
         (svar_assign_s a)))
 
-let soutput_to_code = function
-    | SPrintln xpr_l ->
-        let (setups, refs) = list_of_sexpr_to_code "*" xpr_l in
-            sprintf "%s\nfmt.Println(%s)"
-                (String.concat "\n" setups)
-                (String.concat "," refs)
-    | SPrintf(s, xpr_l) ->
-        let (setups, refs) = list_of_sexpr_to_code "*" xpr_l in
-            sprintf "%s\nfmt.Printf(%s, %s)"
-                (String.concat "\n" setups)
-                (get_string_literal_from_sexpr s)
-                (String.concat "," refs)
-    | _ -> raise UnsupportedOutputType
-
 
 let sreturn_to_code xprs =
     let (tmps, refs) = list_of_sexpr_to_code "" xprs in
@@ -231,6 +234,11 @@ let sfunccall_to_code lv id xprs =
     let lhs = lv_to_code lv in
     let (tmps, refs) = list_of_sexpr_to_code "" xprs in
     let tmps = String.concat "\n" tmps in
+    let s, id = if StringMap.mem id (need_dereference_funcs) then "*", "" ^ id
+       else "", id in
+    let refs = List.map (fun str -> s ^ str ) refs in
+    let refs = if s = "Println" then String.sub (List.hd refs) 1 ((String.length (List.hd refs)) - 1) :: (List.tl refs)
+        else refs in
     let refs = String.concat "," refs in
     if lhs = "" then sprintf "%s\n%s( %s )" tmps id refs
         else sprintf "%s\n%s = %s( %s )" tmps lhs id refs
@@ -261,7 +269,6 @@ let rec control_code b expr stmts =
 and sast_to_code = function
     | SDecl(_, (id, xpr)) -> sassign_to_code (id, xpr)
     | SAssign a -> sassign_to_code a
-    | SOutput p -> soutput_to_code p
     | SReturn xprs -> sreturn_to_code xprs
     | SFuncCall(lv, id, xprs) -> sfunccall_to_code lv id xprs
     | SUserDefDecl(class_id, (id, SExprUserDef(xpr))) -> class_instantiate_to_code class_id (id, xpr)

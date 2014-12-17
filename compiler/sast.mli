@@ -58,10 +58,6 @@ and user_def_expr =
     | SUserDefAcc of var_type * user_def_expr * string (* class * var / instance * member *)
 and sactual = string * sexpr
 
-type soutput =
-    | SPrintf of sexpr * sexpr list
-    | SPrintln of sexpr list
-
 type svar_assign = string * sexpr
 
 type sfunc_lval =
@@ -72,7 +68,6 @@ type sfunc_lval =
 type semantic_stmt =
     | SAssign of svar_assign
     | SDecl of var_type * svar_assign
-    | SOutput of soutput
     | SReturn of sexpr list
     | SFuncCall of sfunc_lval list * string * sexpr list (* left hand of assing, fname, args *)
     | SUserDefDecl of string * svar_assign (* class_id, (id, expr) *)
