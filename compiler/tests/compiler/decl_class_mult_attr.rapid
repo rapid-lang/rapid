@@ -1,0 +1,22 @@
+
+class User {
+    string name;
+    int age = 20;
+    optional float balance;
+}
+
+User a = new User(name="tester", age=20, balance=3.14);
+println(a.balance);
+
+User b = new User(name="tester", balance=3.14);
+println(a.age);
+
+User c = new User(name="tester");
+println(c.balance?);
+
+println(a.age + b.age + c.age);
+
+User d;
+
+d = new User(name="tester2");
+

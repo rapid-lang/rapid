@@ -1,0 +1,14 @@
+int i = 0;
+while(i < 3)
+{
+	println(i+1);
+	if(i + 1 == 2)
+	{
+	    println("two");
+	}
+	else
+	{
+	    println("not two");
+	}
+	i = i + 1;
+}

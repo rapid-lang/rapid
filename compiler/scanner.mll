@@ -56,9 +56,8 @@ rule token = parse
 | "for"  { FOR }
 | "in"   { IN }
 
-(*
+
 | "while" { WHILE }
-*)
 
 (* primatives *)
 | '=' { ASSIGN }
