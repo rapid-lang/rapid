@@ -1,0 +1,8 @@
+class User {
+	int age;
+	instance {
+		func get_age() int {
+			return self.age;
+		}
+	}
+}

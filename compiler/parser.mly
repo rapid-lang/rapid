@@ -8,8 +8,7 @@
 %token PLUS MINUS TIMES DIVIDE ASSIGN CASTBOOL
 %token EQ NEQ LT LEQ GT GEQ AND OR MOD
 %token RETURN IF ELSE FOR WHILE FUNC IN
-%token PRINTLN PRINTF // LOG
-%token CLASS NEW ACCESS OPTIONAL
+%token CLASS NEW ACCESS OPTIONAL INSTANCE
 %token HTTP PARAM NAMESPACE
 
 %token <string> ID TYPE STRING_LIT
@@ -38,10 +37,13 @@
 
 
 primtype:
-    | TYPE { Ast_printer.string_to_t $1 }
+    | TYPE { string_to_t $1 }
     | LIST LT primtype GT { ListType $3 }
-    /* todo: add arrays and dicts to primtype */
+    /* todo: add arrays, dicts to primtype */
 
+anytype:
+    | ID         { string_to_t $1 }
+    | primtype   { $1 }
 
 /* Base level expressions of a program:
  * TODO: Classes */
@@ -84,6 +86,9 @@ func_decl:
     }}
     /* TODO: unsafe functions */
 
+func_decl_list:
+    | /* nothing */            { [] }
+    | func_decl_list func_decl { $2 :: $1 }
 
 arguments:
     | /* nothing */ { [] }
@@ -129,17 +134,39 @@ id_list:
     | primtype ID {[VDecl($1, $2, None)]}
 
 fcall:
-    | ID LPAREN expression_list_opt RPAREN { ($1, $3) }
+    | ID LPAREN expression_list_opt RPAREN             { (None,     $1, $3) }
+    | expr ACCESS ID LPAREN expression_list_opt RPAREN { (Some($1), $3, $5) }
 
 func_call:
     | fcall                {FuncCall([], $1)}
     | LPAREN id_list RPAREN ASSIGN fcall { FuncCall(List.rev $2, $5) }
 
+lhs:
+    | ID             { LhsId($1) }
+    | expr ACCESS ID { LhsAcc($1, $3) }
+
+stmt_list:
+    | {[]}
+    | stmt            { [$1] }
+    | stmt_list stmt { $2 :: $1 }
+
+stmt:
+    | var_decl SEMI     { VarDecl $1 }
+    | user_def_decl SEMI { UserDefDecl $1 }
+    | func_call SEMI     { $1 }
+    | lhs ASSIGN expr SEMI { Assign($1, $3) }
+    | http_type_block    { HttpTree $1 }
+    | FOR LPAREN anytype ID IN expr RPAREN LBRACE stmt_list RBRACE
+        { For($3, $4, $6, List.rev $9) }
+    | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE %prec NOELSE { If($3, List.rev $6, []) }
+    | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE { If($3, List.rev $6, List.rev $10) }
+    | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE { While($3, List.rev $6) }
+
 typed_param_list:
     | /* nothing */     { [] }
-    | TYPE ID           { [(Ast_printer.string_to_t $1, $2, None)] }
+    | TYPE ID           { [(Datatypes.string_to_t $1, $2, None)] }
     | typed_param_list COMMA TYPE ID
-        { (Ast_printer.string_to_t $3, $4, None) :: $1 }
+        { (Datatypes.string_to_t $3, $4, None) :: $1 }
 
 http_tree_list:
     |                    { [] }
@@ -155,31 +182,6 @@ http_type_block:
         { Endpoint($2, $4, $6, $8) }
     | HTTP LPAREN typed_param_list RPAREN primtype LBRACE fstmt_list RBRACE
         { Endpoint("", $3, $5, $7) }
-
-stmt_list:
-    | {[]}
-    | stmt            { [$1] }
-    | stmt_list stmt { $2 :: $1 }
-
-stmt:
-    | print SEMI        { Output $1 }
-    | var_decl SEMI     { VarDecl $1 }
-    | user_def_decl SEMI { UserDefDecl $1 }
-    | func_call SEMI     { $1 }
-    | ID ASSIGN expr SEMI { Assign($1, $3) }
-    | FOR LPAREN TYPE ID IN expr RPAREN LBRACE stmt_list RBRACE
-        { For(Ast_printer.string_to_t $3, $4, $6, List.rev $9) }
-    | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE %prec NOELSE
-        { If($3, List.rev $6, []) }
-    | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE
-        { If($3, List.rev $6, List.rev $10) }
-    | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE
-        { While($3, List.rev $6) }
-
-print:
-    | PRINTLN LPAREN expression_list RPAREN { Println $3 }
-    | PRINTF LPAREN expression_list RPAREN { Printf $3 }
-
 
 expr_opt:
     | /* nothing */ { Noexpr }
@@ -217,6 +219,14 @@ expr:
     | expr ACCESS ID                        { Access($1, $3) }
     | LBRACKET expression_list_opt RBRACKET { ListLit $2 }
     | expr LBRACKET expr RBRACKET { ListAccess($1, $3) }
+
+instance_block:
+    | INSTANCE ID LBRACE func_decl_list RBRACE { InstanceBlock($2, $4) }
+
+
+instance_block_opt:
+    | /* nothing */  { None }
+    | instance_block { Some($1) }
 
 
 expression_list:
@@ -256,12 +266,14 @@ attr_decl:
     | OPTIONAL primtype ID    { Optional($2, $3) }
 
 
-attribute_list:
-    | /* nothing */                 { [] }
-    | attribute_list attr_decl SEMI { $2 :: $1 }
+member_list:
+    | /* nothing */              { [] }
+    | member_list attr_decl SEMI { Attr($2) :: $1 }
+    | member_list func_decl      { ClassFunc($2) :: $1 }
 
 
 class_decl:
-    | CLASS ID LBRACE attribute_list RBRACE { $2, $4 }
+    | CLASS ID LBRACE member_list instance_block_opt member_list RBRACE
+        { $2, List.rev ($6 @ $4), $5 }
 
 %%

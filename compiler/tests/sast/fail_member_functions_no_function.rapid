@@ -1,0 +1,7 @@
+class User {
+	int age;
+	string name;
+}
+
+User bob = new User(age=42, name="Bob Burger");
+int three = bob.add(1,2);

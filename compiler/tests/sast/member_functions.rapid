@@ -1,0 +1,13 @@
+
+class User {
+	int age;
+	string name;
+
+	func add(int a, int b) int {
+		return a + b;
+	}
+}
+
+
+User bob = new User(age=42, name="Bob Burger");
+int three = bob.add(1,2);

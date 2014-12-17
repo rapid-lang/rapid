@@ -17,6 +17,10 @@ exception AttributeNotDefinedErr of string
 exception MissingActualErr of string
 exception ExistingFuncErr
 exception ExistingRouteErr
+exception BadFunctionId
+exception CannotFindFunctionIDForArgTypes
+exception CannotFindFunctionIDForReturnType
+exception CannotFindFunctionIDForReturnTypeList
 
 
 (* Maps a function to a expr option if it is defined, otherwise return NullExpr *)
@@ -45,6 +49,20 @@ let add_func ft id arg_ts ret_ts =
         let v = (arg_ts, ret_ts) in
         StringMap.add id v ft
 
+let default_ft ft =
+    let ft = add_func ft "append"
+        [(ListType(AnyList), NullExpr); (ListType(AnyList), NullExpr)]
+        [ListType(AnyList)]  in
+    let ft = add_func ft "printf"
+        [(String, NullExpr); (InfiniteArgs, NullExpr)]
+        []  in
+    let ft = add_func ft "len"
+        [ListType(AnyList), NullExpr] [Int] in
+    let ft = add_func ft "println"
+        [(InfiniteArgs, NullExpr)]
+        []  in
+    ft
+
 let empty_symbol_table = StringMap.empty
 let symbol_table_list = StringMap.empty :: []
 
@@ -71,17 +89,25 @@ let rec get_type id = function
     | _ -> raise(VariableNotDefinedErr(Format.sprintf "%s is not defined" id))
 
 let get_return_type id ft =
-    let (_, ret_t) = StringMap.find id ft in
-    match ret_t with
-        | [] -> Void
-        | t :: [] -> t
-        | t_list -> Multi
+    if StringMap.mem id ft
+        then let (_, ret_t) = StringMap.find id ft in
+            match ret_t with
+                | [] -> Void
+                | t :: [] -> t
+                | t_list -> Multi
+        else raise CannotFindFunctionIDForReturnType
 
 let get_return_type_list id ft =
-    let (_, retl) = StringMap.find id ft in retl
+    if StringMap.mem id ft
+        then let (_, retl) = StringMap.find id ft in retl
+        else raise CannotFindFunctionIDForReturnTypeList
+
 
 let get_arg_types id ft =
-    let (arg_ts, _) = StringMap.find id ft in arg_ts
+    if StringMap.mem id ft
+        then let (arg_ts, _) = StringMap.find id ft in arg_ts
+        else raise CannotFindFunctionIDForArgTypes
+
 
 (* adds a new empty symbol table for use in the new scope *)
 let new_scope sym_tbl = empty_symbol_table :: sym_tbl
@@ -182,4 +208,3 @@ let add_route route rt =
         raise ExistingRouteErr
     else
         StringMap.add route "" rt
-

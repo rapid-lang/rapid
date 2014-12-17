@@ -18,7 +18,7 @@ type expr =
     | Access of expr * string
     | Noexpr
     | Nullxpr
-and fcall = string * expr list
+and fcall = expr option * string * expr list
 and actual =
     | Actual of string * expr
 
@@ -35,8 +35,12 @@ type vars =
     | ID of string
     | VDecl of vdecl
 
+type lhs =
+    | LhsId of string
+    | LhsAcc of expr * string
+
 type stmt =
-    | Assign of string * expr
+    | Assign of lhs * expr
     | For of var_type * string * expr * stmt list
     | If of expr * stmt list * stmt list
     | While of expr * stmt list
@@ -69,7 +73,14 @@ type attr =
     | NonOption of var_type * string * expr option
     | Optional of var_type * string
 
-type class_decl = string * attr list
+type member =
+    | Attr of attr
+    | ClassFunc of func_decl
+
+type instance_block =
+    | InstanceBlock of string * func_decl list
+
+type class_decl = string * member list * instance_block option
 
 (*
 type class_decl = string * attr list * func_decl list * route_decl list

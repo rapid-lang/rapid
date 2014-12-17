@@ -74,8 +74,6 @@ rule token = parse
 | "list" { LIST }
 
 
-| "printf"  { PRINTF }
-| "println" { PRINTLN }
 (* functions *)
 | "func"   { FUNC }
 | "return" { RETURN }
@@ -88,9 +86,7 @@ rule token = parse
 | '.'        { ACCESS }
 | "new"      { NEW }
 | "optional" { OPTIONAL }
-(*
 | "instance" { INSTANCE }
-*)
 
 (* http related *)
 | "http"      { HTTP }

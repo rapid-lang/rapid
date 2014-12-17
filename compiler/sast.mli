@@ -1,7 +1,7 @@
 open Ast
 open Datatypes
 
-type cast_side = | Left | Right | None
+type cast_side = | Left | Right | Neither
 
 type string_expr =
     | SStringExprLit of string
@@ -30,8 +30,9 @@ and bool_expr =
     | SBoolBinOp of sexpr * op * sexpr
     | SBoolAcc of user_def_expr * string
     | SBoolNull
-and func_call_expr = string * sexpr list
 and bin_expr = sexpr * op * sexpr
+and func_call_expr =
+    | SFCall of sexpr option * string * sexpr list
 and list_expr =
     | SListExprLit of var_type option * sexpr list
     | SListVar of var_type * string
@@ -56,11 +57,10 @@ and user_def_expr =
     | SUserDefVar of var_type * string (* class * variablename *)
     | SUserDefNull of var_type
     | SUserDefAcc of var_type * user_def_expr * string (* class * var / instance * member *)
+and slhs =
+    | SLhsId of string (* varname *)
+    | SLhsAcc of sexpr * string (* sexpr.membername *)
 and sactual = string * sexpr
-
-type soutput =
-    | SPrintf of sexpr * sexpr list
-    | SPrintln of sexpr list
 
 type svar_assign = string * sexpr
 
@@ -70,16 +70,15 @@ type sfunc_lval =
     | SFuncTypedId of var_type * string (*After second pass*)
 
 type semantic_stmt =
-    | SAssign of svar_assign
+    | SAssign of slhs * sexpr
     | SDecl of var_type * svar_assign
-    | SOutput of soutput
     | SReturn of sexpr list
-    | SFuncCall of sfunc_lval list * string * sexpr list (* left hand of assing, fname, args *)
+    | SFuncCall of sfunc_lval list * func_call_expr (* left hand of assing, rhs *)
     | SUserDefDecl of string * svar_assign (* class_id, (id, expr) *)
     | SIfElse of sexpr * semantic_stmt list * semantic_stmt list
     | SIf of sexpr * semantic_stmt list
     | SWhile of sexpr * semantic_stmt list
-    | SFor of var_type * sexpr * sexpr * semantic_stmt list
+    | SFor of var_type * string * sexpr * semantic_stmt list
 
 type s_http_tree =
     (* typed route param, rest of tree *)
@@ -95,9 +94,12 @@ type sattr =
     | SNonOption of var_type * string * sexpr option
     | SOptional of var_type * string
 
-type sclass = string * sattr list
+type self_ref =
+    | SelfRef of string * string (* classname * varname *)
 
 (*this is the id, args, return types, body*)
-type semantic_function = string * (var_type * svar_assign) list * var_type list * semantic_stmt list
+type semantic_function = string * self_ref option * (var_type * svar_assign) list * var_type list * semantic_stmt list
 type semantic_program = semantic_stmt list * sclass list * semantic_function list * s_http_tree
+
+type sclass = string * sattr list
 
