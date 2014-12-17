@@ -1,0 +1,5 @@
+Error default = new Error();
+
+println(default.name);
+println(default.code);
+println(default.message);

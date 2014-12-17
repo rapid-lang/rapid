@@ -6,3 +6,4 @@ type Error struct{
 	code Int
 	message String
 }
+
