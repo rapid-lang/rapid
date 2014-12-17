@@ -67,11 +67,6 @@ and fcall_s = function
 and actual_s = function
     | Actual(id, e) -> sprintf "(ACTUAL: %s=%s)" id (expr_s e)
 
-let output_s = function
-    | Printf el -> sprintf "(Printf(%s))"
-        (String.concat ", " (List.map expr_s el))
-    | Println el -> sprintf "(Println(%s))"
-        (String.concat ", " (List.map expr_s el))
 
 let string_of_vdecl (t, nm, e) = sprintf "%s %s %s"
     (string_of_t t)
@@ -113,8 +108,6 @@ let rec stmt_s = function
     | While(e, s) -> sprintf "(While (%s)\n{(%s))0"
         (expr_s e)
         (stmt_s s)
-    | Output o -> sprintf "(Output (%s))"
-        (output_s o)
     | VarDecl vd -> sprintf "(VarDecl (%s))"
         (string_of_vdecl vd)
     | UserDefDecl ud -> sprintf "(UserDefDecl (%s))"

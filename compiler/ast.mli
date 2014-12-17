@@ -41,7 +41,6 @@ type stmt =
     | If of expr * stmt * stmt
     | For of var_type * string * expr * stmt list
     | While of expr * stmt
-    | Output of print
     | VarDecl of vdecl
     | UserDefDecl of user_def_decl
     | FuncCall of vars list * fcall
