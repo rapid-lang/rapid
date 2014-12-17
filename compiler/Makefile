@@ -5,11 +5,11 @@ OCAMLLEX=ocamllex
 OCAMLYACC=ocamlyacc
 
 LIBS = str.cma
-RAPID_OBJS  = datatypes.cmo ast_printer.cmo parser.cmo scanner.cmo sast_helper.cmo sast_printer.cmo translate.cmo semantic_check.cmo \
-	generate.cmo rapid.cmo
+RAPID_OBJS = datatypes.cmo ast_printer.cmo parser.cmo scanner.cmo sast_helper.cmo sast_printer.cmo translate.cmo semantic_check.cmo \
+		generate.cmo rapid.cmo
 PARSER_OBJS = datatypes.cmo ast_printer.cmo parser.cmo scanner.cmo test_parser.cmo
-SAST_OBJS   = datatypes.cmo ast_printer.cmo parser.cmo scanner.cmo sast_helper.cmo sast_printer.cmo translate.cmo semantic_check.cmo \
-		  test_sast.cmo
+SAST_OBJS = datatypes.cmo ast_printer.cmo parser.cmo scanner.cmo sast_helper.cmo sast_printer.cmo translate.cmo semantic_check.cmo \
+		test_sast.cmo
 
 default: test
 
