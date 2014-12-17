@@ -33,7 +33,7 @@ let rec translate_expr = function
     | Ast.Access(e, mem)         -> translate_access e mem
     (* we put a placeholder with the ID in and check after and reclassify *)
     | Ast.Id id       -> SId id
-    | Ast.Call(id, expr) -> SCall(id, (List.map translate_expr expr))
+    | Ast.Call c -> translate_call c
     | Ast.Binop(lhs, o, rhs) -> Sast.SBinop(translate_expr lhs, o, translate_expr rhs)
     | Ast.Nullxpr -> UntypedNullExpr
     | _ -> raise UnsupportedExpressionType

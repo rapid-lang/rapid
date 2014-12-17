@@ -56,7 +56,7 @@ let rec sexpr_to_code = function
     | SExprString s -> string_expr_to_code s
     | SExprFloat f -> float_expr_to_code f
     | SExprBool b -> bool_expr_to_code b
-    | SCallTyped(t, SFCall(None, id, args)) -> func_expr_to_code id args
+    | SCallTyped(t, c) -> func_expr_to_code c
     | SExprList l -> list_expr_to_code l
     | SExprUserDef u -> user_def_expr_to_code u
     | NullExpr -> "", "nil"
@@ -128,10 +128,17 @@ and cast_to_code t xpr =
     let setup, ref = sexpr_to_code xpr in
     let cast = sprintf "%sTo%s(%s)" src_type dest_type ref in
     setup, cast
-and func_expr_to_code id arg_xrps =
-    let (tmps, refs) = (list_of_sexpr_to_code "" arg_xrps) in
-    let call = sprintf "%s(%s)" id (String.concat ", " refs) in
-    (String.concat "\n" tmps), call
+and func_expr_to_code = function
+    | SFCall(None, id, arg_xrps) ->
+        let (tmps, refs) = (list_of_sexpr_to_code "" arg_xrps) in
+        let call = sprintf "%s(%s)" id (String.concat ", " refs) in
+        (String.concat "\n" tmps), call
+    | SFCall(Some(xpr), id, arg_xrps) ->
+        let setup, ref = sexpr_to_code xpr in
+        let (tmps, refs) = (list_of_sexpr_to_code "" arg_xrps) in
+        let call = sprintf "%s.%s(%s)" ref id (String.concat ", " refs) in
+        ((String.concat "\n" tmps) ^ "\n" ^ setup^ "\n" ), call
+
 (* Helper function that turns a list of expressions into code *)
 and list_of_sexpr_to_code deref_string xpr_l =
     let trans = List.map sexpr_to_code xpr_l in
@@ -178,7 +185,7 @@ and user_def_expr_to_code = function
          sprintf "%s{\n%s\n}\n" class_id (String.concat "\n" (List.map snd trans)))
     | SUserDefVar(_, id) ->
         let tmp_var = rand_var_gen () in
-        sprintf "%s := %s" tmp_var id, sprintf "%s" tmp_var
+        sprintf "%s := &%s" tmp_var id, sprintf "(*%s)" tmp_var
     | SUserDefNull _ ->
         "", "nil"
     | _ -> raise(InvalidUserDefExpr)
@@ -191,11 +198,11 @@ and ud_access_to_code ud_expr attr_id =
 let sassign_to_code = function
     | (SLhsId id, xpr) ->
         let setup, ref = sexpr_to_code xpr in
-        sprintf "%s\n%s = %s" setup id ref
+        sprintf "%s\n%s = %s\n" setup id ref
     | (SLhsAcc(e, mem), xpr) ->
         let setup, ref = sexpr_to_code xpr in
         let lhs_setup, lhs_ref = sexpr_to_code e in
-        sprintf "%s\n%s.%s = %s" (setup ^ lhs_setup) lhs_ref mem ref
+        sprintf "%s\n%s.%s = %s\n" (setup ^ "\n" ^ lhs_setup) lhs_ref mem ref
     | a -> raise(UnsupportedSemanticExpressionType(
         sprintf "Assignment expression not yet supported -> %s"
         (svar_assign_s a)))
@@ -230,13 +237,11 @@ let get_ids = function
 let lv_to_code lv =
     String.concat ", " (List.map get_ids lv)
 
-let sfunccall_to_code lv id xprs =
+let sfunccall_to_code lv c =
+    let setup, call = func_expr_to_code c in
     let lhs = lv_to_code lv in
-    let (tmps, refs) = list_of_sexpr_to_code "" xprs in
-    let tmps = String.concat "\n" tmps in
-    let refs = String.concat "," refs in
-    if lhs = "" then sprintf "%s\n%s( %s )" tmps id refs
-        else sprintf "%s\n%s = %s( %s )" tmps lhs id refs
+    if lhs = "" then sprintf "%s\n%s" setup call
+        else sprintf "%s\n%s = %s" setup lhs call
 
 let class_instantiate_to_code class_id (id, inst_xpr) =
     let setups, attrs = user_def_expr_to_code inst_xpr in
@@ -245,7 +250,7 @@ let class_instantiate_to_code class_id (id, inst_xpr) =
 let rec grab_decls = function
     | SDecl(t, (id, _)) :: tl ->
         sprintf "var %s %s" id (go_type_from_type t) :: grab_decls tl
-    | SFuncCall(lv, _,_) :: tl ->
+    | SFuncCall(lv, _) :: tl ->
         (String.concat "\n" (List.map decls_from_lv lv)) :: grab_decls tl
     | _ :: tl -> grab_decls tl
     | [] -> []
@@ -266,7 +271,7 @@ and sast_to_code = function
     | SAssign (lhs, xpr) -> sassign_to_code (lhs, xpr)
     | SOutput p -> soutput_to_code p
     | SReturn xprs -> sreturn_to_code xprs
-    | SFuncCall (lv, SFCall(None, id, xprs)) -> sfunccall_to_code lv id xprs
+    | SFuncCall (lv, c) -> sfunccall_to_code lv c
     | SUserDefDecl(class_id, (id, SExprUserDef(xpr))) -> class_instantiate_to_code class_id (id, xpr)
     | SUserDefDecl(class_id, (id, NullExpr)) -> sprintf "var %s %s\n_ = %s" id class_id id
     | SIf(expr, stmts) -> (control_code IF expr stmts) ^ "\n"
@@ -304,7 +309,7 @@ let func_to_code f =
     let (id, selfref_opt, args, rets, body) = f in
     sprintf "func %s%s( %s ) (%s){\n%s\n%s\n%s\n}"
         (match selfref_opt with
-            | Some(SelfRef(class_id, id)) -> sprintf "(%s %s) " class_id id
+            | Some(SelfRef(class_id, id)) -> sprintf "(%s *%s) " id class_id
             | None -> "")
         id
         (String.concat "," (List.map arg_to_code args))

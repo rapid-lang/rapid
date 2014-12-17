@@ -118,18 +118,19 @@ let rec rewrite_sexpr st ct ft ?t = function
     | SExprString(SStringCast e) -> SExprString(SStringCast(rewrite_cast st ct ft e AllTypes))
     | SCall(c) -> (match c with
         | SFCall(Some(xpr), fn_id, xprs) ->
-            let obj = rewrite_sexpr st ct ft xpr in
-            let class_id = (match sexpr_to_t Void obj with
+            let xpr = rewrite_sexpr st ct ft xpr in
+            let class_id = (match sexpr_to_t Void xpr with
                 | UserDef u -> u
                 | _         -> raise AccessOnNonUserDef) in
             let id = (class_id  ^ "__" ^ fn_id) in
             let xprs = (List.map (rewrite_sexpr st ct ft) xprs) in
             let xprs = check_arg_types ((get_arg_types id ft), xprs) in
-            SCallTyped((get_return_type id ft), SFCall(Some(obj), id, xprs))
+            SCallTyped((get_return_type id ft), SFCall(Some(xpr), id, xprs))
         | SFCall(None, id, xprs) ->
             let xprs = (List.map (rewrite_sexpr st ct ft) xprs) in
             let xprs = check_arg_types ((get_arg_types id ft), xprs) in
-            SCallTyped((get_return_type id ft), SFCall(None, id, xprs)))
+            SCallTyped((get_return_type id ft), SFCall(None, id, xprs))
+        | _ -> raise UnsupportedSexpr)
     | SExprList(SListExprLit(None, untyped_l)) ->
         rewrite_sexpr_list st ct ft untyped_l t
     | SExprList(SListAccess(xpr_l, xpr_r)) ->
@@ -289,7 +290,7 @@ let rec add_to_scope st = function
     | SDecl(t, (id, xpr)) :: tl ->
        let st = add_sym t id st in
         add_to_scope st tl
-    | SFuncCall (lv, _, _) :: tl -> let st = scope_lv st lv in
+    | SFuncCall (lv, _) :: tl -> let st = scope_lv st lv in
         add_to_scope st tl
     | _ :: tl -> add_to_scope st tl
     | [] -> st
@@ -344,7 +345,7 @@ let rec var_analysis st ct ft = function
         let xprs = check_arg_types ((get_arg_types id ft), xprs) in
 
         let st = scope_lv st lv in
-        SFuncCall(lv, SFCall(None, id, xprs)) :: (var_analysis st ct ft tl)
+        SFuncCall(lv, SFCall(xpr, id, xprs)) :: (var_analysis st ct ft tl)
     | SUserDefDecl(cls, (id, xpr)) :: tl ->
         let checked_expr = rewrite_sexpr st ct ft xpr in
         let t = UserDef cls in

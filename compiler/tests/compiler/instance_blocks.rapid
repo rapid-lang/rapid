@@ -19,4 +19,5 @@ println(bob.age);
 
 println(bob.name);
 bob.name = "Bob Burger";
-println(bob.get_name());
+string msg = bob.get_name();
+println(msg);

@@ -126,7 +126,7 @@ let svar_decl_s t (id, xpr) =
     sprintf "(Declare %s (%s) to %s)" id (Ast_printer.string_of_t t) (sexpr_s xpr)
 
 let suser_def_decl_s cls (id, xpr) =
-    sprintf "(Declare %s (%s) to %s)" id cls (sexpr_s xpr)
+    sprintf "(Declare USERDEF %s (%s) to %s)" id cls (sexpr_s xpr)
 
 let lv_s = function
     | SFuncDecl(t, (id, _)) -> sprintf "%s %s" (Ast_printer.string_of_t t) id
@@ -146,7 +146,6 @@ let sfcall_s = function
 
 let rec semantic_stmt_s = function
     | SAssign (lhs, xpr) -> svar_assign_s (lhs, xpr) ^ "\n"
-    | SAssign a -> svar_assign_s a ^ "\n"
     | SDecl(t, vd) -> svar_decl_s t vd ^ "\n"
     | SOutput o -> sprintf "(Output %s)\n" (soutput_s o)
     | SUserDefDecl(cls, vd) -> suser_def_decl_s cls vd ^ "\n"
