@@ -138,7 +138,7 @@ let rec translate_http_tree = function
             | Some xpr -> translate_expr xpr
             | None -> NullExpr)) args,
         ret_t,
-        List.map translate_fstatement body
+        List.map translate_fstatement (List.rev body)
     ) :: translate_http_tree tl
     | [] -> []
 

@@ -40,6 +40,7 @@ let go_type_from_sexpr = function
     | SExprFloat _ -> go_type_from_type Float
     | SExprBool _ -> go_type_from_type Bool
     | SExprString _ -> go_type_from_type String
+    | x -> raise(UnsupportedSemanticExpressionType(Sast_printer.sexpr_s x))
 
 (* must return a direct reference to a string *)
 let get_string_literal_from_sexpr = function
@@ -267,7 +268,7 @@ and sast_to_code = function
     | SUserDefDecl(class_id, (id, NullExpr)) -> sprintf "var %s %s\n_ = %s" id class_id id
     | SIf(expr, stmts) -> (control_code IF expr stmts) ^ "\n"
     | SWhile (expr, stmts) -> control_code WHILE expr stmts
-    | SIfElse(expr, stmts, estmts) -> 
+    | SIfElse(expr, stmts, estmts) ->
         sprintf "%selse{\n%s\n%s}\n"
         (control_code IF expr stmts)
         (String.concat "\n" (grab_decls estmts))
@@ -337,25 +338,30 @@ let generate_route_registrations routes =
            "\nlog.Fatal(http.ListenAndServe(\":8080\", router))\n"
 
 let endpoint_to_code (path, args, ret_type, body) =
+    let decl_vars = grab_decls body in
     (* grabs the parameters from the request and instantiates the variables *)
     let grab_param (t, name, default) =
         let setup = if default = NullExpr then
             let tmp = rand_var_gen () in
-            sprintf "%s := XXX.ByName(\"%s\")\n%s := &%s" tmp name name tmp
+            sprintf "%s := XXX.ByName(\"%s\")\n%s := StringTo%s(&%s)"
+                tmp name name (go_type_from_type t) tmp
         else
             let xpr_setup, ref = sexpr_to_code default in
             sprintf "%s\n%s := &%s" xpr_setup name ref in
         sprintf "%s\n_ = %s" setup name in
-
     sprintf "func HTTP%s(w http.ResponseWriter, r *http.Request, XXX httprouter.Params){\n%s\n%s\n}\n"
         (strip_path path)
-        (String.concat "\n" (List.map grab_param args))
+        (
+            (String.concat "\n" decl_vars) ^ "\n\n" ^
+            (String.concat "\n" (List.map grab_param args))
+        )
         (String.concat "\n" (List.map http_fstmt_to_code body))
 
 
 let skeleton decls http_funcs classes main fns router =
     let packages = ("fmt", "fmt.Printf") ::
         ("net/http", "http.StatusOK") ::
+        ("log", "log.Fatal") ::
         ("github.com/julienschmidt/httprouter", "httprouter.CleanPath") :: [] in
     let processed = List.map (fun (p, ref) -> sprintf "\"%s\"" p, sprintf "var _ = %s" ref) packages in
     let imports, references = List.map fst processed, List.map snd processed in

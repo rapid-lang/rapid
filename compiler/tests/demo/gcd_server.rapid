@@ -1,0 +1,26 @@
+
+func gcd(int p, int q) int {
+    while (q != 0) {
+        int temp = q;
+        q = p % q;
+        p = temp;
+    }
+    return p;
+}
+
+int x = 85125;
+int y = 25545;
+
+println(gcd(x, 25545));
+
+namespace gcd {
+    param int a {
+        param int b {
+            http (int a, int b) int {
+                int res = gcd(a, b);
+                return res;
+            }
+        }
+    }
+}
+
