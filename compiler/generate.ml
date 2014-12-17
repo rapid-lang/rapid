@@ -175,7 +175,7 @@ and user_def_expr_to_code = function
             setup, sprintf "%s: %s," attr ref in
         let trans = List.map expand act_list in
         (String.concat "\n" (List.map fst trans),
-         String.concat "\n" (List.map snd trans))
+         sprintf "%s{\n%s\n}\n" class_id (String.concat "\n" (List.map snd trans)))
     | SUserDefVar(_, id) ->
         let tmp_var = rand_var_gen () in
         sprintf "%s := %s" tmp_var id, sprintf "%s" tmp_var
@@ -236,8 +236,7 @@ let sfunccall_to_code lv id xprs =
 
 let class_instantiate_to_code class_id (id, inst_xpr) =
     let setups, attrs = user_def_expr_to_code inst_xpr in
-    sprintf "%s\n%s := %s{\n%s\n}\n_ = %s"
-        setups id class_id attrs id
+    sprintf "%s\n%s := %s\n_ = %s" setups id attrs id
 
 let rec grab_decls = function
     | SDecl(t, (id, _)) :: tl ->
