@@ -38,10 +38,13 @@
 
 
 primtype:
-    | TYPE { Ast_printer.string_to_t $1 }
+    | TYPE { string_to_t $1 }
     | LIST LT primtype GT { ListType $3 }
     /* todo: add arrays and dicts to primtype */
 
+anytype:
+    | ID         { string_to_t $1 }
+    | primtype   { $1 }
 
 /* Base level expressions of a program:
  * TODO: Classes */
@@ -143,8 +146,8 @@ stmt:
     | user_def_decl SEMI { UserDefDecl $1 }
     | func_call SEMI     { $1 }
     | ID ASSIGN expr SEMI { Assign($1, $3) }
-    | FOR LPAREN TYPE ID IN expr RPAREN LBRACE stmt_list RBRACE
-        { For(Ast_printer.string_to_t $3, $4, $6, List.rev $9) }
+    | FOR LPAREN anytype ID IN expr RPAREN LBRACE stmt_list RBRACE
+        { For($3, $4, $6, List.rev $9) }
     | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE %prec NOELSE { If($3, List.rev $6, []) }
     | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE { If($3, List.rev $6, List.rev $10) }
     | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE { While($3, List.rev $6) }
