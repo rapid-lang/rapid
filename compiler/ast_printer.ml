@@ -6,6 +6,8 @@ let sprintf = Format.sprintf
 let concat = String.concat
 let str_concat l = concat "" l
 
+let newline = Str.regexp "\n"
+let indent_block s = Str.global_replace newline "\n\t" s
 
 let rec string_of_t = function
     | Int -> "int"
@@ -122,24 +124,25 @@ let rec stmt_s = function
     | FuncCall(s,f) -> sprintf "(FuncCall(%s = %s))"
         (concat ", " (List.map func_lvalue_s s))
         (fcall_s f)
-    | HttpTree t ->  http_tree_s t
-and http_tree_s = function
-    | Param(t, id, tree) -> sprintf "(param (%s %s)\n%s\n)"
-        (string_of_t t)
-        id
-        (String.concat "\n"(List.map http_tree_s tree))
-    | Namespace(id, tree) -> sprintf "(namespace (%s)\n%s\n)"
-        id
-        (String.concat "\n"(List.map http_tree_s tree))
-    | Endpoint(id, args, ret_t, body) -> sprintf "(HTTP %s(%s)%s{\n%s\n)"
-        id
-        (String.concat "," (List.map string_of_vdecl args))
-        (String.concat "," (List.map string_of_t ret_t))
-        (String.concat "\n"(List.map fstmt_s body))
+
 and fstmt_s = function
-    | Return e -> sprintf "(Return (%s))"
+    | Return e -> sprintf "(Return (%s))\n"
         (concat ", " (List.map expr_s e))
     | FStmt s -> stmt_s s
+
+let rec http_tree_s = function
+    | Param(t, id, tree) -> sprintf "(param (%s %s)\n\t%s\n}"
+        (string_of_t t)
+        id
+        (indent_block (String.concat "\n" (List.map http_tree_s tree)))
+    | Namespace(id, tree) -> sprintf "(namespace (%s)\n\t%s\n}"
+        id
+        (indent_block (String.concat "\n"(List.map http_tree_s tree)))
+    | Endpoint(id, args, ret_t, body) -> sprintf "(HTTP %s(%s)%s{\n\t%s\n}"
+        id
+        (String.concat "," (List.map string_of_vdecl args))
+        (string_of_t ret_t)
+        (indent_block(String.concat "\n" (List.map fstmt_s body)))
 
 let func_decl_s f = sprintf "{\nfname = \"%s\"\nargs = [%s]\n\tbody = [%s]\n}"
     f.fname
@@ -179,8 +182,9 @@ let class_s (name, members, instance_block) =
             (List.map member_s members)))
 
 
-let program_s (stmts, classes, funcs) = sprintf
-    "classes:{\n%s\n}\nstatements:{\n%s\n}\nfunctions:\n%s"
+let program_s (stmts, classes, funcs, http_tree) = sprintf
+    "classes:{\n%s\n}\nstatements:{\n%s\n}\nfunctions:\n%sHTTP tree:\n%s"
     (concat "\n" (List.rev (List.map class_s classes)))
     (concat "\n" (List.rev (List.map stmt_s stmts)))
     (concat "\n" (List.rev (List.map func_decl_s funcs)))
+    (concat "\n" (List.rev (List.map http_tree_s http_tree)))

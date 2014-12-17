@@ -47,3 +47,8 @@ namespace test2 {
     }
 }
 
+
+http () int {
+    return 0;
+}
+

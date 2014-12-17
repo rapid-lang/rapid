@@ -10,7 +10,6 @@
 %token RETURN IF ELSE FOR WHILE FUNC IN
 %token CLASS NEW ACCESS OPTIONAL INSTANCE
 %token HTTP PARAM NAMESPACE
-// %token INT BOOL FLOAT STRING
 
 %token <string> ID TYPE STRING_LIT
 %token <int> INT_VAL
@@ -49,16 +48,19 @@ anytype:
 /* Base level expressions of a program:
  * TODO: Classes */
 program:
-    | /* nothing */ { [], [], [] }
+    | /* nothing */ { [], [], [], [] }
     | program stmt {
-        let (statements, classes, functions) = $1 in
-            ($2 :: statements), classes, functions }
-    | program func_decl {
-        let (statements, classes, functions) = $1 in
-            statements, classes, ($2 :: functions) }
+        let (statements, classes, functions, http_tree) = $1 in
+            ($2 :: statements), classes, functions, http_tree }
     | program class_decl {
-        let (statements, classes, functions) = $1 in
-            statements, ($2 :: classes), functions }
+        let (statements, classes, functions, http_tree) = $1 in
+            statements, ($2 :: classes), functions, http_tree }
+    | program func_decl {
+        let (statements, classes, functions, http_tree) = $1 in
+            statements, classes, ($2 :: functions), http_tree }
+    | program http_type_block {
+        let (statements, classes, functions, http_tree) = $1 in
+            statements, classes, functions, ($2 :: http_tree) }
 
 
 /* TODO: allow user defined types */
@@ -161,6 +163,7 @@ stmt:
     | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE { While($3, List.rev $6) }
 
 typed_param_list:
+    | /* nothing */     { [] }
     | TYPE ID           { [(Datatypes.string_to_t $1, $2, None)] }
     | typed_param_list COMMA TYPE ID
         { (Datatypes.string_to_t $3, $4, None) :: $1 }
@@ -175,8 +178,10 @@ http_type_block:
         { Param($2, $3, $5) }
     | NAMESPACE ID LBRACE http_tree_list RBRACE
         { Namespace($2, $4) }
-    | HTTP ID LPAREN typed_param_list RPAREN return_type LBRACE fstmt_list RBRACE
+    | HTTP ID LPAREN typed_param_list RPAREN primtype LBRACE fstmt_list RBRACE
         { Endpoint($2, $4, $6, $8) }
+    | HTTP LPAREN typed_param_list RPAREN primtype LBRACE fstmt_list RBRACE
+        { Endpoint("", $3, $5, $7) }
 
 expr_opt:
     | /* nothing */ { Noexpr }

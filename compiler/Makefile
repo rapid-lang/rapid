@@ -4,6 +4,7 @@ OCAMLDEP=ocamldep
 OCAMLLEX=ocamllex
 OCAMLYACC=ocamlyacc
 
+LIBS = str.cma
 RAPID_OBJS  = datatypes.cmo ast_printer.cmo parser.cmo scanner.cmo sast_helper.cmo sast_printer.cmo translate.cmo semantic_check.cmo \
 	generate.cmo rapid.cmo
 PARSER_OBJS = datatypes.cmo ast_printer.cmo parser.cmo scanner.cmo test_parser.cmo
@@ -15,13 +16,13 @@ default: test
 all: clean parser sast rapid
 
 rapid: $(RAPID_OBJS)
-	$(OCAMLC) -o rapid $(RAPID_OBJS)
+	$(OCAMLC) $(LIBS) -o rapid $(RAPID_OBJS)
 
 parser: $(PARSER_OBJS)
-	$(OCAMLC) -o parser $(PARSER_OBJS)
+	$(OCAMLC) $(LIBS) -o parser $(PARSER_OBJS)
 
 sast: $(SAST_OBJS)
-	$(OCAMLC) -o sast $(SAST_OBJS)
+	$(OCAMLC) $(LIBS) -o sast $(SAST_OBJS)
 
 test: all
 	./parser_tests.sh

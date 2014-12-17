@@ -9,6 +9,9 @@ exception UnsupportedSattr
 exception UntypedVariableReference of string
 exception UntypedAccess of string
 
+let newline = Str.regexp "\n"
+let indent_block s = Str.global_replace newline "\n\t" s
+
 
 let rec sexpr_s = function
     | SExprInt i -> int_expr_s i
@@ -175,10 +178,25 @@ let semantic_class_s (classname, sattrs) =
     let actl_strings = String.concat "" (List.map sattr_s sattrs) in
     sprintf "(Class %s %s)" classname actl_strings
 
+let route_s (path, args, ret_type, body) =
+    let rec arg_to_s = ( function
+        | (t, id, xpr) :: tl -> ((sprintf "%s %s = %s"
+            (Ast_printer.string_of_t t)
+            id
+            (sexpr_s xpr)) :: arg_to_s tl)
+        | _ -> []) in
+    sprintf "(HTTP: %s (%s) (%s)\n\n{\n%s\n})\n"
+        path
+        (String.concat ", " (arg_to_s args))
+        (Ast_printer.string_of_t ret_type)
+        (String.concat ", "
+            (List.map semantic_stmt_s body))
+
 let string_of_sast sast =
-    let (stmts, classes, funcs) = sast in
+    let (stmts, classes, funcs, routes) = sast in
     let stmt_strings = List.map semantic_stmt_s stmts in
     let class_strings = List.map semantic_class_s classes in
     let func_strings = List.map semantic_func_s funcs in
-    String.concat " "  (stmt_strings @ class_strings @ func_strings)
+    let route_strings = List.map route_s routes in
+    String.concat ""  (stmt_strings @ class_strings @ func_strings @ route_strings)
 

@@ -16,17 +16,14 @@ func IntToBool(i Int) Bool {
 	tmp := !(i == nil || *i == 0)
 	return Bool(&tmp)
 }
-
 func FloatToBool(f Float) Bool {
 	tmp := !(f == nil || *f == 0.0)
 	return Bool(&tmp)
 }
-
 func BoolToBool(b Bool) Bool {
 	tmp := !(b == nil || *b == false)
 	return Bool(&tmp)
 }
-
 func StringToBool(s String) Bool {
 	tmp := !(s == nil || *s == "")
 	return Bool(&tmp)
@@ -39,9 +36,15 @@ func IntToFloat(i Int) Float {
 	tmp := float64(*i)
 	return Float(&tmp)
 }
-
 func FloatToFloat(f Float) Float {
 	tmp := float64(*f)
+	return Float(&tmp)
+}
+func StringToFloat(s String) Float {
+	tmp, err := strconv.ParseFloat(*s, 64)
+	if err != nil {
+		panic(err)
+	}
 	return Float(&tmp)
 }
 
@@ -52,9 +55,15 @@ func FloatToInt(f Float) Int {
 	tmp := int(*f)
 	return Int(&tmp)
 }
-
 func IntToInt(i Int) Int {
 	tmp := int(*i)
+	return Int(&tmp)
+}
+func StringToInt(s String) Int {
+	tmp, err := strconv.Atoi(*s)
+	if err != nil {
+		panic(err)
+	}
 	return Int(&tmp)
 }
 
@@ -65,17 +74,14 @@ func IntToString(i Int) String {
 	tmp := strconv.Itoa(*i)
 	return String(&tmp)
 }
-
 func FloatToString(f Float) String {
 	tmp := strconv.FormatFloat(*f, 'f', -1, 64)
 	return String(&tmp)
 }
-
 func BoolToString(b Bool) String {
 	tmp := strconv.FormatBool(*b)
 	return String(&tmp)
 }
-
 func StringToString(s String) String {
 	tmp := *s
 	return String(&tmp)

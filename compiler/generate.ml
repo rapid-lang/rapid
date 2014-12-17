@@ -2,7 +2,7 @@ open Format
 open Sast
 open Sast_printer
 open Datatypes
-open Str
+
 
 exception UnsupportedSemanticExpressionType of string
 exception UnsupportedSemanticStatementType
@@ -50,6 +50,7 @@ let go_type_from_sexpr = function
     | SExprFloat _ -> go_type_from_type Float
     | SExprBool _ -> go_type_from_type Bool
     | SExprString _ -> go_type_from_type String
+    | x -> raise(UnsupportedSemanticExpressionType(Sast_printer.sexpr_s x))
 
 (* must return a direct reference to a string *)
 let get_string_literal_from_sexpr = function
@@ -343,17 +344,78 @@ let class_def_to_code (class_id, attr_list) =
     sprintf "type %s struct{\n%s\n}" class_id (String.concat "\n" attrs)
 
 
-let skeleton decls classes main fns = "package main\nimport (\"fmt\")\n" ^
-    "var _ = fmt.Printf\n" ^ classes ^ "\n\n" ^ decls ^ "\nfunc main() {\n" ^
-    main ^ "\n}\n " ^ fns
+(* rewrites returns as writes to the connection *)
+let http_fstmt_to_code = function
+    | SReturn(xpr :: _) ->
+        let setup, ref  = cast_to_code String xpr in
+        sprintf "%s\nw.Write([]byte(*%s))\nreturn"
+            setup
+            ref
+    | s -> sast_to_code s
+
+let strip_route_re = Str.regexp "[:/]"
+let strip_path s = Str.global_replace strip_route_re "" s
+
+let generate_route_registrations routes =
+    let routes = List.map (fun (r, _, _, _) ->
+        let fname = strip_path r in
+        sprintf "router.GET(\"%s\", HTTP%s)" r fname) routes in
+    let regs = (String.concat "\n" routes) in
+    if regs = ""
+        then ""
+        else  "router := httprouter.New()\n" ^ regs ^
+           "\nlog.Fatal(http.ListenAndServe(\":8080\", router))\n"
+
+let endpoint_to_code (path, args, ret_type, body) =
+    let decl_vars = grab_decls body in
+    (* grabs the parameters from the request and instantiates the variables *)
+    let grab_param (t, name, default) =
+        let setup = if default = NullExpr then
+            let tmp = rand_var_gen () in
+            sprintf "%s := XXX.ByName(\"%s\")\n%s := StringTo%s(&%s)"
+                tmp name name (go_type_from_type t) tmp
+        else
+            let xpr_setup, ref = sexpr_to_code default in
+            sprintf "%s\n%s := &%s" xpr_setup name ref in
+        sprintf "%s\n_ = %s" setup name in
+    sprintf "func HTTP%s(w http.ResponseWriter, r *http.Request, XXX httprouter.Params){\n%s\n%s\n}\n"
+        (strip_path path)
+        (
+            (String.concat "\n" decl_vars) ^ "\n\n" ^
+            (String.concat "\n" (List.map grab_param args))
+        )
+        (String.concat "\n" (List.map http_fstmt_to_code body))
+
+
+let skeleton decls http_funcs classes main fns router =
+    let packages = ("fmt", "fmt.Printf") ::
+        ("net/http", "http.StatusOK") ::
+        ("log", "log.Fatal") ::
+        ("github.com/julienschmidt/httprouter", "httprouter.CleanPath") :: [] in
+    let processed = List.map (fun (p, ref) -> sprintf "\"%s\"" p, sprintf "var _ = %s" ref) packages in
+    let imports, references = List.map fst processed, List.map snd processed in
+    let imports = String.concat "\n" imports in
+    let references = String.concat "\n" references in
+    "package main\n" ^
+    "import (\n" ^ imports ^ "\n)\n" ^
+    references ^ "\n\n" ^
+    http_funcs ^ "\n\n" ^
+    classes ^ "\n\n" ^
+    decls ^
+    "\nfunc main() {\n" ^
+    main ^ "\n\n" ^
+    router ^ "\n" ^
+    "}\n " ^ fns
+
 
 let build_prog sast =
-    (* Ignore classes for now *)
-    let (stmts, classes, funcs) = sast in
+    let (stmts, classes, funcs, route_list) = sast in
     let decls = String.concat "\n" (grab_decls stmts) in
     let code_lines = List.map sast_to_code stmts in
     let stmt_code = String.concat "\n" code_lines in
     let func_code = String.concat "\n\n" (List.map func_to_code funcs) in
     let class_struct_defs = String.concat "\n\n" (List.map class_def_to_code classes) in
-    skeleton decls class_struct_defs stmt_code func_code
+    let http_funcs = String.concat "\n" (List.map endpoint_to_code route_list) in
+    let router_reg = generate_route_registrations route_list in
+    skeleton decls http_funcs class_struct_defs stmt_code func_code router_reg
 
