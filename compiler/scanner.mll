@@ -75,8 +75,6 @@ rule token = parse
 | "list" { LIST }
 
 
-| "printf"  { PRINTF }
-| "println" { PRINTLN }
 (* functions *)
 | "func"   { FUNC }
 | "return" { RETURN }

@@ -142,7 +142,6 @@ stmt_list:
     | stmt_list stmt { $2 :: $1 }
 
 stmt:
-    | print SEMI        { Output $1 }
     | var_decl SEMI     { VarDecl $1 }
     | user_def_decl SEMI { UserDefDecl $1 }
     | func_call SEMI     { $1 }

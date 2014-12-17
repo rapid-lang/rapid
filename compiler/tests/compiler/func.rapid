@@ -1,8 +1,8 @@
 int a = foo(1, "hi");
 
-println(a);
+Println(a);
 
 func foo(int a, string b = "hi") int {
-    println(b);
+    Println(b);
     return a;
 }

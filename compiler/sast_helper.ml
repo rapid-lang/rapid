@@ -46,10 +46,15 @@ let add_func ft id arg_ts ret_ts =
 
 let default_ft ft =
     let ft = add_func ft "append"
-        [(ListType(AnyList), NullExpr); (ListType(Void), NullExpr)]
-        [ListType(AnyList); Void;]  in
-    let ft = add_func ft "println"
-        [(String, NullExpr;); (InfiniteArgs, NullExpr)]
+        [(ListType(AnyList), NullExpr); (ListType(AnyList), NullExpr)]
+        [ListType(AnyList)]  in
+    let ft = add_func ft "Printf"
+        [(String, NullExpr); (InfiniteArgs, NullExpr)]
+        []  in
+    let ft = add_func ft "len"
+        [ListType(AnyList), NullExpr] [Int] in
+    let ft = add_func ft "Println"
+        [(InfiniteArgs, NullExpr)]
         []  in
     ft
 

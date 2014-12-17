@@ -9,9 +9,9 @@ float x = b;
 boolean y = c;
 string z = d;
 
-println(w);
-println(x);
-println(y);
-println(z);
+Println(w);
+Println(x);
+Println(y);
+Println(z);
 
 

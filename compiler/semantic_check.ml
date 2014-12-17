@@ -29,6 +29,7 @@ exception TooManyArgsErr
 exception InvalidBinaryOp
 exception BinOpTypeMismatchErr
 exception AmbiguousContextErr of string
+exception NotPrintTypeErr
 
 type allowed_types = AllTypes | NumberTypes
 
@@ -44,8 +45,8 @@ let check_t_sexpr expected_t xpr =
 let is_not_default x = (x = NullExpr)
 
 let check_print_arg = function
-    | SExprInt _ | SExprString _ | SExprBool _ | SExprFloat _ -> ()
-    | _ -> raise InvalidArgErr 
+    | SExprUserDef(_) | SExprList(SListVar(_,_)) -> raise NotPrintTypeErr
+    | _ ->  ()
 
 (*takes a list of args as SDecl(t, xpr) and list of params as sexprs
   Checks the type and if there is some default args not entered, fill them with
@@ -145,7 +146,11 @@ let rec rewrite_sexpr st ct ft ?t = function
     | SCall(id, xprs) ->
         let xprs = (List.map (rewrite_sexpr st ct ft) xprs) in
         let xprs = check_arg_types Void ((get_arg_types id ft), xprs) in
-        SCallTyped((get_return_type id ft), (id, xprs))
+        let rt = get_return_type id ft in
+        let rt = match rt with
+            | ListType(AnyList) -> sexpr_to_t Void (List.hd xprs)
+            | _ -> rt in
+        SCallTyped(rt, (id, xprs))
     | SBinop (lhs, o, rhs) -> let lhs = rewrite_sexpr st ct ft lhs in
         let rhs = rewrite_sexpr st ct ft rhs in
         let lt = sexpr_to_t Void lhs in
@@ -235,13 +240,6 @@ let check_var_assign_use st id xpr =
     let () = check_t_sexpr var_t xpr in
     st
 
-(* rewrites any sexprs in an SOutput statement *)
-let check_s_output st ct ft = function
-    | SPrintf(s, xpr_l) ->
-        let format_str = rewrite_sexpr_to_t st ct ft s String in
-        SPrintf(format_str, List.map (rewrite_sexpr st ct ft ) xpr_l)
-    | SPrintln(xpr_l) -> SPrintln(List.map (rewrite_sexpr st ct ft) xpr_l)
-
 (*Check that the return statement has expressions with the right types*)
 let rec check_return_types = function
     | (xpr :: s),(t :: types) -> let () = (check_t_sexpr t xpr) in
@@ -298,9 +296,6 @@ let rec var_analysis st ct ft = function
         let expr = rewrite_sexpr st ct ft xpr ~t:t in
         let st = check_var_assign_use st id expr in
             SAssign(id, expr) :: (var_analysis st ct ft tl)
-    | SOutput(so) :: tl ->
-        let so = check_s_output st ct ft so in
-            SOutput(so) :: (var_analysis st ct ft tl)
     (*Return stmts are xpr lists, tranlslate all the expressions here*)
     | SReturn(s) :: tl -> let xprs = List.map (rewrite_sexpr st ct ft) s in
          SReturn(xprs) :: (var_analysis st ct ft tl)

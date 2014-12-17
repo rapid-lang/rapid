@@ -13,3 +13,4 @@ type var_type =
     | Multi(*Used for funcs with multiple rets*)
     | InfiniteArgs
     | AnyList
+

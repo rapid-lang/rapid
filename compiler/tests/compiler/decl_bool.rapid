@@ -2,6 +2,6 @@
 boolean b = true;
 b = false;
 
-printf("%t\n", b);
+Printf("%t\n", b);
 
 

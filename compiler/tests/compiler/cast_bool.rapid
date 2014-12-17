@@ -1,22 +1,22 @@
 
 int i = 4;
-printf("%t\n", i?);
+Printf("%t\n", i?);
 
 boolean b = false;
-printf("%t\n", b?);
+Printf("%t\n", b?);
 
 string s = "";
-printf("%t\n", s?);
+Printf("%t\n", s?);
 s = "hi";
-printf("%t\n", s?);
+Printf("%t\n", s?);
 
 float f = 3.14;
-printf("%t\n", f?);
+Printf("%t\n", f?);
 f = 0.0;
-printf("%t\n", f?);
+Printf("%t\n", f?);
 
 foo(f?);
 
 func foo(boolean i) {
-	println(i);
+	Println(i);
 }

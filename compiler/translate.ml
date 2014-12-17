@@ -71,11 +71,6 @@ let translate_decl = function
 let translate_user_def_decl = function
     | class_id, id, xpr -> SUserDefDecl (class_id, (id, (expr_option_map translate_expr xpr)))
 
-let translate_output = function
-    | Ast.Println xpr_l -> SPrintln(List.map translate_expr xpr_l)
-    | Ast.Printf(format :: xpr_l) -> SPrintf(translate_expr format, List.map translate_expr xpr_l)
-    | _ -> raise(UnsupportedOutputType("Not yet implemented"))
-
 let translate_vars = function
     | Ast.ID(s) -> SFuncId(s)
     | Ast.VDecl(vd) ->
@@ -89,7 +84,6 @@ let translate_fcall id exprs =
 let rec translate_statement = function
     | Ast.VarDecl vd -> translate_decl vd
     | Ast.Assign(id, xpr) -> SAssign(id, translate_expr xpr)
-    | Ast.Output o -> SOutput(translate_output o)
     | Ast.UserDefDecl udd -> translate_user_def_decl udd
     | Ast.FuncCall(vl, (id, exprs)) -> let(id, sexprs) = translate_fcall id exprs in
         SFuncCall((List.map translate_vars vl), id, sexprs)

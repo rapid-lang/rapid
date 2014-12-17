@@ -2,6 +2,6 @@
 int x = 2;
 string y = "hi";
 
-println(x, y);
+Println(x, y);
 
 

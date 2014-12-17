@@ -5,5 +5,7 @@ a = append(a, b);
 
 for(int i in a)
 {
-	println(i);
+	Println(i);
 }
+
+Println(len(a));
