@@ -68,7 +68,8 @@ let rec check_arg_types lt = function
         param :: check_arg_types lt ([(InfiniteArgs, NullExpr)], pl)
     | ((InfiniteArgs, _ ) :: tl), ([]) -> []
     (*| ((InfiniteArgs, _) :: tl ), (param :: pl) -> *)
-    | (((t, _)::tl),(param :: pl)) -> let () = check_t_sexpr t param in
+    | (((t, _)::tl),(param :: pl)) ->
+        let () = check_t_sexpr t param in
         param :: check_arg_types lt (tl, pl)
     | (((_, xpr) :: tl), ([])) -> if (is_not_default xpr)
             then raise TooFewArgsErr
@@ -82,15 +83,6 @@ let get_cast_side = function
     | (Float, Int) -> Right
     | (l, r) when l = r -> Neither
     | _ -> raise BinOpTypeMismatchErr
-
-(* Takes a type and a typed sexpr and confirms it is the proper type *)
-let check_t_sexpr expected_t xpr =
-    let found_t = sexpr_to_t expected_t xpr in
-    if found_t = expected_t
-        then ()
-        else raise(InvalidTypeErr(Format.sprintf "Expected %s expression, found %s"
-            (Ast_printer.string_of_t expected_t)
-            (Ast_printer.string_of_t found_t)))
 
 (* Check that for a given attribute, it either exists in the actuals, or
  * it if it isn't place a default value if one exists (or raise if no default
@@ -163,7 +155,7 @@ let rec rewrite_sexpr st ct ft ?t = function
         let rewritten_l = rewrite_sexpr st ct ft xpr_l in
         let rewritten_r = rewrite_sexpr st ct ft xpr_r in
         (* Verify that index is an int *)
-        let () = check_t_sexpr AnyList rewritten_r in
+        let () = check_t_sexpr Int rewritten_r in
         SExprList(SListAccess(rewritten_l, rewritten_r))
     | SBinop (lhs, o, rhs) -> let lhs = rewrite_sexpr st ct ft lhs in
         let rhs = rewrite_sexpr st ct ft rhs in
