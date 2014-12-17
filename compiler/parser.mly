@@ -46,16 +46,19 @@ primtype:
 /* Base level expressions of a program:
  * TODO: Classes */
 program:
-    | /* nothing */ { [], [], [] }
+    | /* nothing */ { [], [], [], [] }
     | program stmt {
-        let (statements, classes, functions) = $1 in
-            ($2 :: statements), classes, functions }
-    | program func_decl {
-        let (statements, classes, functions) = $1 in
-            statements, classes, ($2 :: functions) }
+        let (statements, classes, functions, http_tree) = $1 in
+            ($2 :: statements), classes, functions, http_tree }
     | program class_decl {
-        let (statements, classes, functions) = $1 in
-            statements, ($2 :: classes), functions }
+        let (statements, classes, functions, http_tree) = $1 in
+            statements, ($2 :: classes), functions, http_tree }
+    | program func_decl {
+        let (statements, classes, functions, http_tree) = $1 in
+            statements, classes, ($2 :: functions), http_tree }
+    | program http_type_block {
+        let (statements, classes, functions, http_tree) = $1 in
+            statements, classes, functions, ($2 :: http_tree) }
 
 
 /* TODO: allow user defined types */
@@ -172,7 +175,6 @@ stmt:
         { If($3, List.rev $6, List.rev $10) }
     | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE
         { While($3, List.rev $6) }
-    | http_type_block    { HttpTree $1 }
 
 print:
     | PRINTLN LPAREN expression_list RPAREN { Println $3 }

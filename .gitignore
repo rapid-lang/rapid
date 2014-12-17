@@ -2,6 +2,8 @@
 *.tar.gz
 *.cmi
 *.cmo
+*.cmx
+*.o
 parser.ml
 parser.mli
 parser.output

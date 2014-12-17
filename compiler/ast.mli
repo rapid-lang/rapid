@@ -75,8 +75,5 @@ type class_decl = string * attr list
 type class_decl = string * attr list * func_decl list * route_decl list
 *)
 
-type program = stmt list * class_decl list * func_decl list
-(*
-type program = stmt list * func_decl list * class_decl list * route_decl list
-*)
+type program = stmt list  * class_decl list * func_decl list * http_tree list
 

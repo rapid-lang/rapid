@@ -16,6 +16,7 @@ exception ClassNotDefinedErr of string
 exception AttributeNotDefinedErr of string
 exception MissingActualErr of string
 exception ExistingFuncErr
+exception ExistingRouteErr
 
 
 (* Maps a function to a expr option if it is defined, otherwise return NullExpr *)
@@ -172,4 +173,13 @@ let rec sexpr_to_t expected_t = function
         | _ -> raise UnsupportedSexprTypeClassification
     )
     | SId _ | _ -> raise UnsupportedSexprTypeClassification
+
+
+let empty_route_table = StringMap.empty
+
+let add_route route rt =
+    if StringMap.mem route rt then
+        raise ExistingRouteErr
+    else
+        StringMap.add route "" rt
 

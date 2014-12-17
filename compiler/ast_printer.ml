@@ -121,8 +121,13 @@ let rec stmt_s = function
     | FuncCall(s,f) -> sprintf "(FuncCall(%s = %s))"
         (concat ", " (List.map func_lvalue_s s))
         (fcall_s f)
-    | HttpTree t ->  http_tree_s t
-and http_tree_s = function
+
+and fstmt_s = function
+    | Return e -> sprintf "(Return (%s))\n"
+        (concat ", " (List.map expr_s e))
+    | FStmt s -> stmt_s s
+
+let rec http_tree_s = function
     | Param(t, id, tree) -> sprintf "(param (%s %s)\n\t%s\n}"
         (string_of_t t)
         id
@@ -135,10 +140,6 @@ and http_tree_s = function
         (String.concat "," (List.map string_of_vdecl args))
         (String.concat "," (List.map string_of_t ret_t))
         (indent_block(String.concat "\n" (List.map fstmt_s body)))
-and fstmt_s = function
-    | Return e -> sprintf "(Return (%s))\n"
-        (concat ", " (List.map expr_s e))
-    | FStmt s -> stmt_s s
 
 let func_decl_s f = sprintf "{\nfname = \"%s\"\nargs = [%s]\n\tbody = [%s]\n}"
     f.fname
@@ -166,11 +167,12 @@ let class_s (name, attrs) =
             (List.map attr_s attrs)))
 
 
-let program_s (stmts, classes, funcs) = sprintf
-    "classes:{\n%s\n}\nstatements:{\n%s\n}\nfunctions:\n%s"
+let program_s (stmts, classes, funcs, http_tree) = sprintf
+    "classes:{\n%s\n}\nstatements:{\n%s\n}\nfunctions:\n%sHTTP tree:\n%s"
     (concat "\n" (List.rev (List.map class_s classes)))
     (concat "\n" (List.rev (List.map stmt_s stmts)))
     (concat "\n" (List.rev (List.map func_decl_s funcs)))
+    (concat "\n" (List.rev (List.map http_tree_s http_tree)))
 
 
 (*

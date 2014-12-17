@@ -126,3 +126,19 @@ let translate_function (f : Ast.func_decl) =
         f.return,
         (List.map translate_fstatement f.body)
     )
+
+let rec translate_http_tree = function
+    | Ast.Param(t, id, tree) :: tl ->
+        SParam(t, id, translate_http_tree tree) :: translate_http_tree tl
+    | Ast.Namespace(name, tree ) :: tl ->
+        SNamespace(name, translate_http_tree tree) :: translate_http_tree tl
+    | Ast.Endpoint(name, args, ret_t, body) :: tl ->
+        SEndpoint(name,
+        List.map (fun(t, id, default) -> (t, id, match default with
+            | Some xpr -> translate_expr xpr
+            | None -> NullExpr)) args,
+        ret_t,
+        List.map translate_fstatement body
+    ) :: translate_http_tree tl
+    | [] -> []
+

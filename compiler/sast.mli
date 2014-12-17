@@ -78,8 +78,16 @@ type semantic_stmt =
     | SUserDefDecl of string * svar_assign (* class_id, (id, expr) *)
     | SIfElse of sexpr * semantic_stmt list * semantic_stmt list
     | SIf of sexpr * semantic_stmt list
-    | SWhile of sexpr * semantic_stmt list 
+    | SWhile of sexpr * semantic_stmt list
     | SFor of var_type * sexpr * sexpr * semantic_stmt list
+and s_http_tree =
+    (* typed route param, rest of tree *)
+    | SParam of var_type * string * s_http_tree list
+    (* /route, rest of tree *)
+    | SNamespace of string * s_http_tree list
+    (* /route, argument list, return type, function body *)
+    (* NOTE: endpoints are rewritten to include the full path *)
+    | SEndpoint of string * (var_type * string * sexpr) list * var_type list * semantic_stmt list
 
 type sattr =
     | SNonOption of var_type * string * sexpr option
@@ -88,8 +96,6 @@ type sattr =
 type sclass = string * sattr list
 
 (*this is the id, args, return types, body*)
-type semantic_function = string * semantic_stmt list * var_type list * semantic_stmt list
-(* TODO: Add HTTP routes or something similar in the future *)
-(* TODO: add functions so we allow more than just scripts *)
-type semantic_program = semantic_stmt list * sclass list * semantic_function list
+type semantic_function = string * (var_type * svar_assign) list * var_type list * semantic_stmt list
+type semantic_program = semantic_stmt list * sclass list * semantic_function list * s_http_tree
 

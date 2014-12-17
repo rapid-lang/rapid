@@ -30,6 +30,7 @@ exception BinOpTypeMismatchErr
 exception AmbiguousContextErr of string
 exception ClassAttrInClassErr
 exception UserDefinedTypNeeded
+exception UnusedParamArgument
 
 type allowed_types = AllTypes | NumberTypes
 
@@ -414,12 +415,45 @@ let gen_class_stmts stmts =
     let (checked_sclasses, ct) = class_analysis class_table sclasses in
     checked_sclasses, ct
 
+(*
+ * rt == route table
+ *)
+let rec validate_http_tree path params rt = function
+    | SParam(t, id, tree) :: tl ->
+        let params = (t, id) :: params in
+        let path = Format.sprintf "%s/:%s" path id in
+        let rt = add_route path rt in
+        let checked_sub_tree = validate_http_tree path params rt in
+        []
+    | SNamespace(name, tree) :: tl ->
+        let path = Format.sprintf "%s/%s" path name in
+        let rt = add_route path rt in
+        let checked_sub_tree = validate_http_tree path params rt in
+        []
+    | SEndpoint(name, args, ret_t, body) :: tl ->
+        (* takes arguments and path params and confirms they all exist *)
+        let rec check_args = (function (* args, required args *)
+            (* http arguments must be unpacked *)
+            | ((a_t, id, _) :: a_tl), (req :: req_tl) ->
+                if (a_t, id) = req then check_args (a_tl, req_tl)
+                else raise UnusedParamArgument
+            | x, []  -> ()
+            | [], x -> raise UnusedParamArgument) in
+        let () = check_args (args, params) in
+        []
+    | [] -> []
+
+
+(* TODO *)
+let flatten_tree tree = []
+
 (*The order of the checking and building of symbol tables may need to change
     to allow functions to be Hoisted*)
-let gen_semantic_program stmts classes funcs =
+let gen_semantic_program stmts classes funcs h_tree =
     (* build an unsafe semantic AST *)
     let s_stmts = List.map translate_statement stmts in
     let s_funcs = List.map translate_function funcs in
+    let s_http_tree = translate_http_tree h_tree in
     let ft = build_function_table empty_function_table s_funcs in
     let checked_classes, ct = gen_class_stmts classes in
     (* typecheck and reclassify all variable usage *)
@@ -428,12 +462,14 @@ let gen_semantic_program stmts classes funcs =
     let st = add_to_scope symbol_table_list s_stmts in
     (*typecheck all the functions (including args and returns)*)
     let checked_funcs = check_funcs st ct ft s_funcs in
+    let checked_http_tree = validate_http_tree "" [] empty_route_table s_http_tree in
+    let collapsed_tree = flatten_tree checked_http_tree in
     (checked_stmts, checked_classes, checked_funcs)
 
 
 let sast_from_ast ast =
     (* ignore functions for now *)
-    let (stmts, classes, funcs) = ast in
+    let (stmts, classes, funcs, h_tree) = ast in
     let stmts = List.rev stmts in
-    gen_semantic_program stmts classes funcs
+    gen_semantic_program stmts classes funcs h_tree
 
