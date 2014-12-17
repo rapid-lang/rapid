@@ -158,9 +158,12 @@ stmt:
     | http_type_block    { HttpTree $1 }
     | FOR LPAREN anytype ID IN expr RPAREN LBRACE stmt_list RBRACE
         { For($3, $4, $6, List.rev $9) }
-    | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE %prec NOELSE { If($3, List.rev $6, []) }
-    | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE { If($3, List.rev $6, List.rev $10) }
-    | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE { While($3, List.rev $6) }
+    | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE %prec NOELSE
+        { If($3, List.rev $6, []) }
+    | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE
+        { If($3, List.rev $6, List.rev $10) }
+    | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE
+        { While($3, List.rev $6) }
 
 typed_param_list:
     | /* nothing */     { [] }
