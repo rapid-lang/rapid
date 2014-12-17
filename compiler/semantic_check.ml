@@ -371,12 +371,12 @@ let rec var_analysis st ct ft = function
         let () = check_t_sexpr Bool expr in
         let stmts = var_analysis (new_scope st) ct ft stmts in
         SWhile(expr, stmts) :: var_analysis st ct ft tl
-    | SFor (t, SId(id), xpr, stmts) :: tl ->
+    | SFor (t, string_id, xpr, stmts) :: tl ->
         let scoped_st = new_scope st in
-        let scoped_st = add_sym t id scoped_st in
+        let scoped_st = add_sym t string_id scoped_st in
         let xpr = rewrite_sexpr scoped_st ct ft xpr ~t:(ListType t) in
         let for_body = var_analysis scoped_st ct ft stmts in
-        SFor(t, SId(id), xpr, for_body) :: (var_analysis st ct ft tl)
+        SFor(t, string_id, xpr, for_body) :: (var_analysis st ct ft tl)
     | [] -> []
 
 

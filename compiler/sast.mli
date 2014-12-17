@@ -83,7 +83,7 @@ type semantic_stmt =
     | SIfElse of sexpr * semantic_stmt list * semantic_stmt list
     | SIf of sexpr * semantic_stmt list
     | SWhile of sexpr * semantic_stmt list
-    | SFor of var_type * sexpr * sexpr * semantic_stmt list
+    | SFor of var_type * string * sexpr * semantic_stmt list
 
 type sattr =
     | SNonOption of var_type * string * sexpr option

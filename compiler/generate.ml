@@ -29,6 +29,7 @@ let rec go_type_from_type = function
     | String -> "String"
     | ListType(t) ->
         sprintf "%sList" (go_type_from_type t)
+    | UserDef(name) -> name
     | _ -> raise UnsupportedDatatypeErr
 and go_tmp_type_from_type = function
     | ListType(t) ->
@@ -281,7 +282,7 @@ and sast_to_code = function
         (control_code IF expr stmts)
         (String.concat "\n" (grab_decls estmts))
         (String.concat "\n" (List.map sast_to_code estmts))
-    | SFor(t, SId(id), xpr, stmts) -> sfor_to_code t id xpr stmts
+    | SFor(t, id, xpr, stmts) -> sfor_to_code t id xpr stmts
     | _ -> raise(UnsupportedSemanticStatementType)
 
 and sfor_to_code t id xpr stmts =
