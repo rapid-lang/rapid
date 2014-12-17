@@ -1,0 +1,5 @@
+instance self {
+	func get_age() int {
+		return self.age;
+	}
+}

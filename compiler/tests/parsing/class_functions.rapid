@@ -1,0 +1,3 @@
+my_object.my_function();
+a.b(1, "world");
+

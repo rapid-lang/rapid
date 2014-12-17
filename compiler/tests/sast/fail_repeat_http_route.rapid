@@ -1,0 +1,13 @@
+
+namespace test {
+    http info(int date) string {
+        return "hi";
+    }
+}
+
+namespace test {
+    http info(int date) string {
+        return "hi";
+    }
+}
+

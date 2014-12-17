@@ -2,7 +2,7 @@ open Format
 open Sast
 open Sast_printer
 open Datatypes
-open Str
+
 
 exception UnsupportedSemanticExpressionType of string
 exception UnsupportedSemanticStatementType
@@ -20,6 +20,15 @@ exception StringExpressionsRequired
 exception InvalidUserDefExpr
 exception InvalidErrorExpr
 
+module  StringMap = Map.Make(String)
+
+
+let need_dereference_funcs = let sm = StringMap.empty in
+    let sm = StringMap.add "append" true sm in
+    let sm = StringMap.add "len" true sm in
+    let sm = StringMap.add "println" true sm in
+    let sm = StringMap.add "printf" true sm in
+    sm
 
 let rand_var_gen _ = "tmp_" ^ Int64.to_string (Random.int64 Int64.max_int)
 
@@ -30,6 +39,7 @@ let rec go_type_from_type = function
     | String -> "String"
     | ListType(t) ->
         sprintf "%sList" (go_type_from_type t)
+    | UserDef(name) -> name
     | _ -> raise UnsupportedDatatypeErr
 and go_tmp_type_from_type = function
     | ListType(t) ->
@@ -41,6 +51,7 @@ let go_type_from_sexpr = function
     | SExprFloat _ -> go_type_from_type Float
     | SExprBool _ -> go_type_from_type Bool
     | SExprString _ -> go_type_from_type String
+    | x -> raise(UnsupportedSemanticExpressionType(Sast_printer.sexpr_s x))
 
 (* must return a direct reference to a string *)
 let get_string_literal_from_sexpr = function
@@ -57,9 +68,13 @@ let rec sexpr_to_code = function
     | SExprString s -> string_expr_to_code s
     | SExprFloat f -> float_expr_to_code f
     | SExprBool b -> bool_expr_to_code b
+    | SCallTyped(t, c) -> func_expr_to_code c
     | SExprList l -> list_expr_to_code l
+<<<<<<< HEAD
     | SCallTyped(t, (id, args)) -> func_expr_to_code id args
     | SExprError e -> error_expr_to_code e
+=======
+>>>>>>> master
     | SExprUserDef u -> user_def_expr_to_code u
     | NullExpr -> "", "nil"
     | s -> raise(UnsupportedSExprType(Sast_printer.sexpr_s s))
@@ -132,10 +147,26 @@ and cast_to_code t xpr =
     let setup, ref = sexpr_to_code xpr in
     let cast = sprintf "%sTo%s(%s)" src_type dest_type ref in
     setup, cast
-and func_expr_to_code id arg_xrps =
-    let (tmps, refs) = (list_of_sexpr_to_code "" arg_xrps) in
-    let call = sprintf "%s(%s)" id (String.concat ", " refs) in
-    (String.concat "\n" tmps), call
+
+and func_expr_to_code = function
+    | SFCall(None, id, arg_xrps) ->
+        let (tmps, refs) = (list_of_sexpr_to_code "" arg_xrps) in
+        let s = if StringMap.mem id (need_dereference_funcs) then "*"
+           else "" in
+        let refs = List.map (fun str -> s ^ str ) refs in
+        let tmps, call = if StringMap.mem id (need_dereference_funcs) then
+                let tmp = rand_var_gen () in
+                let dots = if id = "append" then "..." else "" in
+                tmps @ [(sprintf "\n%s := %s(%s%s)" tmp id (String.concat ", " refs) dots )] , "&" ^ tmp
+            else
+                tmps ,sprintf "%s(%s)" id (String.concat ", " refs) in
+        (String.concat "\n" tmps), call
+    | SFCall(Some(xpr), id, arg_xrps) ->
+        let setup, ref = sexpr_to_code xpr in
+        let (tmps, refs) = (list_of_sexpr_to_code "" arg_xrps) in
+        let call = sprintf "%s.%s(%s)" ref id (String.concat ", " refs) in
+        ((String.concat "\n" tmps) ^ "\n" ^ setup^ "\n" ), call
+
 (* Helper function that turns a list of expressions into code *)
 and list_of_sexpr_to_code deref_string xpr_l =
     let trans = List.map sexpr_to_code xpr_l in
@@ -196,7 +227,7 @@ and user_def_expr_to_code = function
          sprintf "%s{\n%s\n}\n" class_id (String.concat "\n" (List.map snd trans)))
     | SUserDefVar(_, id) ->
         let tmp_var = rand_var_gen () in
-        sprintf "%s := %s" tmp_var id, sprintf "%s" tmp_var
+        sprintf "%s := &%s" tmp_var id, sprintf "(*%s)" tmp_var
     | SUserDefNull _ ->
         "", "nil"
     | _ -> raise(InvalidUserDefExpr)
@@ -212,26 +243,16 @@ and error_access_to_code er_expr attr_id =
         tmp_var
 
 let sassign_to_code = function
-    | (id, xpr) ->
+    | (SLhsId id, xpr) ->
         let setup, ref = sexpr_to_code xpr in
-        sprintf "%s\n%s = %s" setup id ref
+        sprintf "%s\n%s = %s\n" setup id ref
+    | (SLhsAcc(e, mem), xpr) ->
+        let setup, ref = sexpr_to_code xpr in
+        let lhs_setup, lhs_ref = sexpr_to_code e in
+        sprintf "%s\n%s.%s = %s\n" (setup ^ "\n" ^ lhs_setup) lhs_ref mem ref
     | a -> raise(UnsupportedSemanticExpressionType(
         sprintf "Assignment expression not yet supported -> %s"
         (svar_assign_s a)))
-
-let soutput_to_code = function
-    | SPrintln xpr_l ->
-        let (setups, refs) = list_of_sexpr_to_code "*" xpr_l in
-            sprintf "%s\nfmt.Println(%s)"
-                (String.concat "\n" setups)
-                (String.concat "," refs)
-    | SPrintf(s, xpr_l) ->
-        let (setups, refs) = list_of_sexpr_to_code "*" xpr_l in
-            sprintf "%s\nfmt.Printf(%s, %s)"
-                (String.concat "\n" setups)
-                (get_string_literal_from_sexpr s)
-                (String.concat "," refs)
-    | _ -> raise UnsupportedOutputType
 
 
 let sreturn_to_code xprs =
@@ -249,13 +270,24 @@ let get_ids = function
 let lv_to_code lv =
     String.concat ", " (List.map get_ids lv)
 
-let sfunccall_to_code lv id xprs =
+let sfunccall_to_code lv c =
     let lhs = lv_to_code lv in
-    let (tmps, refs) = list_of_sexpr_to_code "" xprs in
-    let tmps = String.concat "\n" tmps in
-    let refs = String.concat "," refs in
-    if lhs = "" then sprintf "%s\n%s( %s )" tmps id refs
-        else sprintf "%s\n%s = %s( %s )" tmps lhs id refs
+    match c with
+    | SFCall(None, id, arg_xprs) ->
+        let (tmps, refs) = list_of_sexpr_to_code "" arg_xprs in
+        let tmps = String.concat "\n" tmps in
+        let s, id = if StringMap.mem id (need_dereference_funcs) then "*", "" ^ id
+           else "", id in
+        let refs = List.map (fun str -> s ^ str ) refs in
+        let refs = if s = "Println" then String.sub (List.hd refs) 1 ((String.length (List.hd refs)) - 1) :: (List.tl refs)
+            else refs in
+        let refs = String.concat "," refs in
+        if lhs = "" then sprintf "%s\n%s( %s )" tmps id refs
+            else sprintf "%s\n%s = %s( %s )" tmps lhs id refs
+    | SFCall(Some(xpr), id, arg_xprs) ->
+        let setup, call = func_expr_to_code c in
+        if lhs = "" then sprintf "%s\n%s" setup call
+            else sprintf "%s\n%s = %s" setup lhs call
 
 let error_instantiate_to_code (id, inst_xpr) =
     let setups, attrs = error_expr_to_code inst_xpr in
@@ -268,7 +300,7 @@ let class_instantiate_to_code class_id (id, inst_xpr) =
 let rec grab_decls = function
     | SDecl(t, (id, _)) :: tl ->
         sprintf "var %s %s" id (go_type_from_type t) :: grab_decls tl
-    | SFuncCall(lv, _,_) :: tl ->
+    | SFuncCall(lv, _) :: tl ->
         (String.concat "\n" (List.map decls_from_lv lv)) :: grab_decls tl
     | _ :: tl -> grab_decls tl
     | [] -> []
@@ -285,12 +317,15 @@ let rec control_code b expr stmts =
         |WHILE -> sprintf "for{\n%s\nif !(*(%s)){\nbreak\n}\n%s\n%s}\n" tmps exprs decls body
 
 and sast_to_code = function
-    | SDecl(_, (id, xpr)) -> sassign_to_code (id, xpr)
-    | SAssign a -> sassign_to_code a
-    | SOutput p -> soutput_to_code p
+    | SDecl(_, (id, xpr)) -> sassign_to_code (SLhsId id, xpr)
+    | SAssign (lhs, xpr) -> sassign_to_code (lhs, xpr)
     | SReturn xprs -> sreturn_to_code xprs
+<<<<<<< HEAD
     | SFuncCall(lv, id, xprs) -> sfunccall_to_code lv id xprs
     | SErrorDecl(id, SExprError(xpr)) -> error_instantiate_to_code (id, xpr)
+=======
+    | SFuncCall (lv, c) -> sfunccall_to_code lv c
+>>>>>>> master
     | SUserDefDecl(class_id, (id, SExprUserDef(xpr))) -> class_instantiate_to_code class_id (id, xpr)
     | SUserDefDecl(class_id, (id, NullExpr)) -> sprintf "var %s %s\n_ = %s" id class_id id
     | SIf(expr, stmts) -> (control_code IF expr stmts) ^ "\n"
@@ -300,7 +335,7 @@ and sast_to_code = function
         (control_code IF expr stmts)
         (String.concat "\n" (grab_decls estmts))
         (String.concat "\n" (List.map sast_to_code estmts))
-    | SFor(t, SId(id), xpr, stmts) -> sfor_to_code t id xpr stmts
+    | SFor(t, id, xpr, stmts) -> sfor_to_code t id xpr stmts
     | _ -> raise(UnsupportedSemanticStatementType)
 
 and sfor_to_code t id xpr stmts =
@@ -322,11 +357,14 @@ let defaults_to_code = function
     | SDecl(_, (id, xpr)) -> if xpr = NullExpr then ""
         else sprintf "if %s == nil {\n %s\n}"
                 id
-                (sassign_to_code (id, xpr))
+                (sassign_to_code (SLhsId id, xpr))
 
 let func_to_code f =
-    let (id, args, rets, body) = f in
-    sprintf "func %s( %s ) (%s){\n%s\n%s\n%s\n}"
+    let (id, selfref_opt, args, rets, body) = f in
+    sprintf "func %s%s( %s ) (%s){\n%s\n%s\n%s\n}"
+        (match selfref_opt with
+            | Some(SelfRef(class_id, id)) -> sprintf "(%s *%s) " id class_id
+            | None -> "")
         id
         (String.concat "," (List.map arg_to_code args))
         (String.concat ", " (List.map go_type_from_type rets))
@@ -342,18 +380,85 @@ let class_def_to_code (class_id, attr_list) =
     sprintf "type %s struct{\n%s\n}" class_id (String.concat "\n" attrs)
 
 
+<<<<<<< HEAD
 
 let skeleton decls classes main fns = "package main\nimport (\"fmt\")\n" ^
     "var _ = fmt.Printf\n" ^ classes ^ "\n\n" ^ decls ^ "\nfunc main() {\n" ^
     main ^ "\n}\n " ^ fns
+=======
+(* rewrites returns as writes to the connection *)
+let http_fstmt_to_code = function
+    | SReturn(xpr :: _) ->
+        let setup, ref  = cast_to_code String xpr in
+        sprintf "%s\nw.Write([]byte(*%s))\nreturn"
+            setup
+            ref
+    | s -> sast_to_code s
+
+let strip_route_re = Str.regexp "[:/]"
+let strip_path s = Str.global_replace strip_route_re "" s
+
+let generate_route_registrations routes =
+    let routes = List.map (fun (r, _, _, _) ->
+        let fname = strip_path r in
+        sprintf "router.GET(\"%s\", HTTP%s)" r fname) routes in
+    let regs = (String.concat "\n" routes) in
+    if regs = ""
+        then ""
+        else  "router := httprouter.New()\n" ^ regs ^
+           "\nlog.Fatal(http.ListenAndServe(\":8080\", router))\n"
+
+let endpoint_to_code (path, args, ret_type, body) =
+    let decl_vars = grab_decls body in
+    (* grabs the parameters from the request and instantiates the variables *)
+    let grab_param (t, name, default) =
+        let setup = if default = NullExpr then
+            let tmp = rand_var_gen () in
+            sprintf "%s := XXX.ByName(\"%s\")\n%s := StringTo%s(&%s)"
+                tmp name name (go_type_from_type t) tmp
+        else
+            let xpr_setup, ref = sexpr_to_code default in
+            sprintf "%s\n%s := &%s" xpr_setup name ref in
+        sprintf "%s\n_ = %s" setup name in
+    sprintf "func HTTP%s(w http.ResponseWriter, r *http.Request, XXX httprouter.Params){\n%s\n%s\n}\n"
+        (strip_path path)
+        (
+            (String.concat "\n" decl_vars) ^ "\n\n" ^
+            (String.concat "\n" (List.map grab_param args))
+        )
+        (String.concat "\n" (List.map http_fstmt_to_code body))
+
+
+let skeleton decls http_funcs classes main fns router =
+    let packages = ("fmt", "fmt.Printf") ::
+        ("net/http", "http.StatusOK") ::
+        ("log", "log.Fatal") ::
+        ("github.com/julienschmidt/httprouter", "httprouter.CleanPath") :: [] in
+    let processed = List.map (fun (p, ref) -> sprintf "\"%s\"" p, sprintf "var _ = %s" ref) packages in
+    let imports, references = List.map fst processed, List.map snd processed in
+    let imports = String.concat "\n" imports in
+    let references = String.concat "\n" references in
+    "package main\n" ^
+    "import (\n" ^ imports ^ "\n)\n" ^
+    references ^ "\n\n" ^
+    http_funcs ^ "\n\n" ^
+    classes ^ "\n\n" ^
+    decls ^
+    "\nfunc main() {\n" ^
+    main ^ "\n\n" ^
+    router ^ "\n" ^
+    "}\n " ^ fns
+
+>>>>>>> master
 
 let build_prog sast =
-    (* Ignore classes for now *)
-    let (stmts, classes, funcs) = sast in
+    let (stmts, classes, funcs, route_list) = sast in
     let decls = String.concat "\n" (grab_decls stmts) in
     let code_lines = List.map sast_to_code stmts in
     let stmt_code = String.concat "\n" code_lines in
     let func_code = String.concat "\n\n" (List.map func_to_code funcs) in
     let class_struct_defs = String.concat "\n\n" (List.map class_def_to_code classes) in
-    skeleton decls class_struct_defs stmt_code func_code
+    let http_funcs = String.concat "\n" (List.map endpoint_to_code route_list) in
+    let router_reg = generate_route_registrations route_list in
+    skeleton decls http_funcs class_struct_defs stmt_code func_code router_reg
 

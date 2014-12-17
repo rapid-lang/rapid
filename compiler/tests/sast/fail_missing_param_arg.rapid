@@ -1,0 +1,7 @@
+
+param int test_number {
+    http info() string {
+        return 0;
+    }
+}
+

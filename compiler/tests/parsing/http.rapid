@@ -1,0 +1,54 @@
+
+namespace test {
+    param int test_number {
+        http info(int date) string {
+            return 0;
+        }
+    }
+    param int test_number {
+        http info(int date) string {
+            return 0;
+        }
+        http info(int date) string {
+            return 0;
+        }
+        http info(int date) string {
+            return 0;
+        }
+    }
+    param int test_number {
+        http info(int date) string {
+            return 0;
+        }
+    }
+}
+
+namespace test2 {
+    param int test_number {
+        http info(int date) string {
+            return 0;
+        }
+    }
+    param int test_number {
+        http info(int date) string {
+            return 0;
+        }
+        http info(int date) string {
+            return 0;
+        }
+        http info(int date) string {
+            return 0;
+        }
+    }
+    param int test_number {
+        http info(int date) string {
+            return 0;
+        }
+    }
+}
+
+
+http () int {
+    return 0;
+}
+

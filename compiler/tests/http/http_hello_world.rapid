@@ -1,0 +1,12 @@
+
+param string name {
+    http hello(string name) string {
+        return name;
+    }
+
+}
+
+http plus(int i) int {
+    return 2;
+}
+

@@ -1,0 +1,8 @@
+
+
+param int test1 {
+    http info(int test2) string {
+        return 0;
+    }
+}
+
