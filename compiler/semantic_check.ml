@@ -92,6 +92,7 @@ let check_attr sactuals_table = function
         else (name, xpr)
 
 
+(* Check for required attributes *)
 let check_sactual attrs_table (id, expr) = 
     if StringMap.mem id attrs_table 
         then ()
@@ -171,8 +172,8 @@ let rec rewrite_sexpr st ct ft ?t = function
         match edf with
         | SErrorInst(sactls) ->
             let rewritten_sactls = List.map (rewrite_sactl st ct ft) sactls in
-            let expr = check_error_def_inst sactls in
-            SExprError(SErrorInst(rewritten_sactls))
+            let expr = check_error_def_inst rewritten_sactls in
+            SExprError(expr) 
         | _ -> SExprError edf)
     | SExprUserDef udf -> (
         match udf with

@@ -1,6 +1,6 @@
 Error e;
 
-e = new Error(name="EpicFail", code=666, message="OH NO");
+e = new Error(name="goodError", code=200, message="OH NO");
 
 Error generic = new Error();
 
