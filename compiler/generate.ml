@@ -19,14 +19,14 @@ exception InvalidClassInstantiation
 exception StringExpressionsRequired
 exception InvalidUserDefExpr
 
-module  StringMap = Map.Make(String)    
+module  StringMap = Map.Make(String)
 
 
 let need_dereference_funcs = let sm = StringMap.empty in
-    let sm = StringMap.add "append" true sm in 
+    let sm = StringMap.add "append" true sm in
     let sm = StringMap.add "len" true sm in
     let sm = StringMap.add "println" true sm in
-    let sm = StringMap.add "Printf" true sm in
+    let sm = StringMap.add "printf" true sm in
     sm
 
 let rand_var_gen _ = "tmp_" ^ Int64.to_string (Random.int64 Int64.max_int)
@@ -140,14 +140,14 @@ and cast_to_code t xpr =
     setup, cast
 and func_expr_to_code id arg_xrps =
     let (tmps, refs) = (list_of_sexpr_to_code "" arg_xrps) in
-    let s = if StringMap.mem id (need_dereference_funcs) then "*" 
-       else "" in 
+    let s = if StringMap.mem id (need_dereference_funcs) then "*"
+       else "" in
     let refs = List.map (fun str -> s ^ str ) refs in
     let tmps, call = if StringMap.mem id (need_dereference_funcs) then
             let tmp = rand_var_gen () in
             let dots = if id = "append" then "..." else "" in
             tmps @ [(sprintf "\n%s := %s(%s%s)" tmp id (String.concat ", " refs) dots )] , "&" ^ tmp
-        else 
+        else
             tmps ,sprintf "%s(%s)" id (String.concat ", " refs) in
     (String.concat "\n" tmps), call
 (* Helper function that turns a list of expressions into code *)
@@ -234,8 +234,8 @@ let sfunccall_to_code lv id xprs =
     let lhs = lv_to_code lv in
     let (tmps, refs) = list_of_sexpr_to_code "" xprs in
     let tmps = String.concat "\n" tmps in
-    let s, id = if StringMap.mem id (need_dereference_funcs) then "*", "" ^ id 
-       else "", id in 
+    let s, id = if StringMap.mem id (need_dereference_funcs) then "*", "" ^ id
+       else "", id in
     let refs = List.map (fun str -> s ^ str ) refs in
     let refs = if s = "Println" then String.sub (List.hd refs) 1 ((String.length (List.hd refs)) - 1) :: (List.tl refs)
         else refs in

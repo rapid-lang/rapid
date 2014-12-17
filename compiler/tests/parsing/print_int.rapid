@@ -1,5 +1,5 @@
 int x = 1;
 
 func foo(){
-    Printf("%d", x);
+    printf("%d", x);
 }

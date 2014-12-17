@@ -8,7 +8,7 @@ type Bool *bool
 type String *string
 
 var println = fmt.Println
-var Printf = fmt.Printf
+var printf = fmt.Printf
 /*
  * BOOLEANS
  */

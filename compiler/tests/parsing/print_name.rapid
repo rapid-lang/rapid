@@ -1,6 +1,6 @@
 
 func print_name(string name) {
-    Printf("hi %s", name);
+    printf("hi %s", name);
 }
 
 

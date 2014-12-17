@@ -48,7 +48,7 @@ let default_ft ft =
     let ft = add_func ft "append"
         [(ListType(AnyList), NullExpr); (ListType(AnyList), NullExpr)]
         [ListType(AnyList)]  in
-    let ft = add_func ft "Printf"
+    let ft = add_func ft "printf"
         [(String, NullExpr); (InfiniteArgs, NullExpr)]
         []  in
     let ft = add_func ft "len"

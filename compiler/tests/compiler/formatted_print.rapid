@@ -1,8 +1,8 @@
 
 string phrase = "I like %s\n";
 string name = "STRFKR";
-Printf(phrase, name);
+printf(phrase, name);
 
 name = "Flume";
-Printf(phrase, name);
+printf(phrase, name);
 

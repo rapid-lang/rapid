@@ -1,7 +1,7 @@
 
 int x;
 
-Printf("res: %d", x);
+printf("res: %d", x);
 
 int y = x;
 

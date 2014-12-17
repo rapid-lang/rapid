@@ -1,19 +1,19 @@
 
 int i = 4;
-Printf("%t\n", i?);
+printf("%t\n", i?);
 
 boolean b = false;
-Printf("%t\n", b?);
+printf("%t\n", b?);
 
 string s = "";
-Printf("%t\n", s?);
+printf("%t\n", s?);
 s = "hi";
-Printf("%t\n", s?);
+printf("%t\n", s?);
 
 float f = 3.14;
-Printf("%t\n", f?);
+printf("%t\n", f?);
 f = 0.0;
-Printf("%t\n", f?);
+printf("%t\n", f?);
 
 foo(f?);
 

@@ -2,8 +2,8 @@
 list<int> my_list = [1, 13, 5];
 
 for (int num in my_list) {
-    Printf("%d ", num);
-    Printf("%d ", num);
+    printf("%d ", num);
+    printf("%d ", num);
 }
 
-Printf("%d ", num);
+printf("%d ", num);
