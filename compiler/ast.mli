@@ -30,7 +30,7 @@ type print =
     | Printf of expr list
     | Println of expr list
 
-(*Used for function calling*)
+(* Used for function calling *)
 type vars =
     | ID of string
     | VDecl of vdecl
@@ -52,7 +52,7 @@ and http_tree =
     (* /route, rest of tree *)
     | Namespace of string * http_tree list
     (* /route, argument list, return type, function body *)
-    | Endpoint of string * vdecl list * var_type list * func_stmt list
+    | Endpoint of string * vdecl list * var_type * func_stmt list
 
 and func_stmt =
     | FStmt of stmt

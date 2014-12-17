@@ -416,20 +416,22 @@ let gen_class_stmts stmts =
     checked_sclasses, ct
 
 (*
- * rt == route table
+ * rt: route table
  *)
 let rec validate_http_tree path params rt = function
     | SParam(t, id, tree) :: tl ->
+        let rest, rt = validate_http_tree path params rt tl in
         let params = (t, id) :: params in
         let path = Format.sprintf "%s/:%s" path id in
         let rt = add_route path rt in
-        let checked_sub_tree = validate_http_tree path params rt in
-        []
+        let sub_tree, rt = validate_http_tree path params rt tree in
+        (rest @ sub_tree), rt
     | SNamespace(name, tree) :: tl ->
+        let rest, rt = validate_http_tree path params rt tl in
         let path = Format.sprintf "%s/%s" path name in
         let rt = add_route path rt in
-        let checked_sub_tree = validate_http_tree path params rt in
-        []
+        let sub_tree, rt = validate_http_tree path params rt tree in
+        (rest @ sub_tree), rt
     | SEndpoint(name, args, ret_t, body) :: tl ->
         (* takes arguments and path params and confirms they all exist *)
         let rec check_args = (function (* args, required args *)
@@ -440,15 +442,18 @@ let rec validate_http_tree path params rt = function
             | x, []  -> ()
             | [], x -> raise UnusedParamArgument) in
         let () = check_args (args, params) in
-        []
-    | [] -> []
+        let rest, rt = validate_http_tree path params rt tl in
+        (path, args, ret_t, body) :: rest, rt
+    | [] -> [], rt
 
 
 (* TODO *)
 let flatten_tree tree = []
 
 (*The order of the checking and building of symbol tables may need to change
-    to allow functions to be Hoisted*)
+    to allow functions to be Hoisted
+    NOTE: route_list is of type: "route"
+    *)
 let gen_semantic_program stmts classes funcs h_tree =
     (* build an unsafe semantic AST *)
     let s_stmts = List.map translate_statement stmts in
@@ -462,9 +467,8 @@ let gen_semantic_program stmts classes funcs h_tree =
     let st = add_to_scope symbol_table_list s_stmts in
     (*typecheck all the functions (including args and returns)*)
     let checked_funcs = check_funcs st ct ft s_funcs in
-    let checked_http_tree = validate_http_tree "" [] empty_route_table s_http_tree in
-    let collapsed_tree = flatten_tree checked_http_tree in
-    (checked_stmts, checked_classes, checked_funcs)
+    let route_list, _ = validate_http_tree "" [] empty_route_table s_http_tree in
+    (checked_stmts, checked_classes, checked_funcs, route_list)
 
 
 let sast_from_ast ast =

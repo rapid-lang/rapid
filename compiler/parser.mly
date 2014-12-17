@@ -151,9 +151,9 @@ http_type_block:
         { Param($2, $3, $5) }
     | NAMESPACE ID LBRACE http_tree_list RBRACE
         { Namespace($2, $4) }
-    | HTTP ID LPAREN typed_param_list RPAREN return_type LBRACE fstmt_list RBRACE
+    | HTTP ID LPAREN typed_param_list RPAREN primtype LBRACE fstmt_list RBRACE
         { Endpoint($2, $4, $6, $8) }
-    | HTTP LPAREN typed_param_list RPAREN return_type LBRACE fstmt_list RBRACE
+    | HTTP LPAREN typed_param_list RPAREN primtype LBRACE fstmt_list RBRACE
         { Endpoint("", $3, $5, $7) }
 
 stmt_list:

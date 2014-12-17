@@ -138,7 +138,7 @@ let rec http_tree_s = function
     | Endpoint(id, args, ret_t, body) -> sprintf "(HTTP %s(%s)%s{\n\t%s\n}"
         id
         (String.concat "," (List.map string_of_vdecl args))
-        (String.concat "," (List.map string_of_t ret_t))
+        (string_of_t ret_t)
         (indent_block(String.concat "\n" (List.map fstmt_s body)))
 
 let func_decl_s f = sprintf "{\nfname = \"%s\"\nargs = [%s]\n\tbody = [%s]\n}"

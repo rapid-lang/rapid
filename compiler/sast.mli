@@ -80,14 +80,16 @@ type semantic_stmt =
     | SIf of sexpr * semantic_stmt list
     | SWhile of sexpr * semantic_stmt list
     | SFor of var_type * sexpr * sexpr * semantic_stmt list
-and s_http_tree =
+
+type s_http_tree =
     (* typed route param, rest of tree *)
     | SParam of var_type * string * s_http_tree list
     (* /route, rest of tree *)
     | SNamespace of string * s_http_tree list
     (* /route, argument list, return type, function body *)
-    (* NOTE: endpoints are rewritten to include the full path *)
-    | SEndpoint of string * (var_type * string * sexpr) list * var_type list * semantic_stmt list
+    | SEndpoint of string * (var_type * string * sexpr) list * var_type * semantic_stmt list
+
+type route = string * (var_type * string * sexpr) list * var_type * semantic_stmt list
 
 type sattr =
     | SNonOption of var_type * string * sexpr option

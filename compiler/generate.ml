@@ -320,7 +320,7 @@ let skeleton decls classes main fns = "package main\nimport (\"fmt\")\n" ^
 
 let build_prog sast =
     (* Ignore classes for now *)
-    let (stmts, classes, funcs) = sast in
+    let (stmts, classes, funcs, route_list) = sast in
     let decls = String.concat "\n" (grab_decls stmts) in
     let code_lines = List.map sast_to_code stmts in
     let stmt_code = String.concat "\n" code_lines in
