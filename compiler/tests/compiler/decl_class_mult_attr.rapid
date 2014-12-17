@@ -16,3 +16,5 @@ println(c.balance?);
 
 println(a.age + b.age + c.age);
 
+User d;
+

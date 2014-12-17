@@ -265,6 +265,7 @@ and sast_to_code = function
     | SReturn xprs -> sreturn_to_code xprs
     | SFuncCall(lv, id, xprs) -> sfunccall_to_code lv id xprs
     | SUserDefDecl(class_id, (id, SExprUserDef(xpr))) -> class_instantiate_to_code class_id (id, xpr)
+    | SUserDefDecl(class_id, (id, NullExpr)) -> sprintf "var %s %s\n_ = %s" id class_id id
     | SIf(expr, stmts) -> (control_code IF expr stmts) ^ "\n"
     | SWhile (expr, stmts) -> control_code WHILE expr stmts
     | SIfElse(expr, stmts, estmts) -> 
