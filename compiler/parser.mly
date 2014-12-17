@@ -11,7 +11,6 @@
 %token PRINTLN PRINTF // LOG
 %token CLASS NEW ACCESS OPTIONAL
 %token HTTP PARAM NAMESPACE
-// %token INT BOOL FLOAT STRING
 
 %token <string> ID TYPE STRING_LIT
 %token <int> INT_VAL
@@ -153,6 +152,7 @@ stmt:
     | http_type_block    { HttpTree $1 }
 
 typed_param_list:
+    | /* nothing */     { [] }
     | TYPE ID           { [(Ast_printer.string_to_t $1, $2, None)] }
     | typed_param_list COMMA TYPE ID
         { (Ast_printer.string_to_t $3, $4, None) :: $1 }
@@ -169,6 +169,8 @@ http_type_block:
         { Namespace($2, $4) }
     | HTTP ID LPAREN typed_param_list RPAREN return_type LBRACE fstmt_list RBRACE
         { Endpoint($2, $4, $6, $8) }
+    | HTTP LPAREN typed_param_list RPAREN return_type LBRACE fstmt_list RBRACE
+        { Endpoint("", $3, $5, $7) }
 
 print:
     | PRINTLN LPAREN expression_list RPAREN { Println $3 }
