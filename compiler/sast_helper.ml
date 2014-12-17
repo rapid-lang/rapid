@@ -45,11 +45,11 @@ let add_func ft id arg_ts ret_ts =
         StringMap.add id v ft
 
 let default_ft ft =
-    let ft = add_func ft "append" 
-        (ListType(AnyList) :: ListType(Void) :: [])
-        (ListType(AnyList) :: [])  in
+    let ft = add_func ft "append"
+        [(ListType(AnyList), NullExpr); (ListType(Void), NullExpr)]
+        [ListType(AnyList); Void;]  in
     let ft = add_func ft "println"
-        (String :: InfiniteArgs :: [])
+        [(String, NullExpr;); (InfiniteArgs, NullExpr)]
         []  in
     ft
 
