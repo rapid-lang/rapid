@@ -2,7 +2,7 @@ open Format
 open Sast
 open Sast_printer
 open Datatypes
-open Str
+
 
 exception UnsupportedSemanticExpressionType of string
 exception UnsupportedSemanticStatementType
@@ -314,8 +314,47 @@ let class_def_to_code (class_id, attr_list) =
     sprintf "type %s struct{\n%s\n}" class_id (String.concat "\n" attrs)
 
 
-let skeleton decls classes main fns = "package main\nimport (\"fmt\")\n" ^
-    "var _ = fmt.Printf\n" ^ classes ^ "\n\n" ^ decls ^ "\nfunc main() {\n" ^
+let http_fstmt_to_code = function
+    | SReturn(xpr :: _) ->
+        let setup, ref  = cast_to_code String xpr in
+        sprintf "%s\nw.Write([]byte(*%s))\nreturn"
+            setup
+            ref
+    | s -> sast_to_code s
+
+
+let endpoint_to_code (path, args, ret_type, body) =
+    let strip_route_re = Str.regexp "[:/]" in
+    let strip_path s = Str.global_replace strip_route_re "" s in
+    let grab_param (t, name, default) =
+        let value = if default = NullExpr then
+            sprintf "XXX.ByName(\"%s\")" name
+        else
+            let setup, ref = sexpr_to_code default in
+            sprintf "%s\n%s = %s" setup name ref in
+        sprintf "%s := %s\n_ = %s" name value name in
+
+    sprintf "func HTTP%s(w http.ResponseWriter, r *http.Request, XXX httprouter.Params){\n%s\n%s\n}\n"
+        (strip_path path)
+        (String.concat "\n" (List.map grab_param args))
+        (String.concat "\n" (List.map http_fstmt_to_code body))
+
+
+let skeleton decls http_funcs classes main fns =
+    let packages = ("fmt", "fmt.Printf") ::
+        ("net/http", "http.StatusOK") ::
+        ("github.com/julienschmidt/httprouter", "httprouter.CleanPath") :: [] in
+    let processed = List.map (fun (p, ref) -> sprintf "\"%s\"" p, sprintf "var _ = %s" ref) packages in
+    let imports, references = List.map fst processed, List.map snd processed in
+    let imports = String.concat "\n" imports in
+    let references = String.concat "\n" references in
+    "package main\n" ^
+    "import (\n" ^ imports ^ "\n)\n" ^
+    references ^ "\n\n" ^
+    http_funcs ^ "\n\n" ^
+    classes ^ "\n\n" ^
+    decls ^
+    "\nfunc main() {\n" ^
     main ^ "\n}\n " ^ fns
 
 let build_prog sast =
@@ -326,5 +365,6 @@ let build_prog sast =
     let stmt_code = String.concat "\n" code_lines in
     let func_code = String.concat "\n\n" (List.map func_to_code funcs) in
     let class_struct_defs = String.concat "\n\n" (List.map class_def_to_code classes) in
-    skeleton decls class_struct_defs stmt_code func_code
+    let http_funcs = String.concat "\n" (List.map endpoint_to_code route_list) in
+    skeleton decls http_funcs class_struct_defs stmt_code func_code
 
