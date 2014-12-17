@@ -38,6 +38,7 @@ let rec go_type_from_type = function
     | String -> "String"
     | ListType(t) ->
         sprintf "%sList" (go_type_from_type t)
+    | UserDef(name) -> name
     | _ -> raise UnsupportedDatatypeErr
 and go_tmp_type_from_type = function
     | ListType(t) ->
@@ -260,9 +261,9 @@ type control_t = | IF | WHILE
 let rec control_code b expr stmts =
     let tmps, exprs = sexpr_to_code expr in
     let body = String.concat "\n" (List.map sast_to_code stmts) in
-    let decls = String.concat "\n" (grab_decls stmts) in 
+    let decls = String.concat "\n" (grab_decls stmts) in
     match b with
-        |IF -> sprintf "%s\nif *(%s){%s\n%s}" tmps exprs decls body 
+        |IF -> sprintf "%s\nif *(%s){%s\n%s}" tmps exprs decls body
         |WHILE -> sprintf "for{\n%s\nif !(*(%s)){\nbreak\n}\n%s\n%s}\n" tmps exprs decls body
 
 and sast_to_code = function
@@ -274,12 +275,12 @@ and sast_to_code = function
     | SUserDefDecl(class_id, (id, NullExpr)) -> sprintf "var %s %s\n_ = %s" id class_id id
     | SIf(expr, stmts) -> (control_code IF expr stmts) ^ "\n"
     | SWhile (expr, stmts) -> control_code WHILE expr stmts
-    | SIfElse(expr, stmts, estmts) -> 
+    | SIfElse(expr, stmts, estmts) ->
         sprintf "%selse{\n%s\n%s}\n"
         (control_code IF expr stmts)
         (String.concat "\n" (grab_decls estmts))
         (String.concat "\n" (List.map sast_to_code estmts))
-    | SFor(t, SId(id), xpr, stmts) -> sfor_to_code t id xpr stmts
+    | SFor(t, id, xpr, stmts) -> sfor_to_code t id xpr stmts
     | _ -> raise(UnsupportedSemanticStatementType)
 
 and sfor_to_code t id xpr stmts =

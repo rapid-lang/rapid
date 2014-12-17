@@ -123,7 +123,13 @@ let rec semantic_stmt_s = function
         (String.concat ", " (List.map lv_s lv))
         id
         (String.concat ", " (List.map sexpr_s params))
-    | SWhile(expr, stmts) -> sprintf "(While(%s){\n%s\n})\n" 
+    | SFor(t, string_id, xpr, stmts) ->
+        sprintf "(For %s %s in %s {\n%s\n}"
+            (Ast_printer.string_of_t t)
+            string_id
+            (sexpr_s xpr)
+            (String.concat "\n" (List.map semantic_stmt_s stmts))
+    | SWhile(expr, stmts) -> sprintf "(While(%s){\n%s\n})\n"
         (sexpr_s expr)
         (String.concat "\n" (List.map semantic_stmt_s stmts))
     | _ -> "Unsupported statement"

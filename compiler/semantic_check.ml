@@ -333,28 +333,28 @@ let rec var_analysis st ct ft = function
     | SIf(xpr, stmts) :: tl ->
         let expr = rewrite_sexpr st ct ft xpr in
         let () = check_t_sexpr Bool expr in
-        let new_scope = new_scope st in 
+        let new_scope = new_scope st in
         let stmts = var_analysis new_scope ct ft stmts in
         SIf(expr, stmts) :: (var_analysis st ct ft tl)
     | SIfElse(xpr, stmts, estmts) :: tl ->
         let expr = rewrite_sexpr st ct ft xpr in
         let () = check_t_sexpr Bool expr in
-        let if_scope = new_scope st in 
+        let if_scope = new_scope st in
         let stmts = var_analysis if_scope ct ft stmts in
         let else_scope = new_scope st in
         let estmts = var_analysis else_scope ct ft estmts in
         SIfElse(expr, stmts, estmts) :: (var_analysis st ct ft tl)
-    | SWhile(xpr, stmts) :: tl -> 
+    | SWhile(xpr, stmts) :: tl ->
         let expr = rewrite_sexpr st ct ft xpr in
         let () = check_t_sexpr Bool expr in
         let stmts = var_analysis (new_scope st) ct ft stmts in
         SWhile(expr, stmts) :: var_analysis st ct ft tl
-    | SFor (t, SId(id), xpr, stmts) :: tl ->
+    | SFor (t, string_id, xpr, stmts) :: tl ->
         let scoped_st = new_scope st in
-        let scoped_st = add_sym t id scoped_st in
+        let scoped_st = add_sym t string_id scoped_st in
         let xpr = rewrite_sexpr scoped_st ct ft xpr ~t:(ListType t) in
         let for_body = var_analysis scoped_st ct ft stmts in
-        SFor(t, SId(id), xpr, for_body) :: (var_analysis st ct ft tl)
+        SFor(t, string_id, xpr, for_body) :: (var_analysis st ct ft tl)
     | [] -> []
 
 

@@ -162,16 +162,3 @@ let program_s (stmts, classes, funcs) = sprintf
     (concat "\n" (List.rev (List.map class_s classes)))
     (concat "\n" (List.rev (List.map stmt_s stmts)))
     (concat "\n" (List.rev (List.map func_decl_s funcs)))
-
-
-(*
- * Non-printing helpers
- *)
-
-(* Converts a string to a datatype *)
-let string_to_t = function
-    | "boolean" -> Bool
-    | "int" -> Int
-    | "float" -> Float
-    | "string" -> String
-    | c -> UserDef(c)

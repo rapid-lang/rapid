@@ -13,3 +13,12 @@ type var_type =
     | InfiniteArgs
     | AnyList
 
+
+
+(* Converts a string to a datatype *)
+let string_to_t = function
+    | "boolean" -> Bool
+    | "int" -> Int
+    | "float" -> Float
+    | "string" -> String
+    | c -> UserDef(c)
