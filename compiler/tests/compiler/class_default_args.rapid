@@ -1,0 +1,9 @@
+class Test{
+	string name = "bob";
+	int height;
+}
+
+Test t = new Test(height=6);
+
+println(t.height);
+println(t.name);

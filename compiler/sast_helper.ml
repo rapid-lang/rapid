@@ -117,9 +117,9 @@ and insert_attr attr_id attr_tbl triple =
 
 (* Hard coded error attributes *)
 let get_error_attr_table =
-    let attr_table = [ (SNonOption (String, "name", Some(SExprString(SStringExprLit "Error"))));
-                        (SNonOption (Int, "code", Some(SExprInt(SIntExprLit 500))));
-                        (SNonOption (String, "message", Some(SExprString(SStringExprLit "An Error has been thrown"))))]
+    let attr_table = [ (SNonOption (String, "name", Some(NullExpr)));
+                        (SNonOption (Int, "code", Some(NullExpr)));
+                        (SNonOption (String, "message", Some(NullExpr)))]
     in add_attrs empty_attribute_table attr_table
 
 (* Get the table of attributes for a specific class *)
