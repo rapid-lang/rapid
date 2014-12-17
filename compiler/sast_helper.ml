@@ -16,6 +16,10 @@ exception ClassNotDefinedErr of string
 exception AttributeNotDefinedErr of string
 exception MissingActualErr of string
 exception ExistingFuncErr
+exception BadFunctionId
+exception CannotFindFunctionIDForArgTypes
+exception CannotFindFunctionIDForReturnType
+exception CannotFindFunctionIDForReturnTypeList
 
 
 (* Maps a function to a expr option if it is defined, otherwise return NullExpr *)
@@ -84,17 +88,25 @@ let rec get_type id = function
     | _ -> raise(VariableNotDefinedErr(Format.sprintf "%s is not defined" id))
 
 let get_return_type id ft =
-    let (_, ret_t) = StringMap.find id ft in
-    match ret_t with
-        | [] -> Void
-        | t :: [] -> t
-        | t_list -> Multi
+    if StringMap.mem id ft
+        then let (_, ret_t) = StringMap.find id ft in
+            match ret_t with
+                | [] -> Void
+                | t :: [] -> t
+                | t_list -> Multi
+        else raise CannotFindFunctionIDForReturnType
 
 let get_return_type_list id ft =
-    let (_, retl) = StringMap.find id ft in retl
+    if StringMap.mem id ft
+        then let (_, retl) = StringMap.find id ft in retl
+        else raise CannotFindFunctionIDForReturnTypeList
+
 
 let get_arg_types id ft =
-    let (arg_ts, _) = StringMap.find id ft in arg_ts
+    if StringMap.mem id ft
+        then let (arg_ts, _) = StringMap.find id ft in arg_ts
+        else raise CannotFindFunctionIDForArgTypes
+
 
 (* adds a new empty symbol table for use in the new scope *)
 let new_scope sym_tbl = empty_symbol_table :: sym_tbl
@@ -186,4 +198,3 @@ let rec sexpr_to_t expected_t = function
         | _ -> raise UnsupportedSexprTypeClassification
     )
     | SId _ | _ -> raise UnsupportedSexprTypeClassification
-

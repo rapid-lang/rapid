@@ -1,0 +1,18 @@
+class User {
+    int age;
+    string name = "Default User";
+
+    instance self {
+        func set_age(int a) {
+            self.age = a;
+        }
+        func get_name() string {
+            return self.name;
+        }
+    }
+}
+
+User bob = new User(age=10);
+string n = bob.get_name();
+bob.set_age(15);
+bob.name = "Bob Burger";

@@ -16,10 +16,7 @@ let rec sexpr_s = function
     | SExprFloat s -> float_expr_s s
     | SExprBool b -> bool_expr_s b
     | SExprUserDef u -> user_def_expr_s u
-    | SCallTyped (t, (id, args)) -> sprintf "(Call %s) args = %s returns = %s"
-        id
-        (String.concat ", " (List.map sexpr_s args))
-        (Ast_printer.string_of_t t)
+    | SCallTyped (t, c) -> scall_typed_s (t, c)
     | SExprAccess (e, m) -> raise(UntypedAccess(
         "Accesses must be rewritten with type information"))
     | SExprList l -> list_expr l
@@ -62,6 +59,18 @@ and bool_expr_s = function
     | SBoolAcc(v, mem) -> sprintf "(Bool Access: %s.%s)"
         (user_def_expr_s v) mem
     | SBoolNull -> "(Bool NULL)"
+and scall_typed_s = function
+    | (t, SFCall(None, id, args)) -> sprintf
+        "(Call %s) args = %s returns = %s"
+        id
+        (String.concat ", " (List.map sexpr_s args))
+        (Ast_printer.string_of_t t)
+    | (t, SFCall(Some(xpr), id, args)) -> sprintf
+        "(Call %s.%s) args = %s returns = %s"
+        (sexpr_s xpr)
+        id
+        (String.concat ", " (List.map sexpr_s args))
+        (Ast_printer.string_of_t t)
 and sactual_s = function
     | (k,v) -> sprintf "(ACTUAL: %s=%s)" k (sexpr_s v)
 and user_def_expr_s = function
@@ -99,30 +108,44 @@ and list_expr = function
     | SListNull -> "(List NULL)"
 
 
-let svar_assign_s (id, xpr) =
-    sprintf "(Assign (%s) to %s)" id (sexpr_s xpr)
+let slhs_s = function
+    | SLhsId id -> id
+    | SLhsAcc (xpr, mem) -> sprintf "%s.%s" (sexpr_s xpr) mem
+
+let svar_assign_s (lhs, xpr) =
+    sprintf "(Assign (%s) to %s)" (slhs_s lhs) (sexpr_s xpr)
 
 let svar_decl_s t (id, xpr) =
     sprintf "(Declare %s (%s) to %s)" id (Ast_printer.string_of_t t) (sexpr_s xpr)
 
 let suser_def_decl_s cls (id, xpr) =
-    sprintf "(Declare %s (%s) to %s)" id cls (sexpr_s xpr)
+    sprintf "(Declare USERDEF %s (%s) to %s)" id cls (sexpr_s xpr)
 
 let lv_s = function
     | SFuncDecl(t, (id, _)) -> sprintf "%s %s" (Ast_printer.string_of_t t) id
     | SFuncTypedId(_ , id) -> id
     | _ -> raise UnsupportedSOutput
 
+let sfcall_s = function
+    | SFCall(None, id, args) -> sprintf
+        "((FCall %s) args = %s)"
+        id
+        (String.concat ", " (List.map sexpr_s args))
+    | SFCall(Some(xpr), id, args) -> sprintf
+        "((FCall %s.%s) args = %s)"
+        (sexpr_s xpr)
+        id
+        (String.concat ", " (List.map sexpr_s args))
+
 let rec semantic_stmt_s = function
-    | SAssign a -> svar_assign_s a ^ "\n"
+    | SAssign (lhs, xpr) -> svar_assign_s (lhs, xpr) ^ "\n"
     | SDecl(t, vd) -> svar_decl_s t vd ^ "\n"
     | SUserDefDecl(cls, vd) -> suser_def_decl_s cls vd ^ "\n"
     | SReturn s -> sprintf("Return(%s)\n")
         (String.concat ", " (List.map sexpr_s s))
-    | SFuncCall(lv, id, params) -> sprintf "Assign(%s) to Call %s(%s)\n"
+    | SFuncCall(lv, sfc) -> sprintf "Assign(%s) to %s"
         (String.concat ", " (List.map lv_s lv))
-        id
-        (String.concat ", " (List.map sexpr_s params))
+        (sfcall_s sfc)
     | SFor(t, string_id, xpr, stmts) ->
         sprintf "(For %s %s in %s {\n%s\n}"
             (Ast_printer.string_of_t t)
@@ -135,11 +158,14 @@ let rec semantic_stmt_s = function
     | _ -> "Unsupported statement"
 
 let semantic_func_s f =
-    let (id, args, rets, body) = f in
+    let (id, selfref_opt, args, rets, body) = f in
     let args_strings = (List.map semantic_stmt_s args) in
     let ret_strings = (List.map Ast_printer.string_of_t rets) in
     let body_strings = (List.map semantic_stmt_s body) in
-    sprintf "(func %s(%s) %s{\n %s \n})"
+    sprintf "(func %s%s(%s) %s{\n %s \n})"
+        (match selfref_opt with
+            | Some(SelfRef(class_id, id)) -> sprintf "(%s %s) " class_id id
+            | None -> "")
         id
         (String.concat "," args_strings)
         (String.concat ", " ret_strings)

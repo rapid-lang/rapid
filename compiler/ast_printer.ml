@@ -16,6 +16,8 @@ let rec string_of_t = function
     | UserDef(s) -> sprintf "(USER_DEF %s)" s
     | Void -> "void"
     | Multi -> "multi return"
+    | InfiniteArgs -> "InfiniteArgs"
+    | AnyList -> "AnyList"
 
 let bin_op_s = function
     | Add -> "+"
@@ -60,12 +62,20 @@ let rec expr_s = function
     | Nullxpr -> "(Null)"
 
 and fcall_s = function
-    | (f, es) -> sprintf "(Call (%s) with (%s))"
+    | (None, f, es) -> sprintf "(Call (%s) with (%s))"
         f
         (concat ", " (List.map (fun e -> sprintf "(%s)" (expr_s e)) es))
+    | (Some(xpr), f, es) -> sprintf "(Call %s.(%s) with (%s))"
+        (expr_s xpr)
+        f
+        (concat ", " (List.map (fun e -> sprintf "(%s)" (expr_s e)) es))
+
 and actual_s = function
     | Actual(id, e) -> sprintf "(ACTUAL: %s=%s)" id (expr_s e)
 
+and lhs_s = function
+    | LhsId(id) -> id
+    | LhsAcc(xpr, id) -> sprintf "(%s.%s)" (expr_s xpr) id
 
 let string_of_vdecl (t, nm, e) = sprintf "%s %s %s"
     (string_of_t t)
@@ -87,8 +97,8 @@ let func_lvalue_s = function
     | VDecl(t, id, x) -> string_of_vdecl (t,id,x)
 
 let rec stmt_s = function
-    | Assign(v, e) -> sprintf "(Assign %s (%s))"
-        v
+    | Assign(lhs, e) -> sprintf "(Assign %s (%s))"
+        (lhs_s lhs)
         (expr_s e)
     | If(e, s1, [] ) -> sprintf "(If (%s) -> (%s))"
         (expr_s e)
@@ -149,12 +159,24 @@ let attr_s = function
         id
         (string_of_t t)
 
+let member_s = function
+    | Attr a      -> attr_s a
+    | ClassFunc f -> func_decl_s f
 
-let class_s (name, attrs) =
-    sprintf "(CLASS %s:\n%s)"
+
+let instance_block_s = function
+    | Some(InstanceBlock(id, fns)) -> sprintf "(INSTANCE %s {\n\t%s}"
+        id
+        (concat "\n\t" (List.map func_decl_s fns))
+    | None -> "(NO INSTANCE BLOCK)"
+
+
+let class_s (name, members, instance_block) =
+    sprintf "(CLASS %s:\n%s\n%s)"
         name
+        (instance_block_s instance_block)
         (concat "\n" (List.map (fun a -> "\t" ^ a)
-            (List.map attr_s attrs)))
+            (List.map member_s members)))
 
 
 let program_s (stmts, classes, funcs) = sprintf
